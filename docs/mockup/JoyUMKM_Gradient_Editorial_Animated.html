@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0207CA" />
+  <meta name="description" content="Prototipe JoyUMKM: landing page editorial gradient, login, dan register." />
+  <title>JoyUMKM — Kenali Kondisi Usaha</title>
+  <!-- Animate.style: animasi fadeInUp untuk kartu preview. Fallback ada pada CSS di bawah. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <style>
+    :root{
+      --primary:#0207CA; /* Primary — Midnight Black (sesuai kode yang diminta) */
+      --secondary:#0297DE; /* Secondary — Electric Blue */
+      --accent:#FC734D; /* Accent — Cantaloupe Orange */
+      --ink:#151A35;--muted:#67718B;--line:#DFE5F2;--paper:#FFFFFF;
+      --canvas:#F6F8FE;--pale:#EAF5FD;--indigo-pale:#EEF0FF;
+      --radius:24px;--shadow:0 24px 70px rgba(16,31,93,.09);
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;color:var(--ink);background:var(--canvas);font-family:Inter,"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
+    button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid rgba(2,151,222,.55);outline-offset:3px}
+    button:disabled{opacity:.5;cursor:not-allowed}.page[hidden]{display:none!important}
+    .container{width:min(1200px,calc(100% - 64px));margin-inline:auto}
+    .brand{display:inline-flex;align-items:center;gap:12px;line-height:1;white-space:nowrap}
+    .brand-mark{width:46px;height:46px;display:grid;place-items:center;color:#fff;background:var(--primary);border-radius:15px;position:relative;font-size:25px;font-weight:900;letter-spacing:-.08em;box-shadow:0 9px 21px rgba(2,7,202,.14)}
+    .brand-mark::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);position:absolute;right:-3px;top:-3px;border:2px solid #fff}
+    .brand-name{display:block;font-weight:850;font-size:23px;letter-spacing:-.07em}.brand-sub{display:block;color:var(--muted);font-size:10px;font-weight:650;letter-spacing:.014em;margin-top:6px}
+    .header{background:rgba(255,255,255,.93);border-bottom:1px solid #E8EDF8;position:sticky;top:0;z-index:10;backdrop-filter:blur(16px)}
+    .header-inner{display:flex;align-items:center;justify-content:space-between;min-height:86px;gap:26px}
+    .header-links{display:flex;align-items:center;gap:34px}.header-links button,.header-links a{font-size:14px;font-weight:650;background:none;border:0;color:#303B64}.header-links a:hover,.header-links button:hover{color:var(--primary)}
+    .header-actions{display:flex;align-items:center;gap:13px}
+    .btn{border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:11px;font-size:14px;font-weight:750;min-height:48px;padding:0 22px;border-radius:13px;transition:transform .18s,box-shadow .18s,background .18s;white-space:nowrap}
+    .btn:hover{transform:translateY(-2px)}.btn svg{width:18px;height:18px}
+    .btn-primary{background:var(--primary);color:white;box-shadow:0 13px 28px rgba(2,7,202,.16)}.btn-primary:hover{background:#0105AA;box-shadow:0 17px 28px rgba(2,7,202,.24)}
+    .btn-outline{border-color:#D6DDEF;color:var(--primary);background:#fff}.btn-outline:hover{background:var(--indigo-pale)}
+    .btn-white{color:var(--primary);background:#fff}.btn-accent{background:var(--accent);color:#171841}
+    .mobile-cta{display:none}
+    .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#FFFFFF 0%,#FFFFFF 53%,#F1F6FF 100%);padding:86px 0 104px}
+    .hero::before{content:"";position:absolute;width:620px;height:620px;border:1px solid #E8EEFE;border-radius:50%;right:-230px;top:-190px;box-shadow:0 0 0 80px #F5F8FF,0 0 0 160px #F9FBFF;pointer-events:none}
+    .hero-grid{position:relative;display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:72px}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid #DDE5FF;border-radius:100px;color:var(--primary);background:#F0F3FF;font-size:11px;font-weight:820;letter-spacing:.10em;text-transform:uppercase}
+    .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    h1,h2,h3,p{margin-top:0}.hero h1{font-size:clamp(41px,4.25vw,64px);line-height:1.12;letter-spacing:-.065em;margin:25px 0 24px;font-weight:850;max-width:660px}
+    .hero h1 em{font-style:normal;color:var(--primary);position:relative;display:inline-block;white-space:nowrap}
+    .hero h1 em::after{content:"";height:6px;background:var(--accent);border-radius:99px;position:absolute;left:3px;right:0;bottom:-7px;transform:rotate(-1.2deg)}
+    .hero-copy{font-size:16px;line-height:1.83;color:var(--muted);max-width:510px;margin-bottom:30px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .hero-proof{display:flex;align-items:center;gap:16px;margin-top:30px;font-size:12px;color:var(--muted);line-height:1.5}
+    .proof-icon{width:34px;height:34px;display:grid;place-items:center;background:#E6F7FD;border-radius:11px;color:var(--secondary)}.proof-icon svg{width:18px;height:18px}
+    .preview-stage{position:relative;padding:18px 16px 20px 0}.preview-stage::before{content:"";position:absolute;inset:1px 0 0 24px;background:#EAF0FF;border-radius:38px;transform:rotate(5deg)}
+    .dashboard-preview{position:relative;background:#fff;border:1px solid #E6EBF5;border-radius:26px;box-shadow:0 30px 65px rgba(25,45,126,.15);padding:25px;z-index:1}
+    .dash-top{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #E9EDF7;padding-bottom:23px}
+    .dash-title{font-size:17px;font-weight:830;letter-spacing:-.035em;margin:0 0 5px}.dash-note{color:var(--muted);font-size:11px;margin:0}
+    .tag-demo{font-size:10px;font-weight:750;background:#F1F4FB;color:#69748D;padding:8px 10px;border-radius:30px;white-space:nowrap}
+    .dash-main{display:grid;grid-template-columns:160px 1fr;gap:25px;padding:24px 0}
+    .score-outer{width:151px;height:151px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--primary) 0% 74%,#E9ECFB 74% 100%);position:relative}
+    .score-outer::before{content:"";position:absolute;inset:16px;background:#fff;border-radius:50%}
+    .score-inner{position:relative;text-align:center}.score-inner strong{display:block;font-size:43px;letter-spacing:-.07em;color:var(--primary);line-height:1}.score-inner span{display:block;font-size:10px;color:var(--muted);margin-top:6px}
+    .score-label{text-align:center;font-weight:700;font-size:11px;margin-top:11px}
+    .metric{margin-bottom:20px}.metric:last-child{margin-bottom:0}.metric-head{display:flex;justify-content:space-between;gap:12px;font-size:11px;font-weight:750;margin-bottom:9px}.metric-head span:last-child{color:var(--muted)}
+    .track{height:9px;background:#EBEEFA;border-radius:99px;overflow:hidden}.fill{height:100%;border-radius:99px;background:var(--primary)}.fill.secondary{background:var(--secondary)}.fill.accent{background:var(--accent)}
+    .dash-bottom{padding:15px 16px;border-radius:14px;background:#F2F6FF;display:flex;gap:11px;align-items:center}.dash-bottom svg{width:21px;height:21px;flex-shrink:0;color:var(--primary)}.dash-bottom b{font-size:11px;display:block}.dash-bottom span{font-size:11px;color:var(--muted);display:block;margin-top:3px}
+    .float-label{position:absolute;z-index:2;background:#fff;border:1px solid #E2E8F6;box-shadow:0 16px 26px rgba(15,31,84,.10);border-radius:15px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:11px;font-weight:750}
+    .float-label svg{width:18px;height:18px}.float-left{left:-50px;bottom:61px}.float-right{right:-23px;top:-13px}.float-left .bubble{background:#FFF1EC;color:var(--accent)}.float-right .bubble{background:#E5F6FC;color:var(--secondary)}.bubble{display:grid;place-items:center;width:30px;height:30px;border-radius:10px}
+    /* Animate.style fadeInUp; definisi lokal menjaga animasi tetap bekerja ketika CDN offline. */
+    @keyframes fadeInUp{
+      from{opacity:0;transform:translate3d(0,32px,0)}
+      to{opacity:1;transform:translate3d(0,0,0)}
+    }
+    .dashboard-preview.animate__animated.animate__fadeInUp{
+      animation-name:fadeInUp;
+      animation-duration:.85s;
+      animation-timing-function:cubic-bezier(.2,.75,.3,1);
+      animation-fill-mode:both;
+      will-change:transform,opacity;
+    }
+    /* Badge berotasi ringan sekali saat masuk; bukan berputar terus-menerus. */
+    @keyframes joySoftRotate{
+      0%{opacity:0;transform:rotate(var(--rotate-from)) scale(.96)}
+      65%{opacity:1;transform:rotate(var(--rotate-over)) scale(1.01)}
+      100%{opacity:1;transform:rotate(0deg) scale(1)}
+    }
+    .float-left{--rotate-from:-9deg;--rotate-over:3deg}
+    .float-right{--rotate-from:9deg;--rotate-over:-3deg}
+    .float-label.motion-rotate{
+      animation:joySoftRotate .72s cubic-bezier(.22,.85,.31,1) both;
+      will-change:transform,opacity;
+    }
+    .float-left.motion-rotate{animation-delay:.52s}
+    .float-right.motion-rotate{animation-delay:.76s}
+
+    .section{padding:104px 0}.section-head{max-width:655px}.kicker{color:var(--secondary);font-size:12px;letter-spacing:.13em;font-weight:850;text-transform:uppercase;margin-bottom:15px}.section h2{font-size:clamp(30px,3.1vw,44px);line-height:1.18;letter-spacing:-.055em;margin:0 0 17px}.section-lead{font-size:15px;line-height:1.75;color:var(--muted);margin:0}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}.step{background:#fff;border:1px solid #E6EBF6;border-radius:22px;padding:29px 26px;box-shadow:0 8px 22px rgba(17,29,70,.025)}
+    .step-number{width:45px;height:45px;display:grid;place-items:center;background:#EFF0FF;color:var(--primary);border-radius:13px;font-weight:900;margin-bottom:25px}.step:nth-child(2) .step-number{background:#E8F7FE;color:var(--secondary)}.step:nth-child(3) .step-number{background:#FFF1EA;color:#D75D38}
+    .step h3{font-size:18px;letter-spacing:-.035em;margin:0 0 10px}.step p{font-size:13px;color:var(--muted);line-height:1.75;margin:0}
+    .dimensions-section{background:#fff}.dimension-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:38px}
+    .dimension{border:1px solid #E6EBF6;border-radius:22px;padding:29px;position:relative;overflow:hidden;background:#fff}.dimension::after{content:"";width:108px;height:108px;border-radius:50%;background:var(--indigo-pale);position:absolute;right:-60px;top:-59px}
+    .dimension-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:var(--indigo-pale);color:var(--primary);margin-bottom:21px}.dimension-icon svg{width:24px;height:24px}
+    .dimension:nth-child(2) .dimension-icon{background:#E6F6FD;color:var(--secondary)}.dimension:nth-child(2)::after{background:#E6F6FD}.dimension:nth-child(3) .dimension-icon{background:#FFF1EA;color:#DB613C}.dimension:nth-child(3)::after{background:#FFF1EA}
+    .dimension-code{font-size:11px;color:#8992A8;font-weight:850;letter-spacing:.09em;margin-bottom:8px}.dimension h3{font-size:21px;letter-spacing:-.04em;margin:0 0 7px}.dimension p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+    .cta-section{padding:60px 0 90px}.cta-banner{padding:55px 60px;border-radius:29px;background:linear-gradient(115deg,#0207CA,#2641E0 62%,#0297DE);position:relative;overflow:hidden;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:30px}
+    .cta-banner:after{content:"";width:250px;height:250px;border:1px solid #ffffff55;border-radius:50%;position:absolute;right:135px;top:-155px;box-shadow:0 0 0 65px #ffffff0c,0 0 0 130px #ffffff09}.cta-banner h2{font-size:31px;letter-spacing:-.055em;line-height:1.2;max-width:540px;margin:0 0 12px}.cta-banner p{font-size:13px;line-height:1.6;color:#DAE5FF;margin:0}.cta-banner .btn{position:relative;z-index:1;flex-shrink:0}
+    .footer{background:#fff;border-top:1px solid #E9EDF5;padding:29px 0}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:12px;color:var(--muted)}.footer-links{display:flex;gap:24px}.footer-links button{background:none;border:none;color:var(--muted);padding:0;font-size:12px}.footer-links button:hover{color:var(--primary)}
+    /* Auth */
+    .auth-page{min-height:100vh;display:grid;grid-template-columns:minmax(400px,.94fr) minmax(500px,1.06fr);background:#fff}
+    .auth-side{position:relative;overflow:hidden;background:linear-gradient(150deg,#0207CA 2%,#0A22D1 62%,#0297DE 140%);color:#fff;padding:44px clamp(32px,4.7vw,86px);display:flex;flex-direction:column;min-height:100vh}
+    .auth-side::before{content:"";position:absolute;width:660px;height:660px;left:-300px;bottom:-270px;border:1px solid rgba(255,255,255,.16);border-radius:50%;box-shadow:0 0 0 100px rgba(255,255,255,.035),0 0 0 205px rgba(255,255,255,.035)}
+    .auth-side::after{content:"";position:absolute;width:330px;height:330px;right:-180px;top:160px;background:radial-gradient(circle,rgba(2,151,222,.65),transparent 70%);filter:blur(18px)}
+    .brand-light{position:relative;z-index:1}.brand-light .brand-mark{background:#fff;color:var(--primary);box-shadow:none}.brand-light .brand-mark::after{border-color:var(--primary)}.brand-light .brand-sub{color:#DCE9FF}
+    .auth-story{position:relative;z-index:1;max-width:505px;margin:auto 0}.auth-story .story-kicker{display:inline-flex;gap:9px;align-items:center;font-size:11px;color:#DCE6FF;font-weight:800;letter-spacing:.12em;margin-bottom:16px}.story-kicker::before{content:"";height:7px;width:7px;background:var(--accent);border-radius:50%}
+    .auth-story h2{font-size:clamp(37px,3.3vw,52px);letter-spacing:-.065em;line-height:1.14;margin:0 0 17px}.auth-story>p{font-size:14px;line-height:1.8;color:#DFE6FF;max-width:380px;margin-bottom:30px}
+    .auth-insight{background:rgba(255,255,255,.975);padding:22px 22px 17px;border-radius:20px;color:var(--ink);max-width:390px;box-shadow:0 20px 50px rgba(0,0,0,.14);transform:rotate(-1deg)}
+    .insight-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.insight-header b{font-size:13px}.insight-header span{font-size:10px;background:#EFF2FC;padding:6px 9px;border-radius:20px;color:var(--muted)}
+    .insight-row{display:grid;grid-template-columns:110px 1fr 28px;gap:12px;align-items:center;margin-bottom:15px}.insight-row span{font-size:10px;font-weight:700}.insight-row .track{height:7px}.insight-row strong{font-size:11px;text-align:right}
+    .auth-side-foot{position:relative;z-index:1;font-size:11px;color:#D7E4FF;display:flex;align-items:center;gap:10px;margin-top:38px}.auth-side-foot i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+    .auth-main{display:flex;flex-direction:column;min-height:100vh;padding:36px clamp(28px,5.2vw,100px);background:linear-gradient(140deg,#fff 60%,#F7F9FF 100%)}
+    .auth-top{display:flex;align-items:center;justify-content:flex-end;gap:15px;font-size:13px;color:var(--muted);min-height:42px}.auth-top a{color:var(--primary);font-weight:800}.auth-top .top-home{display:flex;align-items:center;gap:7px;white-space:nowrap}.top-home svg{width:15px;height:15px}
+    .auth-content{width:min(100%,444px);margin:auto; padding:35px 0 55px}.auth-content .auth-kicker{font-size:11px;color:var(--secondary);letter-spacing:.13em;font-weight:850;text-transform:uppercase;margin:0 0 13px}
+    .auth-content h1{font-size:clamp(32px,2.8vw,43px);line-height:1.18;letter-spacing:-.06em;margin:0 0 12px}.auth-description{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:30px}
+    .field{margin:0 0 18px}.field-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:9px}.field label{font-size:12px;font-weight:780;color:#293154}.field-top button{font-size:12px;font-weight:700;color:var(--primary);background:none;border:none;padding:0}
+    .input-shell{position:relative}.input-shell input{width:100%;height:52px;border:1.5px solid #DCE3F2;border-radius:12px;background:#fff;padding:0 16px;color:var(--ink);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}.input-shell input::placeholder{color:#96A0B6}.input-shell input:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(2,7,202,.08)}
+    .input-shell.has-trailing input{padding-right:54px}.eye-toggle{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;background:none;border:0;color:#7A84A0;border-radius:8px}.eye-toggle:hover{background:#F2F5FE;color:var(--primary)}.eye-toggle svg{width:19px;height:19px}
+    .input-hint{font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5}.strength-row{display:flex;gap:5px;margin:10px 0 5px}.strength-segment{height:5px;background:#E8EAF2;border-radius:100px;flex:1}.strength-segment.active{background:var(--accent)}.strength-row[data-level="2"] .strength-segment.active{background:var(--secondary)}.strength-row[data-level="3"] .strength-segment.active{background:#149C8B}
+    .auth-submit{width:100%;height:54px;margin-top:8px}.auth-switch{text-align:center;font-size:13px;color:var(--muted);margin:23px 0 0}.auth-switch a{font-weight:800;color:var(--primary)}.auth-disclaimer{color:#9099AF;font-size:11px;text-align:center;margin:25px 0 0;line-height:1.6}
+    .auth-bottom{font-size:11px;color:#9AA3B7;text-align:center;margin-top:auto}
+    .form-feedback{margin:14px 0 0;padding:13px 14px;border-radius:11px;font-size:12px;line-height:1.6;border:1px solid #B8DCF4;background:#EDF8FF;color:#22446A;display:none}.form-feedback.visible{display:block}.form-feedback.error{border-color:#FFB7A8;background:#FFF1ED;color:#8B3522}
+    .auth-mobile-brand{display:none}
+    .notice{position:fixed;z-index:50;bottom:25px;left:50%;transform:translate(-50%,120px);background:var(--ink);color:#fff;padding:14px 20px;min-width:260px;text-align:center;font-size:12px;font-weight:650;box-shadow:0 15px 40px rgba(0,0,0,.2);border-radius:12px;transition:transform .25s}.notice.show{transform:translate(-50%,0)}
+    @media(max-width:1120px){.hero-grid{gap:30px}.float-left{left:-12px}.float-right{right:-7px}.dash-main{grid-template-columns:132px 1fr;gap:16px}.score-outer{height:130px;width:130px}.score-outer::before{inset:14px}.score-inner strong{font-size:37px}}
+    @media(max-width:960px){.container{width:min(100% - 42px,760px)}.header-links{display:none}.header-inner{min-height:76px}.hero{padding:60px 0 88px}.hero-grid{grid-template-columns:1fr;gap:38px}.hero h1{max-width:720px}.hero-copy{max-width:630px}.preview-stage{width:min(100%,550px);margin:auto}.float-left{left:-24px}.section{padding:80px 0}.auth-page{grid-template-columns:1fr}.auth-side{min-height:0;padding:27px 32px 32px}.auth-story{margin-top:32px;max-width:none}.auth-story h2{font-size:30px;max-width:680px}.auth-story>p{margin:10px 0 0;max-width:640px}.auth-insight,.auth-side-foot{display:none}.auth-main{min-height:calc(100vh - 260px);padding:20px 32px 30px}.auth-top{display:none}.auth-content{padding:46px 0 58px;max-width:460px}.auth-side::before{width:300px;height:300px;left:auto;right:-50px;bottom:-230px}}
+    @media(max-width:700px){.container{width:calc(100% - 36px)}.header-actions .login-link{display:none}.mobile-cta{display:inline-flex}.header-actions .btn{min-height:40px;padding:0 14px;font-size:12px}.header-inner{min-height:72px}.brand-mark{width:40px;height:40px;font-size:22px;border-radius:13px}.brand-name{font-size:20px}.brand-sub{font-size:8px}.hero{padding:49px 0 76px}.hero h1{font-size:clamp(37px,8.4vw,52px);margin:19px 0 23px}.hero-copy{font-size:14px;line-height:1.75}.hero-actions .btn{flex:1;min-width:0;padding:0 13px;font-size:12px}.hero-proof{font-size:11px;margin-top:24px}.dashboard-preview{padding:18px}.preview-stage{padding:10px 10px 15px 0}.dash-main{grid-template-columns:125px 1fr;gap:14px}.score-outer{height:121px;width:121px}.score-outer::before{inset:14px}.score-inner strong{font-size:35px}.dash-note{font-size:10px}.dash-title{font-size:15px}.metric{margin-bottom:14px}.metric-head{font-size:10px}.float-label{display:none}.section{padding:69px 0}.section h2{font-size:30px}.steps,.dimension-grid{grid-template-columns:1fr;gap:13px;margin-top:26px}.step,.dimension{padding:24px}.step-number{margin-bottom:18px}.cta-section{padding:25px 0 65px}.cta-banner{padding:35px 25px;flex-direction:column;align-items:stretch;border-radius:22px}.cta-banner h2{font-size:29px}.cta-banner .btn{align-self:flex-start}.footer-inner{align-items:flex-start;flex-direction:column;gap:15px}.auth-side{padding:24px 22px 28px}.auth-story{margin-top:29px}.auth-story h2{font-size:29px}.auth-story>p{font-size:12px;line-height:1.6}.auth-main{padding:0 22px 25px;min-height:calc(100vh - 240px)}.auth-content{padding:40px 0 50px}.auth-content h1{font-size:31px}.auth-description{margin-bottom:27px}.auth-page{min-height:100vh}}
+    @media(max-width:370px){.dash-main{grid-template-columns:1fr}.dash-main .score-block{display:none}.hero-actions{flex-direction:column}.hero-actions .btn{width:100%}.header-actions .btn{font-size:11px;padding:0 10px}.auth-side .brand-name{font-size:19px}}
+    /* Di mobile, badge tetap terlihat dan dianimasikan dalam baris rapi di bawah kartu. */
+    @media(max-width:700px){
+      .preview-stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .dashboard-preview{grid-column:1/-1}
+      .preview-stage .float-label{display:flex;position:relative;inset:auto;justify-content:center;gap:7px;min-width:0;padding:9px 7px;border-radius:12px;font-size:9px;white-space:nowrap}
+      .preview-stage .bubble{width:25px;height:25px;flex-shrink:0}
+      .preview-stage .float-label svg{width:15px;height:15px}
+    }
+
+    /* ==========================================
+       JOYUMKM / Editorial gradient cards V2
+       Arah visual: referensi kartu gradient editorial
+       dengan palet brand utama #0207CA, #0297DE, #FC734D.
+       ========================================== */
+    .editorial-section{position:relative;overflow:hidden;padding:108px 0 100px}
+    .workflow-section{background:#F6F8FE}
+    .dimensions-section.editorial-section{background:#FFFFFF}
+    .editorial-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:54px;margin-bottom:33px}
+    .editorial-heading-main{max-width:710px;min-width:0}
+    .editorial-heading .kicker{display:flex;gap:12px;align-items:center;font-size:11px;margin:0 0 17px;letter-spacing:.16em}
+    .kicker-rule{width:33px;height:1px;background:currentColor;opacity:.5}
+    .editorial-section h2{font-size:clamp(36px,3.8vw,58px);line-height:1.1;font-weight:850;letter-spacing:-.063em;margin:0;max-width:750px}
+    .heading-accent{color:var(--primary)}
+    .editorial-intro{font-size:14px;line-height:1.9;color:var(--muted);max-width:355px;margin:0 0 4px;flex:0 0 31%}
+    .editorial-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px;margin-top:0}
+    .editorial-grid .editorial-card{min-width:0;min-height:426px;display:flex;flex-direction:column;position:relative;isolation:isolate;overflow:hidden;padding:26px;border:1px solid rgba(255,255,255,.18);border-radius:23px;box-shadow:0 12px 34px rgba(12,23,78,.075);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s cubic-bezier(.2,.8,.2,1);background-image:none}
+    .editorial-card:hover{transform:translateY(-7px);box-shadow:0 22px 44px rgba(10,25,88,.17)}
+    .editorial-card:focus-within{outline:3px solid #0297DE;outline-offset:4px}
+    .editorial-card::before,.editorial-card::after{content:none}
+    .editorial-card .card-grain{position:absolute;inset:0;z-index:0;opacity:.4;pointer-events:none;background:radial-gradient(circle at 1px 1px,rgba(255,255,255,.13) .8px,transparent 1px);background-size:5px 5px;mix-blend-mode:soft-light}
+    .editorial-card .card-top{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .editorial-card .card-index{display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border-radius:100px;border:1px solid currentColor;font-size:11px;letter-spacing:.1em;font-weight:850;line-height:1.2;white-space:nowrap;background:rgba(255,255,255,.1);color:inherit}
+    .editorial-card .index-separator{opacity:.5}
+    .editorial-card .card-top-star{font-size:23px;line-height:1;font-weight:400;opacity:.88}
+    .editorial-card .card-top-symbol{width:37px;height:37px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.55);border-radius:50%;background:rgba(255,255,255,.12)}
+    .editorial-card .card-top-symbol svg{width:19px;height:19px}
+    .editorial-card .art{position:absolute;z-index:1;pointer-events:none;inset:40px 0 104px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+    .editorial-card:hover .art{transform:translateY(-6px) scale(1.04)}
+    .editorial-card .card-copy{position:relative;z-index:3;max-width:88%;margin-top:auto;padding-top:200px}
+    .editorial-card .card-overline{display:block;margin-bottom:9px;font-size:10px;letter-spacing:.115em;line-height:1.2;font-weight:850;opacity:.82}
+    .editorial-card h3{font-size:clamp(23px,2.05vw,31px);letter-spacing:-.052em;line-height:1.08;margin:0 0 13px;color:inherit;font-weight:850}
+    .editorial-card .copy-dot{color:inherit}
+    .editorial-card p{font-size:12px;line-height:1.68;margin:0;color:inherit;opacity:.91;max-width:290px}
+    .editorial-card .round-link{position:absolute;z-index:5;right:22px;bottom:22px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.95);color:#0207CA;box-shadow:0 8px 20px rgba(10,20,70,.12);transition:transform .2s,background .2s}
+    .editorial-card .round-link:hover{transform:translate(2px,-2px);background:#fff}
+    .editorial-card .round-link svg{width:21px;height:21px;transform:rotate(-45deg)}
+    .editorial-endnote{display:flex;gap:9px;align-items:center;margin-top:24px;font-size:11px;font-weight:570;color:#717D99}
+    .small-spark{font-size:16px;color:var(--accent)}
+
+    /* Alur 01 — peach/cantaloupe orbital object */
+    .workflow-card.tone-peach{color:#1A2250;background:linear-gradient(145deg,#FFE6D7 0%,#FFBEA6 43%,#FC734D 115%)}
+    .tone-peach .card-index{color:#873B2C;background:rgba(255,255,255,.27);border-color:rgba(135,59,44,.23)}
+    .art-planet{filter:drop-shadow(2px 19px 24px rgba(178,77,65,.22))}
+    .planet-core{position:absolute;width:158px;height:158px;border-radius:50%;top:32px;left:50%;transform:translateX(-50%) rotate(-26deg);background:radial-gradient(circle at 31% 27%,#FFF0D5 0%,#FFB584 36%,#FC734D 68%,#CD4A64 100%);box-shadow:inset -16px -17px 26px rgba(142,51,69,.2),inset 13px 12px 21px rgba(255,255,255,.34),0 19px 30px rgba(151,79,80,.2)}
+    .planet-core::before{content:"";position:absolute;inset:23px 10px auto 20px;height:29px;border:2px solid rgba(255,255,255,.26);border-left:0;border-right:0;border-radius:50%;transform:rotate(-15deg)}
+    .orbit{position:absolute;left:50%;top:93px;width:278px;height:83px;border:11px solid rgba(255,255,255,.67);border-left-color:rgba(251,176,133,.7);border-bottom-color:rgba(249,131,116,.78);border-radius:50%;transform:translateX(-50%) rotate(-27deg);z-index:2;box-shadow:0 3px 9px rgba(157,85,77,.09)}
+    .orbit-b{top:98px;width:308px;height:99px;border:2px solid rgba(255,255,255,.5);box-shadow:none;z-index:0}
+    .planet-star{position:absolute;color:#FFF4EC;z-index:3;font-size:25px}.planet-star-a{top:34px;left:20%}.planet-star-b{top:166px;right:17%;font-size:32px}
+
+    /* Alur 02 — floating glass assessment */
+    .workflow-card.tone-blue{color:#fff;background:linear-gradient(142deg,#0297DE 0%,#2169E8 45%,#0207CA 115%)}
+    .tone-blue .card-index{border-color:rgba(255,255,255,.48)}
+    .evaluation-glow{position:absolute;width:255px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(179,233,255,.86),rgba(255,255,255,.1) 55%,transparent 70%);left:50%;top:5px;transform:translateX(-50%);filter:blur(4px)}
+    .eval-tile{position:absolute;top:30px;left:50%;width:179px;height:157px;border:1px solid rgba(255,255,255,.68);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.74),rgba(177,231,255,.33));box-shadow:0 14px 25px rgba(0,10,85,.15),inset 1px 1px 4px rgba(255,255,255,.6)}
+    .tile-back{transform:translateX(-42%) rotate(16deg);opacity:.62}
+    .tile-front{transform:translateX(-54%) rotate(-9deg);padding:17px;backdrop-filter:blur(7px)}
+    .eval-icon{height:37px;width:37px;display:grid;place-items:center;border-radius:12px;color:#0207CA;background:rgba(255,255,255,.76)}.eval-icon svg{width:22px;height:22px}
+    .eval-line{display:block;height:7px;border-radius:30px;background:rgba(255,255,255,.7);margin-top:12px}.eval-line.long{width:85%}.eval-line.short{width:58%;margin-top:7px}
+    .eval-mini-bars{position:absolute;right:19px;bottom:17px;display:flex;align-items:end;gap:5px;height:45px}.eval-mini-bars i{display:block;width:10px;border-radius:6px 6px 3px 3px;background:#0207CA;opacity:.8}.eval-mini-bars i:nth-child(1){height:20px}.eval-mini-bars i:nth-child(2){height:30px;background:#0297DE}.eval-mini-bars i:nth-child(3){height:39px}.eval-mini-bars i:nth-child(4){height:27px;background:#FC734D}
+    .eval-spark{position:absolute;color:rgba(255,255,255,.95);font-size:43px;top:15px;right:14%}
+
+    /* Alur 03 — bold dark chart disks */
+    .workflow-card.tone-royal{color:#fff;background:radial-gradient(ellipse at 82% 19%,#1479F4 0%,transparent 43%),linear-gradient(140deg,#090BC1 0%,#0207CA 44%,#06105E 120%)}
+    .tone-royal .card-index{border-color:rgba(255,255,255,.42)}
+    .insight-aura{position:absolute;width:260px;height:220px;left:50%;top:8px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(2,151,222,.68),transparent 70%);filter:blur(15px)}
+    .insight-disc{position:absolute;border-radius:50%;left:50%;top:39px;width:170px;height:170px;transform:translateX(-50%);box-shadow:0 14px 30px rgba(0,0,20,.28)}
+    .disc-back{transform:translateX(-37%) translate(29px,-15px);background:linear-gradient(135deg,#6EDAFF,#0297DE);opacity:.72}
+    .disc-mid{transform:translateX(-50%) translate(-10px,5px);background:linear-gradient(140deg,#FC734D,#F7C8B9);opacity:.85}
+    .disc-front{transform:translateX(-50%) scale(.77);background:linear-gradient(135deg,#0207CA,#0297DE);border:3px solid rgba(255,255,255,.8);display:grid;place-items:center}
+    .disc-front svg{width:100px;height:100px;filter:drop-shadow(0 8px 7px rgba(0,0,0,.14))}
+    .insight-twink{position:absolute;right:16%;top:23px;color:#FCB39F;font-size:38px}
+
+    /* Dimensi — independent abstract illustration for each brand tone */
+    .dimension-card.dimension-ins{color:#fff;background:linear-gradient(152deg,#0207CA 4%,#253FE5 57%,#0297DE 130%)}
+    .dimension-card.dimension-ect{color:#08205D;background:linear-gradient(143deg,#DDF7FF 0%,#86D5F6 48%,#0297DE 120%)}
+    .dimension-card.dimension-ops{color:#441F31;background:linear-gradient(144deg,#FFF1E7 0%,#FFBFA7 42%,#FC734D 115%)}
+    .dimension-ect .card-index,.dimension-ops .card-index{background:rgba(255,255,255,.22);border-color:rgba(12,51,93,.18)}
+    .dimension-ect .card-top-symbol,.dimension-ops .card-top-symbol{border-color:rgba(12,51,93,.2);background:rgba(255,255,255,.3)}
+    .dimension-ins .card-top-symbol{border-color:rgba(255,255,255,.48)}
+    .dimension-ins .art-resources .res-ring{position:absolute;left:50%;top:42px;border-radius:50%;transform:translateX(-50%);border:1px solid rgba(255,255,255,.44);width:160px;height:160px;box-shadow:0 0 0 25px rgba(255,255,255,.08),0 0 0 49px rgba(255,255,255,.06)}
+    .res-ring.ring-two{width:105px!important;height:105px!important;top:70px!important;box-shadow:none!important;border:12px solid rgba(124,223,255,.47)!important}
+    .res-ring.ring-three{width:184px!important;height:184px!important;top:28px!important;border:2px dashed rgba(255,255,255,.4)!important;box-shadow:none!important}
+    .res-center{position:absolute;top:91px;left:50%;transform:translateX(-50%);width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(120deg,#fff,#D9F9FF);color:#0207CA;box-shadow:0 12px 18px rgba(2,3,66,.23)}
+    .res-center svg{width:35px;height:35px}.res-spark{position:absolute;color:#fff;top:46px;right:16%;font-size:32px}
+    .connect-orbit{position:absolute;left:50%;top:75px;width:260px;height:114px;transform:translateX(-50%) rotate(-29deg);border:3px solid rgba(255,255,255,.73);border-radius:50%;box-shadow:0 0 15px rgba(255,255,255,.4)}
+    .connect-globe{position:absolute;top:26px;left:50%;transform:translateX(-50%) rotate(-13deg);width:180px;height:180px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 32% 29%,#fff 0%,#B6F0FF 29%,#0297DE 85%);color:rgba(2,7,202,.45);box-shadow:inset -14px -9px 19px rgba(2,7,202,.19),0 21px 28px rgba(2,112,190,.23)}
+    .connect-globe svg{width:160px;height:160px}
+    .connect-point{position:absolute;display:block;width:15px;height:15px;border:4px solid #fff;background:#FC734D;border-radius:50%;box-shadow:0 3px 9px rgba(9,50,142,.2)}
+    .point-1{left:20%;top:102px}.point-2{right:18%;top:66px}.point-3{right:26%;top:181px;width:11px;height:11px;border-width:3px}
+    .art-operation{filter:drop-shadow(0 12px 13px rgba(182,78,71,.13))}
+    .operation-loop{position:absolute;left:50%;top:34px;width:175px;height:175px;border-radius:46%;border:20px solid rgba(255,255,255,.67);border-left-color:rgba(252,115,77,.44);border-bottom-color:#FC734D;transform:translateX(-50%) rotate(30deg);box-shadow:inset 0 0 18px rgba(255,255,255,.27)}
+    .operation-loop.loop-small{width:121px;height:121px;top:61px;border-width:13px;border-color:rgba(255,255,255,.5);border-bottom-color:rgba(2,7,202,.5);transform:translateX(-50%) rotate(-22deg)}
+    .operation-bars{display:flex;align-items:end;gap:7px;height:80px;position:absolute;top:90px;left:50%;transform:translateX(-50%) rotate(-3deg)}
+    .operation-bars i{width:13px;border-radius:7px 7px 3px 3px;background:#0207CA}.operation-bars i:nth-child(1){height:32px;opacity:.44}.operation-bars i:nth-child(2){height:52px;opacity:.62}.operation-bars i:nth-child(3){height:75px}.operation-bars i:nth-child(4){height:45px;background:#0297DE}.operation-bars i:nth-child(5){height:65px;background:#FC734D}
+    .operation-star{position:absolute;top:34px;right:15%;font-size:39px;color:#fff}
+    .dimension-ops .round-link,.dimension-ect .round-link{color:#0207CA}
+    .dimension-card p{opacity:.91}
+
+    @media(max-width:1060px){
+      .editorial-section{padding:85px 0}
+      .editorial-heading{gap:24px}
+      .editorial-intro{flex-basis:35%}
+      .editorial-grid{gap:12px}
+      .editorial-grid .editorial-card{min-height:416px;padding:20px;border-radius:21px}
+      .editorial-card .card-copy{max-width:94%}
+      .editorial-card .round-link{right:18px;bottom:18px;width:39px;height:39px}
+      .editorial-card h3{font-size:25px}
+      .editorial-card p{font-size:11.5px;max-width:235px}
+    }
+    @media(min-width:761px) and (max-width:1060px){
+      .editorial-grid .editorial-card{min-height:446px}
+      .editorial-card .card-copy{padding-right:28px}
+    }
+    @media(max-width:760px){
+      .editorial-section{padding:74px 0 70px}
+      .editorial-heading{display:block;margin-bottom:27px}
+      .editorial-section h2{font-size:clamp(32px,7.1vw,48px)}
+      .editorial-intro{margin:19px 0 0;max-width:650px;font-size:13px}
+      .editorial-grid.steps,.editorial-grid.dimension-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:0}
+      .editorial-grid .editorial-card{min-height:402px;padding:20px}
+      .editorial-grid .editorial-card:last-child:nth-child(odd){grid-column:1/-1;min-height:380px}
+      .editorial-grid .editorial-card:last-child:nth-child(odd) .art{left:auto;width:50%;right:0}
+      .editorial-grid .editorial-card:last-child:nth-child(odd) .card-copy{max-width:53%}
+      .editorial-card .card-copy{padding-top:190px}
+      .editorial-card p{font-size:12px}
+    }
+    @media(max-width:520px){
+      .editorial-section{padding:67px 0}
+      .editorial-heading .kicker{font-size:10px;letter-spacing:.11em}
+      .editorial-section h2{font-size:clamp(32px,9vw,42px)}
+      .editorial-intro{font-size:13px;line-height:1.75;margin-top:15px}
+      .editorial-grid.steps,.editorial-grid.dimension-grid{grid-template-columns:1fr;gap:14px}
+      .editorial-grid .editorial-card,.editorial-grid .editorial-card:last-child:nth-child(odd){grid-column:auto;min-height:410px;padding:25px;border-radius:23px}
+      .editorial-grid .editorial-card:last-child:nth-child(odd) .art{left:0;right:0;width:auto}
+      .editorial-grid .editorial-card:last-child:nth-child(odd) .card-copy{max-width:88%}
+      .editorial-card .card-copy{padding-top:190px}
+      .editorial-card h3{font-size:30px}
+      .editorial-card p{font-size:12px;max-width:320px}
+      .editorial-endnote{font-size:10px;line-height:1.7}
+    }
+    @media(prefers-reduced-motion:reduce){.editorial-card:hover,.editorial-card:hover .art{transform:none!important}}
+
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5m6 6-6-6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19h16M6.5 15v-4m5 4V6m5 9V9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m8 12 3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3 21 21M10 5.2A11 11 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.1 3.7M6.2 6.3C3.5 8.3 2 12 2 12s4 7 10 7c1.3 0 2.5-.3 3.6-.8M9.8 9.8a3.2 3.2 0 0 0 4.4 4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 20v-2a6 6 0 0 1 12 0v2H3Zm14-15a3 3 0 0 1 0 6m0 3a5 5 0 0 1 4 5v1h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  </svg>
+
+  <main class="page" id="home-page" data-page="home">
+    <header class="header"><div class="container header-inner">
+      <a href="#/home" class="brand" aria-label="JoyUMKM, beranda"><span class="brand-mark">J</span><span><strong class="brand-name">JoyUMKM</strong><span class="brand-sub">UMKM Health Dashboard</span></span></a>
+      <nav class="header-links" aria-label="Navigasi utama"><button type="button" data-scroll="cara-kerja">Cara Kerja</button><button type="button" data-scroll="dimensi">Tiga Dimensi</button></nav>
+      <div class="header-actions"><a class="login-link" href="#/login" style="color:var(--primary);font-size:13px;font-weight:750;padding:11px">Masuk</a><a class="btn btn-primary" href="#/register">Daftar Akun <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+    </div></header>
+    <section class="hero"><div class="container hero-grid">
+      <div class="hero-text">
+        <div class="eyebrow"><i></i> Pendampingan UMKM lebih terarah</div>
+        <h1>Kenali kondisi usaha. <em>Tentukan langkah</em> berikutnya.</h1>
+        <p class="hero-copy">Kelola UMKM yang Anda dampingi, pahami kesehatan bisnis dari tiga sudut pandang, dan ubah hasil evaluasi menjadi prioritas yang lebih jelas.</p>
+        <div class="hero-actions"><a href="#/register" class="btn btn-primary">Mulai Mendampingi <svg aria-hidden="true"><use href="#i-arrow"/></svg></a><a href="#/login" class="btn btn-outline">Sudah punya akun? Masuk</a></div>
+        <div class="hero-proof"><span class="proof-icon"><svg aria-hidden="true"><use href="#i-shield"/></svg></span><span>Data pendampingan tersimpan di akun masing-masing.<br />Visualisasi dibuat untuk membantu memahami, bukan menggantikan penilaian pendamping.</span></div>
+      </div>
+      <div class="preview-stage" aria-label="Ilustrasi dashboard kesehatan UMKM">
+        <div class="dashboard-preview">
+          <div class="dash-top"><div><h2 class="dash-title">Ringkasan kesehatan usaha</h2><p class="dash-note">Tiga dimensi, satu pandangan</p></div><span class="tag-demo">Data ilustrasi</span></div>
+          <div class="dash-main">
+            <div class="score-block"><div class="score-outer"><div class="score-inner"><strong>74</strong><span>Skor contoh</span></div></div><div class="score-label">Gambaran keseluruhan</div></div>
+            <div class="metrics"><div class="metric"><div class="metric-head"><span>Sumber Daya · INS</span><span>78</span></div><div class="track"><div class="fill" style="width:78%"></div></div></div><div class="metric"><div class="metric-head"><span>Eksternal · ECT</span><span>62</span></div><div class="track"><div class="fill secondary" style="width:62%"></div></div></div><div class="metric"><div class="metric-head"><span>Operasional · OPS</span><span>86</span></div><div class="track"><div class="fill accent" style="width:86%"></div></div></div></div>
+          </div>
+          <div class="dash-bottom"><svg aria-hidden="true"><use href="#i-spark"/></svg><div><b>Lebih mudah melihat prioritas</b><span>Mulai dari dimensi yang membutuhkan perhatian.</span></div></div>
+        </div>
+        <div class="float-label float-left"><span class="bubble"><svg aria-hidden="true"><use href="#i-chart"/></svg></span> Hasil mudah dipahami</div>
+        <div class="float-label float-right"><span class="bubble"><svg aria-hidden="true"><use href="#i-check"/></svg></span> Terstruktur</div>
+      </div>
+    </div></section>
+    <!-- Editorial gradient panels | Alur Pendampingan -->
+    <section id="cara-kerja" class="section editorial-section workflow-section" aria-labelledby="workflow-heading">
+      <div class="container">
+        <div class="editorial-heading">
+          <div class="editorial-heading-main">
+            <p class="kicker">Alur pendampingan <span class="kicker-rule" aria-hidden="true"></span> 01 / 03</p>
+            <h2 id="workflow-heading">Pendampingan dimulai<br />dari <span class="heading-accent">pemahaman.</span></h2>
+          </div>
+          <p class="editorial-intro">Tidak perlu berpindah-pindah alat. Dari pencatatan UMKM sampai membaca hasil evaluasi, semuanya dalam satu alur kerja.</p>
+        </div>
+        <div class="editorial-grid steps">
+          <article class="step editorial-card workflow-card tone-peach">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">01 <span class="index-separator">/</span> PENCATATAN</span><span class="card-top-star" aria-hidden="true">✳</span></div>
+            <div class="art art-planet" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="planet-core"></div><span class="planet-star planet-star-a">✦</span><span class="planet-star planet-star-b">✧</span></div>
+            <div class="card-copy"><span class="card-overline">LANGKAH PERTAMA</span><h3>Catat UMKM<span class="copy-dot">.</span></h3><p>Buat data usaha yang Anda dampingi agar informasi dan riwayatnya tersusun rapi.</p></div>
+            <a class="round-link" href="#/register" aria-label="Mulai pendampingan dengan mencatat UMKM"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+          <article class="step editorial-card workflow-card tone-blue">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">02 <span class="index-separator">/</span> PENILAIAN</span><span class="card-top-star" aria-hidden="true">✦</span></div>
+            <div class="art art-evaluation" aria-hidden="true"><div class="evaluation-glow"></div><div class="eval-tile tile-back"></div><div class="eval-tile tile-front"><div class="eval-icon"><svg><use href="#i-chart" /></svg></div><span class="eval-line long"></span><span class="eval-line short"></span><div class="eval-mini-bars"><i></i><i></i><i></i><i></i></div></div><span class="eval-spark">✳</span></div>
+            <div class="card-copy"><span class="card-overline">LANGKAH KEDUA</span><h3>Isi evaluasi<span class="copy-dot">.</span></h3><p>Jawab kuesioner berdasarkan kondisi nyata bisnis dari tiga dimensi penilaian.</p></div>
+            <a class="round-link" href="#/register" aria-label="Mulai pendampingan dengan mengisi evaluasi"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+          <article class="step editorial-card workflow-card tone-royal">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">03 <span class="index-separator">/</span> PEMAHAMAN</span><span class="card-top-star" aria-hidden="true">✳</span></div>
+            <div class="art art-insight" aria-hidden="true"><div class="insight-aura"></div><div class="insight-disc disc-back"></div><div class="insight-disc disc-mid"></div><div class="insight-disc disc-front"><svg viewBox="0 0 110 110"><path d="M20 72 42 49 60 60 89 26" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M73 26h16v16" fill="none" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="insight-twink">✦</span></div>
+            <div class="card-copy"><span class="card-overline">LANGKAH KETIGA</span><h3>Pahami prioritas<span class="copy-dot">.</span></h3><p>Baca ringkasan dan visualisasi untuk menentukan fokus pendampingan berikutnya.</p></div>
+            <a class="round-link" href="#/register" aria-label="Daftar untuk memahami prioritas pendampingan"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+        </div>
+        <div class="editorial-endnote"><span class="small-spark" aria-hidden="true">✳</span> Satu alur yang membantu Anda bergerak dari data menuju keputusan pendampingan.</div>
+      </div>
+    </section>
+    <!-- Editorial gradient panels | Tiga Sudut Pandang -->
+    <section id="dimensi" class="section editorial-section dimensions-section" aria-labelledby="dimensions-heading">
+      <div class="container">
+        <div class="editorial-heading">
+          <div class="editorial-heading-main">
+            <p class="kicker">Tiga sudut pandang <span class="kicker-rule" aria-hidden="true"></span> INS / ECT / OPS</p>
+            <h2 id="dimensions-heading">Satu usaha, dilihat<br /><span class="heading-accent">lebih menyeluruh.</span></h2>
+          </div>
+          <p class="editorial-intro">Ketiga dimensi memberi konteks yang saling melengkapi, bukan sekadar angka tanpa penjelasan.</p>
+        </div>
+        <div class="editorial-grid dimension-grid">
+          <article class="dimension editorial-card dimension-card dimension-ins">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">INS <span class="index-separator">/</span> 01</span><span class="card-top-symbol"><svg aria-hidden="true"><use href="#i-users" /></svg></span></div>
+            <div class="art art-resources" aria-hidden="true"><div class="res-ring ring-one"></div><div class="res-ring ring-two"></div><div class="res-ring ring-three"></div><div class="res-center"><svg><use href="#i-users" /></svg></div><span class="res-spark">✦</span></div>
+            <div class="card-copy"><span class="card-overline">INSTITUTIONAL RESOURCES</span><h3>Sumber Daya<span class="copy-dot">.</span></h3><p>Melihat sumber daya dan kapasitas internal usaha yang mendukung keberlanjutan bisnis.</p></div>
+            <a class="round-link" href="#/register" aria-label="Daftar untuk mengevaluasi dimensi Sumber Daya"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+          <article class="dimension editorial-card dimension-card dimension-ect">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">ECT <span class="index-separator">/</span> 02</span><span class="card-top-symbol"><svg aria-hidden="true"><use href="#i-globe" /></svg></span></div>
+            <div class="art art-connect" aria-hidden="true"><div class="connect-orbit"></div><div class="connect-globe"><svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="60" fill="none" stroke="currentColor" stroke-width="2"/><ellipse cx="80" cy="80" rx="28" ry="60" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 80h120M31 50h98M31 110h98" fill="none" stroke="currentColor" stroke-width="2"/></svg></div><span class="connect-point point-1"></span><span class="connect-point point-2"></span><span class="connect-point point-3"></span></div>
+            <div class="card-copy"><span class="card-overline">ECONOMIC CONNECTIVITY</span><h3>Eksternal<span class="copy-dot">.</span></h3><p>Memahami hubungan usaha dengan pasar, pelanggan, dan lingkungan ekonominya.</p></div>
+            <a class="round-link" href="#/register" aria-label="Daftar untuk mengevaluasi dimensi Eksternal"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+          <article class="dimension editorial-card dimension-card dimension-ops">
+            <div class="card-grain" aria-hidden="true"></div>
+            <div class="card-top"><span class="card-index">OPS <span class="index-separator">/</span> 03</span><span class="card-top-symbol"><svg aria-hidden="true"><use href="#i-chart" /></svg></span></div>
+            <div class="art art-operation" aria-hidden="true"><div class="operation-loop"></div><div class="operation-loop loop-small"></div><div class="operation-bars"><i></i><i></i><i></i><i></i><i></i></div><span class="operation-star">✳</span></div>
+            <div class="card-copy"><span class="card-overline">OPERATIONAL STABILITY</span><h3>Operasional<span class="copy-dot">.</span></h3><p>Melihat stabilitas kegiatan operasional dalam menjalankan usaha sehari-hari.</p></div>
+            <a class="round-link" href="#/register" aria-label="Daftar untuk mengevaluasi dimensi Operasional"><svg aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          </article>
+        </div>
+        <div class="editorial-endnote"><span class="small-spark" aria-hidden="true">✳</span> Tiga dimensi yang saling melengkapi untuk memahami konteks setiap usaha.</div>
+      </div>
+    </section>
+    <section class="cta-section"><div class="container"><div class="cta-banner"><div><h2>Mulai pahami usaha yang Anda dampingi hari ini.</h2><p>Buat akun JoyUMKM, catat UMKM, dan mulai evaluasi secara terstruktur.</p></div><a href="#/register" class="btn btn-white">Daftar Sekarang <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div></section>
+    <footer class="footer"><div class="container footer-inner"><span>© 2026 JoyUMKM · UMKM Health Dashboard</span><div class="footer-links"><span>Indikator evaluasi berbasis jawaban kuesioner, bukan diagnosis finansial tervalidasi.</span></div></div></footer>
+  </main>
+
+  <main class="page auth-page" id="login-page" data-page="login" hidden>
+    <aside class="auth-side">
+      <a class="brand brand-light" href="#/home" aria-label="JoyUMKM, beranda"><span class="brand-mark">J</span><span><strong class="brand-name">JoyUMKM</strong><span class="brand-sub">UMKM Health Dashboard</span></span></a>
+      <div class="auth-story"><span class="story-kicker">RUANG KERJA PENDAMPING UMKM</span><h2>Pahami usahanya.<br />Dampingi langkahnya.</h2><p>Akses data, evaluasi, dan insight UMKM dampingan Anda dalam satu dashboard yang terarah.</p>
+        <div class="auth-insight" aria-label="Ilustrasi skor dimensi"><div class="insight-header"><b>Gambaran tiga dimensi</b><span>Ilustrasi</span></div><div class="insight-row"><span>Sumber Daya</span><div class="track"><div class="fill" style="width:78%"></div></div><strong>78</strong></div><div class="insight-row"><span>Eksternal</span><div class="track"><div class="fill secondary" style="width:62%"></div></div><strong>62</strong></div><div class="insight-row"><span>Operasional</span><div class="track"><div class="fill accent" style="width:86%"></div></div><strong>86</strong></div></div>
+      </div>
+      <div class="auth-side-foot"><i></i> Sumber Daya · Eksternal · Operasional</div>
+    </aside>
+    <div class="auth-main"><div class="auth-top"><a class="top-home" href="#/home"><svg aria-hidden="true"><use href="#i-back"/></svg> Kembali ke beranda</a></div>
+      <div class="auth-content"><p class="auth-kicker">Selamat datang kembali</p><h1>Masuk ke JoyUMKM.</h1><p class="auth-description">Lanjutkan pendampingan dan pantau perkembangan UMKM Anda.</p>
+        <form id="login-form" novalidate>
+          <div class="field"><div class="field-top"><label for="login-email">Alamat email</label></div><div class="input-shell"><input type="email" id="login-email" name="email" placeholder="nama@contoh.id" autocomplete="email" maxlength="254" required /></div></div>
+          <div class="field"><div class="field-top"><label for="login-password">Kata sandi</label><button type="button" data-notice="Fitur lupa kata sandi memerlukan integrasi backend.">Lupa kata sandi?</button></div><div class="input-shell has-trailing"><input type="password" id="login-password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required /><button type="button" class="eye-toggle" data-eye="login-password" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div></div>
+          <button type="submit" class="btn btn-primary auth-submit">Masuk <svg aria-hidden="true"><use href="#i-arrow"/></svg></button><div id="login-feedback" class="form-feedback" role="status" aria-live="polite"></div>
+        </form>
+        <p class="auth-switch">Belum punya akun? <a href="#/register">Daftar sekarang</a></p><p class="auth-disclaimer">Data akun dan proses autentikasi memerlukan koneksi ke backend.</p>
+      </div><div class="auth-bottom">© 2026 JoyUMKM</div>
+    </div>
+  </main>
+
+  <main class="page auth-page" id="register-page" data-page="register" hidden>
+    <aside class="auth-side">
+      <a class="brand brand-light" href="#/home" aria-label="JoyUMKM, beranda"><span class="brand-mark">J</span><span><strong class="brand-name">JoyUMKM</strong><span class="brand-sub">UMKM Health Dashboard</span></span></a>
+      <div class="auth-story"><span class="story-kicker">MULAI DARI PEMAHAMAN</span><h2>Langkah kecil.<br />Dampak lebih berarti.</h2><p>Bangun ruang kerja pendampingan yang rapi. Kenali kondisi setiap UMKM dan temukan fokus tindakan berikutnya.</p>
+        <div class="auth-insight"><div class="insight-header"><b>Alur pendampingan</b><span>3 langkah</span></div><div class="insight-row"><span>Catat usaha</span><div class="track"><div class="fill" style="width:100%"></div></div><strong>01</strong></div><div class="insight-row"><span>Isi evaluasi</span><div class="track"><div class="fill secondary" style="width:76%"></div></div><strong>02</strong></div><div class="insight-row"><span>Baca insight</span><div class="track"><div class="fill accent" style="width:54%"></div></div><strong>03</strong></div></div>
+      </div>
+      <div class="auth-side-foot"><i></i> Satu akun untuk seluruh UMKM dampingan Anda</div>
+    </aside>
+    <div class="auth-main"><div class="auth-top"><a class="top-home" href="#/home"><svg aria-hidden="true"><use href="#i-back"/></svg> Kembali ke beranda</a></div>
+      <div class="auth-content"><p class="auth-kicker">Bergabung dengan JoyUMKM</p><h1>Mulai pendampingan.</h1><p class="auth-description">Buat akun pendamping untuk mengelola data dan evaluasi UMKM dalam satu tempat.</p>
+        <form id="register-form" novalidate>
+          <div class="field"><div class="field-top"><label for="register-name">Nama lengkap</label></div><div class="input-shell"><input type="text" id="register-name" name="name" placeholder="Nama pendamping" autocomplete="name" minlength="2" maxlength="100" required /></div></div>
+          <div class="field"><div class="field-top"><label for="register-email">Alamat email</label></div><div class="input-shell"><input type="email" id="register-email" name="email" placeholder="nama@contoh.id" autocomplete="email" maxlength="254" required /></div></div>
+          <div class="field"><div class="field-top"><label for="register-password">Kata sandi</label></div><div class="input-shell has-trailing"><input type="password" id="register-password" name="password" placeholder="Minimal 8 karakter" autocomplete="new-password" minlength="8" maxlength="72" required /><button type="button" class="eye-toggle" data-eye="register-password" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div><div class="strength-row" id="password-strength" data-level="0" aria-label="Indikator kekuatan kata sandi"><span class="strength-segment"></span><span class="strength-segment"></span><span class="strength-segment"></span></div><p class="input-hint" id="password-strength-label">Gunakan minimal 8 karakter (maksimal 72 karakter).</p></div>
+          <div class="field"><div class="field-top"><label for="register-confirm">Konfirmasi kata sandi</label></div><div class="input-shell has-trailing"><input type="password" id="register-confirm" name="password_confirmation" placeholder="Ulangi kata sandi" autocomplete="new-password" required /><button type="button" class="eye-toggle" data-eye="register-confirm" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div></div>
+          <button type="submit" class="btn btn-primary auth-submit">Daftar dan Mulai <svg aria-hidden="true"><use href="#i-arrow"/></svg></button><div id="register-feedback" class="form-feedback" role="status" aria-live="polite"></div>
+        </form>
+        <p class="auth-switch">Sudah punya akun? <a href="#/login">Masuk</a></p><p class="auth-disclaimer">Pendaftaran akun membutuhkan koneksi ke backend agar data tersimpan.</p>
+      </div><div class="auth-bottom">© 2026 JoyUMKM</div>
+    </div>
+  </main>
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const known = new Set(['home','login','register']);
+      const pages = document.querySelectorAll('[data-page]');
+      // Animasi dimainkan saat preview masuk viewport (desktop maupun mobile),
+      // dan dapat diputar ulang saat kembali dari halaman login/register.
+      const previewStage = document.querySelector('.preview-stage');
+      const dashboardPreview = previewStage?.querySelector('.dashboard-preview');
+      const floatingLabels = previewStage?.querySelectorAll('.float-label') || [];
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let previewObserver;
+      function replayPreviewMotion(){
+        if(!previewStage || reducedMotion.matches || document.querySelector('[data-page="home"]').hidden) return;
+        dashboardPreview.classList.remove('animate__animated','animate__fadeInUp');
+        floatingLabels.forEach(label => label.classList.remove('motion-rotate'));
+        void previewStage.offsetWidth; // restart CSS keyframes without recreating the page
+        dashboardPreview.classList.add('animate__animated','animate__fadeInUp');
+        floatingLabels.forEach(label => label.classList.add('motion-rotate'));
+      }
+      function schedulePreviewMotion(){
+        previewObserver?.disconnect();
+        if(reducedMotion.matches || !previewStage) return;
+        if(!('IntersectionObserver' in window)){
+          requestAnimationFrame(replayPreviewMotion);
+          return;
+        }
+        previewObserver = new IntersectionObserver(entries => {
+          if(entries.some(entry => entry.isIntersecting)){
+            replayPreviewMotion();
+            previewObserver.disconnect();
+          }
+        }, {threshold:.18});
+        previewObserver.observe(previewStage);
+      }
+      function navigate(){
+        const route = location.hash.replace(/^#\/?/, '').split(/[?#]/)[0] || 'home';
+        const name = known.has(route) ? route : 'home';
+        pages.forEach(page => {page.hidden = page.dataset.page !== name;});
+        document.title = (name === 'home' ? 'JoyUMKM — Kenali Kondisi Usaha' : name === 'login' ? 'Masuk — JoyUMKM' : 'Daftar Akun — JoyUMKM');
+        window.scrollTo({top:0,behavior:'instant'});
+        if(name === 'home') schedulePreviewMotion();
+        else previewObserver?.disconnect();
+      }
+      window.addEventListener('hashchange',navigate);navigate();
+      document.querySelectorAll('[data-scroll]').forEach(btn=>btn.addEventListener('click',()=>document.getElementById(btn.dataset.scroll)?.scrollIntoView({behavior:'smooth'})));
+      document.querySelectorAll('[data-eye]').forEach(btn=>btn.addEventListener('click',()=>{
+        const input=document.getElementById(btn.dataset.eye); const showing=input.type==='password';
+        input.type=showing?'text':'password'; btn.setAttribute('aria-pressed',String(showing));btn.setAttribute('aria-label',showing?'Sembunyikan kata sandi':'Tampilkan kata sandi');
+        btn.querySelector('use')?.setAttribute('href',showing?'#i-eye-off':'#i-eye');
+      }));
+      const notice=document.getElementById('notice');let noticeTimer;
+      function showNotice(msg){notice.textContent=msg;notice.classList.add('show');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.classList.remove('show'),4100)}
+      document.querySelectorAll('[data-notice]').forEach(button=>button.addEventListener('click',()=>showNotice(button.dataset.notice)));
+      function feedback(id,message,isError=false){const el=document.getElementById(id);el.textContent=message;el.classList.add('visible');el.classList.toggle('error',isError)}
+      document.getElementById('login-form').addEventListener('submit',e=>{
+        e.preventDefault();const form=e.currentTarget;
+        if(!form.checkValidity()){form.reportValidity();feedback('login-feedback','Isi email dan kata sandi yang valid untuk melanjutkan.',true);return}
+        feedback('login-feedback','Validasi tampilan berhasil. Ini prototipe UI; login asli belum terhubung ke backend JoyUMKM.');
+      });
+      const password=document.getElementById('register-password');
+      password.addEventListener('input',()=>{
+        const val=password.value;let level=0;
+        if(val.length>=8)level=1;
+        if(level&&(/[A-Z]/.test(val)&&/[a-z]/.test(val)||/[a-zA-Z]/.test(val)&&/\d/.test(val)))level=2;
+        if(level===2&&val.length>=12&&/[^a-zA-Z\d]/.test(val))level=3;
+        const row=document.getElementById('password-strength');row.dataset.level=String(level);
+        row.querySelectorAll('span').forEach((el,i)=>el.classList.toggle('active',i<level));
+        document.getElementById('password-strength-label').textContent=val.length===0?'Gunakan minimal 8 karakter (maksimal 72 karakter).':level===0?'Terlalu pendek · minimal 8 karakter':level===1?'Cukup · coba kombinasikan huruf dan angka':level===2?'Baik · gunakan kata sandi yang unik':'Lebih kuat · jangan gunakan kata sandi yang sama di layanan lain';
+      });
+      document.getElementById('register-form').addEventListener('submit',e=>{
+        e.preventDefault();const form=e.currentTarget;
+        if(!form.checkValidity()){form.reportValidity();feedback('register-feedback','Periksa kembali nama, email, dan kata sandi yang diisi.',true);return}
+        if(password.value!==document.getElementById('register-confirm').value){document.getElementById('register-confirm').focus();feedback('register-feedback','Konfirmasi kata sandi belum sama.',true);return}
+        feedback('register-feedback','Form pendaftaran sudah valid. Ini prototipe UI; akun belum dibuat karena backend belum dihubungkan.');
+      });
+    })();
+  </script>
+</body>
+</html>

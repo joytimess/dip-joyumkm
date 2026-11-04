@@ -89,6 +89,40 @@ Akun demo bernama **Warjon**, email **demo@joyumkm.test**, password sesuai `DEMO
 
 Skor dihitung service dari jawaban integer, bukan hardcode angka perkiraan brief. Draft boleh memiliki seluruh jawaban. Grup akun demo dan empat fixture dibuat atomik, create-if-missing berdasarkan email. Jika email demo sudah ada, seluruh grup dilewati: seeder tidak mereset password, menimpa edit, menambahkan ulang UMKM yang dihapus, atau menempelkan fixture ke akun existing. Mengubah DEMO_PASSWORD lalu seed ulang tidak mengubah password akun existing. Gunakan schema lokal baru bila membutuhkan fixture awal lagi.
 
+### Data contoh (SampleDataSeeder)
+
+DatabaseSeeder juga memanggil SampleDataSeeder pada `APP_ENV=local` untuk mengisi data dummy yang membuat tiga grafik dashboard (Profil Faktor, Distribusi, Perbandingan), Home, dan tabel UMKM terlihat hidup.
+
+Isi `SEED_PASSWORD` di `.env` (minimal 8 karakter, maksimal 72 byte, tanpa NUL). Profil aktif ditentukan lewat `SEED_PROFILE`:
+
+| Variabel | Nilai | Keterangan |
+|---|---|---|
+| `SEED_PASSWORD` | pilihan Anda | Wajib diisi agar SampleDataSeeder berjalan. |
+| `SEED_PROFILE` | `small` (default) | ≈20 UMKM, 3 akun, maks 3 evaluasi/UMKM. |
+| `SEED_PROFILE` | `benchmark` | ≈1.000 UMKM, 10 akun, maks 10 evaluasi/UMKM. |
+
+Contoh pengisian `.env`:
+
+```dotenv
+SEED_PASSWORD=JoyUMKM-Sample-2026!
+SEED_PROFILE=small
+```
+
+Jalankan seeder:
+
+```sh
+php artisan config:clear
+php artisan db:seed --no-interaction
+```
+
+Atau hanya SampleDataSeeder (hanya pada `APP_ENV=local`):
+
+```sh
+php artisan db:seed --class=SampleDataSeeder --no-interaction
+```
+
+Ketiga akun sample memakai email `sample1@joyumkm.test`, `sample2@joyumkm.test`, `sample3@joyumkm.test` dengan password sesuai `SEED_PASSWORD`. SampleDataSeeder bersifat idempotent: jika email `sample1@joyumkm.test` sudah ada, seluruh grup dilewati tanpa perubahan. Data demo (akun Warjon dan empat UMKM-nya) tidak tersentuh.
+
 ## Formula dan grafik
 
 Untuk faktor berjawaban: `raw = jumlah nilai / jumlah terjawab`, lalu `normalized = (raw - scale_min) / (scale_max - scale_min) × 100`. Skor akhir adalah mean faktor non-null pada presisi penuh, dibulatkan half-up satu desimal. Faktor disimpan empat desimal dan ditampilkan satu desimal; bobot faktor sama. Faktor tanpa jawaban dikeluarkan dari mean; semua kosong menghasilkan null, bukan nol.

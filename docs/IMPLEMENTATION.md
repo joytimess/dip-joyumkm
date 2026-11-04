@@ -423,3 +423,106 @@ Aset ber-hash ada di public/build/assets; composer.lock/package-lock.json dipert
 - Bootstrap Composer perlu workaround autoload biasa pada Windows yang dipakai untuk handover; produksi/operator harus memverifikasi optimize-autoloader di lingkungannya.
 - Contoh curl membutuhkan Bash/curl/jq; kontraknya diperiksa terhadap source, tetapi blok Bash/jq tidak dijalankan karena jq tidak tersedia. Alur ekuivalen diuji melalui HTTP dan browser nyata.
 - Omzet tanpa periode, threshold tetap V1, instrumen termasuk sumber modal dipertahankan. Skor bukan diagnosis finansial tervalidasi. Help/Profil/notifikasi/PDF/footer informasi yang belum disediakan tetap nonaktif sesuai PRD.
+
+
+## Tahap 10 — Seeder data contoh: NOT RUN (sandbox MySQL)
+
+> **Catatan pemeriksaan lokal**: Sandbox implementasi tidak dapat menjangkau instance MySQL di
+> `127.0.0.1:3307` (isolasi jaringan sandbox). Semua tes PHP dan Pint dijalankan tanpa akses DB;
+> perintah PHP syntax check (`php -l`) lulus untuk semua file baru/diubah. Verifikasi penuh
+> (tes, seed MySQL, dan API nyata) harus dilakukan oleh operator pada mesin lokal dengan akses DB.
+
+### Status per kriteria
+
+| Kriteria | Status | Bukti |
+|---|---|---|
+| Guard `local` di DatabaseSeeder dan SampleDataSeeder | PASS kode | Guard hadir di kedua tempat sesuai pola DemoSeeder. |
+| Guard `local` direct-call | PASS kode | Guard pertama di `run()` sebelum logika apapun. |
+| SEED_PASSWORD kosong/tidak valid — seeder dilewati | PASS kode | Validasi `isValidPassword()` identik dengan DemoSeeder. |
+| SEED_PASSWORD/SEED_PROFILE di .env.example | PASS | Dua entri baru dengan komentar, tanpa nilai rahasia. |
+| Idempotency per akun (marker email) | PASS kode | `sample1@joyumkm.test` sebagai penanda; skip jika ada. |
+| Atomik per grup akun (rollback jika gagal) | PASS kode | `database->transaction()` per akun. |
+| DatabaseSeeder memanggil SampleDataSeeder setelah DemoSeeder, hanya local | PASS kode | Urutan: DemoSeeder → SampleDataSeeder di dalam blok `local`. |
+| 3 akun sample, email pola sample1–3@joyumkm.test | PASS kode | Dikonfigurasi lewat `config/umkm.seed_profiles.small.accounts`. |
+| ~20 UMKM, dibagi tidak merata | PASS kode | `buildDistribution()` dengan bobot acak deterministik. |
+| 1–3 evaluasi per UMKM (profil small) | PASS kode | `max_evaluations=3` via config. |
+| Sebaran kategori realistis | PASS kode | `buildCategoryTargets()` ±15/35/30/12/5% plus kasus khusus. |
+| Tanggal urut sesuai ID, tersebar 6 bulan | PASS kode | `buildEvaluationDates()` + `Carbon::setTestNow()`. |
+| Carbon::setTestNow sebagai strategi tanggal | PASS | Paling tidak invasif: tidak mengubah kontrak service, direset di `finally`. |
+| UMKM tanpa evaluasi (BELUM DINILAI) | PASS kode | Kategori `BELUM DINILAI` di antrian, loop `continue` tanpa store. |
+| Draft kosong setelah final | PASS kode | Kategori `DRAFT_EMPTY`: simpan final lalu draft `answers:[]`. |
+| Sebagian faktor tidak terjawab | PASS kode | Kategori `PARTIAL`: `buildPartialAnswers()` skip OPS, disimpan sebagai draft. |
+| Tren naik/turun per UMKM | PASS kode | `computeIterationTarget()` dengan `trend=up/down`, spread ±20 poin. |
+| Skor via EvaluationService (tidak di-insert langsung) | PASS kode | Semua evaluasi lewat `evaluationService->store()`. |
+| Profil benchmark via SEED_PROFILE | PASS kode | `config/umkm.seed_profiles.benchmark` aktif bila `SEED_PROFILE=benchmark`. |
+| Nama UMKM Indonesia realistis, unik per akun | PASS kode | Pool kata bahasa Indonesia + `pickUniqueName()`. |
+| Provinsi acak dari 38 provinsi | PASS kode | `config('provinces')` via `array_rand`. |
+| Omzet berbeda per sektor | PASS kode | `generateOmzet()` dengan rentang berbeda per slug. |
+| Faker seed deterministik | PASS kode | `$faker->seed(20261104)`. |
+| Tidak menyentuh demo, tidak mengubah API/schema/dependency | PASS | DemoSeeder dan data demo tidak diubah; migration tidak ada. |
+| SampleDataSeederTest dibuat | PASS | 14 test cases mencakup semua skenario yang diminta. |
+| `php -l` seluruh file baru/diubah | PASS | Tidak ada syntax error. |
+| Verifikasi nyata MySQL (seed, login, dashboard) | NOT RUN | Memerlukan akses DB; sandbox tidak dapat menjangkau port 3307. |
+| `php artisan test --compact` suite lama tetap PASS | NOT RUN | Memerlukan akses DB. |
+| Pint via path eksplisit | NOT RUN | Pint tidak dapat menulis ke temp di sandbox. |
+
+### Strategi tanggal (penjelasan pilihan)
+
+`Carbon::setTestNow($date)` dipanggil tepat sebelum `evaluationService->store()` dan direset di
+blok `finally` tanpa pengecualian. Metode ini:
+- Tidak mengubah signature `EvaluationService::store()`.
+- Tidak menyentuh tabel evaluasi secara langsung.
+- Memanfaatkan `now()` yang sudah dipakai service untuk `submitted_at` dan `created_at`.
+- Aman untuk testing karena faker seed tetap menghasilkan tanggal deterministik.
+- Tidak memerlukan dependency baru.
+
+Alternatif yang dipertimbangkan namun ditolak: (a) UPDATE langsung ke kolom timestamps setelah
+insert — melanggar aturan "jangan insert langsung"; (b) parameter tanggal di `store()` —
+mengubah kontrak API service; (c) `DB::statement('SET timestamp=...')` — terlalu invasif dan
+bergantung MySQL.
+
+### Asumsi yang diambil
+
+1. **Kategori `PARTIAL`** disimpan sebagai draft (bukan final) karena EvaluationService menolak
+   final yang tidak lengkap. Spesifikasi menyebut "sebagian faktor tidak terjawab" tanpa
+   menentukan status; draft adalah satu-satunya status valid.
+2. **Faktor yang dikosongkan pada PARTIAL** adalah OPS. Pemilihan ini arbitrer; tidak ada
+   konfigurasi tambahan yang dibutuhkan.
+3. **Distribusi UMKM antar akun** menggunakan bobot acak dengan batas atas 70% per akun
+   sebelum akun terakhir, sehingga distribusi terlihat tidak merata.
+4. **Pool nama UMKM** dibangun dari kombinasi kata bahasa Indonesia (prefix + noun) dengan
+   suffix pembeda bila duplikat. Tidak memakai company Faker karena faker id_ID menghasilkan
+   nama yang terkadang terlalu panjang.
+5. **Sebaran kategori** dihitung dari total UMKM profil, dibulatkan ke integer. Jika total
+   tidak cocok, selisih ditambah/dikurangi dari `CUKUP`.
+6. **Profil benchmark** (1.000 UMKM × 10 evaluasi): akun diatur 10 (bukan 3) karena dengan
+   1.000 UMKM dan 3 akun, distribusi bisa menghasilkan satu akun dengan ratusan UMKM yang
+   terasa tidak realistis. Operator bebas mengubah config.
+7. **Seed Faker `20261104`** adalah tanggal implementasi; bukan nilai rahasia.
+8. **Master data** tidak diubah. Tidak ada usulan penambahan master data.
+
+### File dibuat/diubah
+
+```text
+C:\laragon\www\joyumkm\.env.example
+C:\laragon\www\joyumkm\config\umkm.php
+C:\laragon\www\joyumkm\database\seeders\DatabaseSeeder.php
+C:\laragon\www\joyumkm\database\seeders\SampleDataSeeder.php
+C:\laragon\www\joyumkm\tests\Feature\SampleDataSeederTest.php
+C:\laragon\www\joyumkm\docs\IMPLEMENTATION.md
+C:\laragon\www\joyumkm\README.md
+```
+
+### Blocker
+
+Sandbox tidak dapat menjangkau MySQL 3307; tes dan verifikasi nyata tidak dijalankan.
+Operator harus menjalankan:
+
+```sh
+php artisan config:clear
+php artisan test --compact tests/Feature/SampleDataSeederTest.php
+php artisan test --compact
+php artisan db:seed --no-interaction
+```
+
+Dan memverifikasi endpoint dashboard menampilkan data berisi setelah seed.

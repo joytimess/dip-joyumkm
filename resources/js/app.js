@@ -1,7 +1,9 @@
 import { bindSessionEvents, guardProtectedPage, bindLogout, initAuthPage } from './auth';
 import { bindDialog, openDialog } from './ui';
+import { initPublicUI } from './public';
 
 bindSessionEvents();
+if (document.body.classList.contains('public-body')) initPublicUI();
 const page = document.body.dataset.page;
 
 if (['login', 'register'].includes(page)) {

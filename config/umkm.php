@@ -6,6 +6,20 @@ return [
     'intervention_threshold' => 70,
     'token_expiration_days' => (int) env('SANCTUM_TOKEN_EXPIRATION_DAYS', 7),
     'demo_password' => env('DEMO_PASSWORD'),
+    'seed_password' => env('SEED_PASSWORD'),
+    'seed_profile' => env('SEED_PROFILE', 'small'),
+    'seed_profiles' => [
+        'small' => [
+            'accounts' => 3,
+            'umkms' => 20,
+            'max_evaluations' => 3,
+        ],
+        'benchmark' => [
+            'accounts' => 10,
+            'umkms' => 1000,
+            'max_evaluations' => 10,
+        ],
+    ],
     'scoring' => [
         'factor_precision' => 4,
         'score_precision' => 1,
