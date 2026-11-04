@@ -20,7 +20,7 @@
             </form>
             <p class="auth-switch">Belum punya akun? <a href="{{ route('register') }}">Daftar sekarang</a></p>
         </div>
-        <div class="auth-bottom">? 2026 JoyUMKM</div>
+        <div class="auth-bottom">© 2026 JoyUMKM</div>
     </section>
 </main>
 @endsection

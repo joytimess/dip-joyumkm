@@ -12,5 +12,5 @@
             <div class="insight-row"><span>{{ $register ? 'Baca insight' : 'Operasional' }}</span><div class="track"><div class="fill accent" style="width:{{ $register ? 54 : 86 }}%"></div></div><strong>{{ $register ? '03' : '86' }}</strong></div>
         </div>
     </div>
-    <div class="auth-side-foot"><i aria-hidden="true"></i>{{ $register ? 'Satu akun untuk seluruh UMKM dampingan Anda' : 'Sumber Daya ? Eksternal ? Operasional' }}</div>
+    <div class="auth-side-foot"><i aria-hidden="true"></i>{{ $register ? 'Satu akun untuk seluruh UMKM dampingan Anda' : 'Sumber Daya · Eksternal · Operasional' }}</div>
 </aside>

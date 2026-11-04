@@ -4,7 +4,7 @@
     <header class="header"><div class="container header-inner">
       <x-public-brand />
       <nav class="header-links" aria-label="Navigasi utama"><a href="#cara-kerja">Cara Kerja</a><a href="#dimensi">Tiga Dimensi</a></nav>
-      <div class="header-actions"><a class="login-link" href="{{ route('login') }}" style="color:var(--primary);font-size:13px;font-weight:750;padding:11px">Masuk</a><a class="btn btn-primary" href="{{ route('register') }}">Daftar Akun <svg aria-hidden="true"><use href="#joy-i-arrow"/></svg></a></div>
+      <div class="header-actions"><a class="login-link" href="{{ route('login') }}">Masuk</a><a class="btn btn-primary" href="{{ route('register') }}">Daftar Akun <svg aria-hidden="true"><use href="#joy-i-arrow"/></svg></a></div>
     </div></header>
     <section class="hero"><div class="container hero-grid">
       <div class="hero-text">

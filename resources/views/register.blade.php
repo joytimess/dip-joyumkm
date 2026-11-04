@@ -20,7 +20,7 @@
             </form>
             <p class="auth-switch">Sudah punya akun? <a href="{{ route('login') }}">Masuk</a></p>
         </div>
-        <div class="auth-bottom">? 2026 JoyUMKM</div>
+        <div class="auth-bottom">© 2026 JoyUMKM</div>
     </section>
 </main>
 @endsection

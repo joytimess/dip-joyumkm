@@ -1,0 +1,35 @@
+/* JoyUMKM Dashboard Relayout V1 — reference tokens.
+   Adapt into the framework's existing theme, don't blindly import if it conflicts.
+*/
+:root {
+  --brand-primary: #0207CA;
+  --brand-secondary: #0297DE;
+  --brand-accent: #FC734D;
+  --text-primary: #101E40;
+  --text-muted: #70819D;
+  --canvas: #F4F7FC;
+  --surface: #FFFFFF;
+  --border: #E8EDF6;
+  --border-strong: #DCE4F2;
+  --soft-blue: #EAF6FF;
+  --soft-orange: #FFF1EB;
+  --status-good: #147D5B;
+  --status-warn: #9B6508;
+  --card-radius: 20px;
+  --input-radius: 11px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --card-shadow: 0 12px 34px rgba(27, 53, 103, 0.045);
+  --brand-gradient: linear-gradient(112deg, #0207CA 0%, #0933D2 48%, #0297DE 115%);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
