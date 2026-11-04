@@ -3,7 +3,7 @@ import { api } from './api';
 import { element, formatScore, showError } from './ui';
 
 export const portfolioLabel = 'Rerata seluruh portofolio';
-export const seriesColors = ['#5844b6', '#087f8c', '#bd651a', '#a83f65', '#727b28'];
+export const seriesColors = ['#0207CA', '#0297DE', '#FC734D', '#147D5B', '#8B4A25'];
 export const evaluationLabel = (status) => ({ draft: 'Sementara', final: 'Final', none: 'Belum dinilai' })[status];
 
 export function chartOptions(type, series, categories = []) {

@@ -17,5 +17,14 @@
         @case('arrow')<path d="M4 12h16m-6-6 6 6-6 6"/>@break
         @case('plus')<path d="M12 5v14M5 12h14"/>@break
         @case('filter')<path d="M3 5h18l-7 8v6l-4 2v-8z"/>@break
+        @case('trend')<path d="m3 17 7-7 4 4 7-8M15 6h6v6"/>@break
+        @case('circle')<path d="M12 2v10h10A10 10 0 1 1 12 2Z"/><path d="M15 2a9.8 9.8 0 0 1 7 7h-7z"/>@break
+        @case('clock')<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 3"/>@break
+        @case('spark')<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/>@break
+        @case('check')<path d="m4 12 5 5L20 6"/>@break
+        @case('edit')<path d="M4 17v3h3l12-12-3-3zM14 7l3 3M15 5l3-3 4 4-3 3"/>@break
+        @case('trash')<path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/>@break
+        @case('eye')<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>@break
+        @case('save')<path d="M4 3h14l3 3v15H3V3zM7 3v6h10V3M7 21v-8h10v8"/>@break
     @endswitch
 </svg>

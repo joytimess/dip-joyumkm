@@ -1,1 +1,1 @@
-<footer class="site-footer"><span>© 2026 JoyUMKM</span><div><span>Pusat Bantuan <small>Belum tersedia</small></span><span>Kebijakan Privasi <small>Belum tersedia</small></span></div></footer>
+<footer class="site-footer footer"><span>© 2026 JoyUMKM · Dashboard Workspace</span><span>Prototype UI responsif · <a href="{{ route('home') }}" class="footer-link">Kembali ke beranda</a></span></footer>

@@ -1,4 +1,3 @@
-<section id="umkm-summary" class="summary-section" aria-labelledby="summary-title" aria-busy="true">
-    <div class="summary-heading"><h2 id="summary-title">Ringkasan seluruh UMKM Anda</h2><span id="summary-state" class="muted" role="status">Memuat ringkasan…</span></div>
-    <div id="summary-cards" class="summary-cards"><div class="panel"><p class="summary-label">TOTAL RESPONDEN</p><div class="skeleton h-10 mt-4"></div></div><div class="panel"><p class="summary-label">RERATA SKOR KESEHATAN</p><div class="skeleton h-10 mt-4"></div></div><div class="panel"><p class="summary-label">SEKTOR KRITIS</p><div class="skeleton h-10 mt-4"></div></div></div>
+<section id="umkm-summary" class="summary-section" aria-label="Ringkasan metrik portofolio" aria-busy="true">
+    <div id="summary-cards" class="grid-4 summary-cards">@foreach (['Total responden', 'Rata-rata skor', 'Sektor prioritas', 'Draft aktif'] as $metric)<div class="card metric panel"><p class="metric-label">{{ $metric }}</p><div class="skeleton h-10 mt-4"></div></div>@endforeach</div>
 </section>

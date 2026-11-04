@@ -1,5 +1,5 @@
 import { bindSessionEvents, guardProtectedPage, bindLogout, initAuthPage } from './auth';
-import { bindDialog, openDialog } from './ui';
+import { bindDialog, openDialog, toast } from './ui';
 import { initPublicUI } from './public';
 
 bindSessionEvents();
@@ -20,6 +20,15 @@ if (['login', 'register'].includes(page)) {
             menu.setAttribute('aria-expanded', 'true');
         });
         drawer.addEventListener('close', () => menu.setAttribute('aria-expanded', 'false'));
+        document.querySelectorAll('[data-notification-btn]').forEach((btn) => {
+            btn.addEventListener('click', () => toast('Tidak ada notifikasi baru saat ini.'));
+        });
+        document.querySelectorAll('[data-profile-btn]').forEach((btn) => {
+            btn.addEventListener('click', () => toast('Halaman profil pengguna belum terhubung pada versi ini.'));
+        });
+        document.querySelectorAll('[data-help-btn]').forEach((btn) => {
+            btn.addEventListener('click', () => toast('Pusat bantuan JoyUMKM dapat diakses melalui tim pendamping.'));
+        });
         const searchForm = document.getElementById('global-search-form');
         const search = document.getElementById('global-search');
         search.value = new URLSearchParams(window.location.search).get('search') || '';

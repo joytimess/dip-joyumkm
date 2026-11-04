@@ -1,9 +1,28 @@
 import { api } from './api';
 import { element, formatNumber, formatScore, showError } from './ui';
 
-export function createSummary(root) {
+function metricIconSvg(name) {
+    const svgs = {
+        store: '<path d="M3 10h18l-2-7H5zM4 10v11h16V10M9 21v-8h6v8M3 10c0 3 4 3 4 0 0 3 4 3 5 0 1 3 5 3 5 0 0 3 4 3 4 0"/>',
+        trend: '<path d="m3 17 7-7 4 4 7-8M15 6h6v6"/>',
+        circle: '<path d="M12 2v10h10A10 10 0 1 1 12 2Z"/><path d="M15 2a9.8 9.8 0 0 1 7 7h-7z"/>',
+        clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 3"/>',
+    };
+    const node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    node.setAttribute('class', 'icon');
+    node.setAttribute('viewBox', '0 0 24 24');
+    node.setAttribute('fill', 'none');
+    node.setAttribute('stroke', 'currentColor');
+    node.setAttribute('stroke-width', '1.8');
+    node.setAttribute('stroke-linecap', 'round');
+    node.setAttribute('stroke-linejoin', 'round');
+    node.innerHTML = svgs[name] || '';
+    return node;
+}
+
+export function createSummary(root, onRender = () => {}) {
     const cards = root.querySelector('#summary-cards');
-    const state = root.querySelector('#summary-state');
+    const state = document.getElementById('summary-state') || root.querySelector('#summary-state');
     let categories;
     let controller;
     let sequence = 0;
@@ -13,7 +32,7 @@ export function createSummary(root) {
         controller?.abort();
         controller = new AbortController();
         root.setAttribute('aria-busy', 'true');
-        state.textContent = 'Memuat ringkasan…';
+        if (state) state.textContent = 'Memuat ringkasan…';
         try {
             const [summaryResult, optionsResult] = await Promise.all([
                 api('/umkms/summary', { signal: controller.signal }),
@@ -22,43 +41,70 @@ export function createSummary(root) {
             if (current !== sequence) return;
             if (optionsResult) categories = optionsResult.data.categories;
             render(summaryResult.data);
-            state.textContent = '';
+            if (state) state.textContent = '';
         } catch (error) {
             if (error.name === 'AbortError' || current !== sequence) return;
-            state.textContent = 'Ringkasan belum dapat dimuat.';
+            if (state) state.textContent = 'Ringkasan belum dapat dimuat.';
             cards.replaceChildren();
             showError(cards, error, reload);
         } finally { if (current === sequence) root.setAttribute('aria-busy', 'false'); }
     }
 
+    function createMetricCard({ iconName, theme = '', label, value, unit = '', foot, href = null }) {
+        const card = element(href ? 'a' : 'article', {
+            class: `card metric panel ${theme === 'orange' ? 'metric-accent' : ''}`,
+            ...(href ? { href, style: 'text-decoration:none;color:inherit;display:block;' } : {}),
+        }, [
+            element('span', { class: 'soft-corner', 'aria-hidden': true }),
+            element('div', { class: `metric-icon ${theme}` }, [metricIconSvg(iconName)]),
+            element('div', { class: 'metric-label', text: label }),
+            element('div', { class: 'metric-value' }, [
+                element('span', { text: value }),
+                unit ? element('span', { class: 'metric-suffix', text: unit }) : null,
+            ]),
+            element('div', { class: 'metric-foot', text: foot }),
+        ]);
+        return card;
+    }
+
     function render(summary) {
-        const category = categories.find((item) => item.label === summary.category);
-        const categoryLabel = element('strong', { class: 'summary-category', text: summary.category });
-        categoryLabel.style.color = category?.color || '';
-        const averageProgress = element('progress', { max: 100, value: summary.average_score ?? 0, 'aria-label': 'Rerata skor kesehatan', 'aria-valuetext': summary.average_score === null ? 'Belum dinilai' : `${formatScore(summary.average_score)} dari 100` });
-        averageProgress.style.setProperty('--summary-color', category?.color || '#6b7280');
         const critical = summary.critical_sector;
         cards.replaceChildren(
-            element('article', { class: 'panel summary-total' }, [
-                element('h3', { class: 'summary-label', text: 'TOTAL RESPONDEN' }),
-                element('p', { class: 'summary-value num', text: formatNumber(summary.total_respondents) }),
-                element('p', { class: 'summary-caption', text: 'Evaluasi terbaru per UMKM' }),
-                element('p', { class: 'summary-detail', text: `${formatNumber(summary.total_umkms)} UMKM terdaftar · ${formatNumber(summary.draft_count)} draft` }),
-            ]),
-            element('article', { class: 'panel summary-average' }, [
-                element('h3', { class: 'summary-label', text: 'RERATA SKOR KESEHATAN' }),
-                element('p', { class: 'summary-value num' }, [element('span', { text: formatScore(summary.average_score) }), element('small', { text: '/100' })]),
-                averageProgress,
-                categoryLabel,
-                element('p', { class: 'summary-detail', text: `${formatNumber(summary.scored_count)} UMKM berskor · ${formatNumber(summary.draft_count)} draft` }),
-            ]),
-            element('article', { class: `panel ${critical ? 'summary-critical' : 'summary-neutral'}` }, [
-                element('h3', { class: 'summary-label', text: 'SEKTOR KRITIS' }),
-                element('p', { class: 'summary-sector', text: critical ? critical.name : 'Belum ada data' }),
-                critical ? element('strong', { class: `intervention-label ${critical.needs_intervention ? 'needs-intervention' : 'is-controlled'}`, text: critical.needs_intervention ? 'BUTUH INTERVENSI SEGERA' : 'TERKENDALI' }) : element('p', { class: 'summary-caption', text: 'Belum ada UMKM dengan skor evaluasi.' }),
-                critical ? element('p', { class: 'summary-detail', text: `Rerata ${formatScore(critical.average_score)}/100 · ${formatNumber(critical.scored_count)} UMKM berskor · ${formatNumber(critical.draft_count)} draft` }) : null,
-            ]),
+            createMetricCard({
+                iconName: 'store',
+                label: 'Total responden',
+                value: formatNumber(summary.total_umkms),
+                unit: 'UMKM',
+                foot: `${formatNumber(summary.total_respondents)} usaha dalam portofolio`,
+                href: '/umkms',
+            }),
+            createMetricCard({
+                iconName: 'trend',
+                theme: 'blue',
+                label: 'Rata-rata skor',
+                value: formatScore(summary.average_score),
+                unit: '/100',
+                foot: `${summary.category || 'Kondisi portofolio'} · ${formatNumber(summary.scored_count)} berskor`,
+            }),
+            createMetricCard({
+                iconName: 'circle',
+                theme: 'orange',
+                label: 'Sektor prioritas',
+                value: critical ? formatScore(critical.average_score) : '—',
+                unit: critical ? '/100' : '',
+                foot: critical ? `${critical.name} · ${critical.needs_intervention ? 'Butuh intervensi' : 'Rerata terendah'}` : 'Belum ada data sektor',
+            }),
+            createMetricCard({
+                iconName: 'clock',
+                theme: 'blue',
+                label: 'Draft aktif',
+                value: formatNumber(summary.draft_count),
+                unit: 'Draft',
+                foot: 'Evaluasi yang belum final',
+                href: '/umkms?status=draft',
+            }),
         );
+        onRender(summary);
     }
 
     reload();
