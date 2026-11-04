@@ -2,31 +2,125 @@ import { createUmkmPicker } from '../umkm-picker';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, portfolioLabel, scoreTable, tooltipText } from '../charts';
 import { element, formatScore } from '../ui';
 
+function renderStatusBadge(status) {
+    if (status === 'final') return element('span', { class: 'pill pill-green', text: 'Final' });
+    if (status === 'draft') return element('span', { class: 'pill pill-amber', text: 'Sementara' });
+    return element('span', { class: 'pill pill-muted', text: 'Belum dinilai' });
+}
+
 export async function init() {
     const root = document.getElementById('page-data');
     const load = createChartPage(root, (data, mount) => {
         const complete = data.selected_scores.every((score) => score !== null);
         const status = `${evaluationLabel(data.evaluation_status)} · ${data.answered_count}/${data.total_questions} soal terjawab`;
+        const formUrl = `/form-data?umkm=${data.umkm.id}`;
         const host = chartHost('Radar skor faktor UMKM dibandingkan rerata seluruh portofolio, skala 0 sampai 100');
-        const panel = element('section', { class: 'panel chart-panel' }, [
-            element('div', { class: 'chart-heading' }, [element('h2', { text: data.umkm.name }), element('span', { class: data.evaluation_status === 'draft' ? 'draft-badge' : 'muted', text: status })]),
-            complete ? host : emptyState('Data faktor belum lengkap', 'Nilai yang tersedia ditampilkan di bawah. Lengkapi kuesioner untuk melihat radar.', `/form-data?umkm=${data.umkm.id}`, 'Lengkapi kuesioner'),
-            scoreTable(data.factors, [
-                { name: data.umkm.name, scores: data.selected_scores, detail: status, color: '#5844b6' },
-                { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#64748b' },
-            ], 'Skor faktor 0–100; faktor kosong tidak dihitung dalam rerata.'),
-            element('a', { href: `/form-data?umkm=${data.umkm.id}`, class: 'text-link', text: 'Isi atau perbarui kuesioner' }),
+        const colors = ['#0207CA', '#0297DE', '#FC734D'];
+
+        const metrics = element('div', { class: 'grid-3 metric-strip', style: 'margin-bottom:20px;' }, data.factors.map((factor, index) => {
+            const score = data.selected_scores[index];
+            const base = data.portfolio_averages[index];
+            return element('section', { class: 'card metric panel' }, [
+                element('span', { class: 'soft-corner', 'aria-hidden': true }),
+                element('div', { class: `metric-icon ${index === 1 ? 'blue' : index === 2 ? 'orange' : ''}` }, [
+                    element('span', { style: 'font-weight:800;font-size:12px;', text: factor }),
+                ]),
+                element('div', { class: 'metric-label', text: `Faktor ${factor}` }),
+                element('div', { class: 'metric-value' }, [
+                    element('span', { text: formatScore(score) }),
+                    score !== null ? element('span', { class: 'metric-suffix', text: '/100' }) : null,
+                ]),
+                element('div', { class: 'metric-foot', text: `Baseline portofolio ${formatScore(base)}/100` }),
+            ]);
+        }));
+
+        const legend = element('div', { class: 'legend-inline', style: 'justify-content:center;margin-top:12px;' }, [
+            element('span', {}, [
+                element('i', { class: 'legend-swatch', style: 'background:#0207CA;', 'aria-hidden': true }),
+                element('span', { text: data.umkm.name }),
+            ]),
+            element('span', {}, [
+                element('i', { class: 'legend-swatch', style: 'background:#0297DE;', 'aria-hidden': true }),
+                element('span', { text: portfolioLabel }),
+            ]),
         ]);
-        root.append(panel);
+
+        const highestFactorIndex = data.selected_scores.reduce((maxI, cur, i, arr) => (cur ?? -1) > (arr[maxI] ?? -1) ? i : maxI, 0);
+        const highestFactor = data.factors[highestFactorIndex];
+
+        root.append(
+            metrics,
+            element('div', { class: 'two-col-6-4 analytics-grid', style: 'margin-bottom:20px;' }, [
+                element('section', { class: 'card card-pad panel chart-panel' }, [
+                    element('div', { class: 'section-top section-heading' }, [
+                        element('div', {}, [
+                            element('h2', { class: 'section-title', text: 'Radar profil usaha' }),
+                            element('p', { class: 'section-desc muted', text: 'Skor 0–100 · pembanding adalah rata-rata seluruh portofolio.' }),
+                        ]),
+                    ]),
+                    complete ? host : emptyState('Data faktor belum lengkap', 'Nilai yang tersedia tetap ditampilkan. Lengkapi kuesioner untuk melihat radar lengkap.', formUrl, 'Lengkapi kuesioner'),
+                    legend,
+                ]),
+                element('section', { class: 'card card-pad panel' }, [
+                    element('div', { class: 'section-top section-heading' }, [
+                        element('div', {}, [
+                            element('h2', { class: 'section-title', text: 'Ringkasan performa' }),
+                            element('p', { class: 'section-desc muted', text: `${data.umkm.name} · ${data.umkm.sector?.name || 'Sektor'}` }),
+                        ]),
+                    ]),
+                    element('div', { class: 'summary-stat', style: 'display:flex;align-items:baseline;gap:6px;' }, [
+                        element('strong', { style: 'font:800 32px var(--font-sans);letter-spacing:-1px;', text: formatScore(data.umkm.latest_score) }),
+                        element('span', { class: 'muted', text: '/100' }),
+                    ]),
+                    element('div', { style: 'margin-bottom:18px;' }, [
+                        renderStatusBadge(data.evaluation_status),
+                        element('span', { class: 'tiny muted', style: 'margin-left:8px;', text: `${data.answered_count}/${data.total_questions} soal terjawab` }),
+                    ]),
+                    element('div', { style: 'margin:20px 0 8px;font-size:12px;font-weight:800;', text: 'Skor per faktor' }),
+                    element('div', { class: 'factor-score-list' }, data.factors.map((factor, index) => {
+                        const val = data.selected_scores[index];
+                        return element('div', { class: 'factor-row' }, [
+                            element('span', { class: 'factor-name', text: factor }),
+                            element('div', { class: 'progress' }, [
+                                element('span', { style: `width:${Math.max(0, Math.min(100, Number(val) || 0))}%;background:${colors[index]}` }),
+                            ]),
+                            element('span', { class: 'factor-number', text: formatScore(val) }),
+                        ]);
+                    })),
+                    element('div', { class: 'note-card', style: 'margin-top:20px;' }, [
+                        element('div', {}, [
+                            element('h4', { text: 'Pembacaan singkat' }),
+                            element('p', { text: `${data.umkm.name} mencatat skor tertinggi pada faktor ${highestFactor} (${formatScore(data.selected_scores[highestFactorIndex])}/100). Bandingkan dengan garis baseline untuk prioritas pendampingan.` }),
+                        ]),
+                    ]),
+                    element('div', { style: 'margin-top:20px;' }, [
+                        element('a', { href: formUrl, class: 'btn btn-primary btn-full button button-primary w-full', text: 'Isi atau perbarui kuesioner' }),
+                    ]),
+                ]),
+            ]),
+            element('section', { class: 'card card-pad panel chart-panel section-block' }, [
+                element('div', { class: 'section-top section-heading' }, [
+                    element('div', {}, [
+                        element('h2', { class: 'section-title', text: 'Detail perbandingan' }),
+                        element('p', { class: 'section-desc muted', text: 'Nilai tiap faktor dan pembanding portofolio.' }),
+                    ]),
+                ]),
+                scoreTable(data.factors, [
+                    { name: data.umkm.name, scores: data.selected_scores, detail: status, color: '#0207CA' },
+                    { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#0297DE' },
+                ], 'Skor faktor 0–100; faktor kosong tidak dihitung dalam rerata.'),
+            ]),
+        );
+
         if (!complete) return;
         const options = chartOptions('radar', [
-            { name: 'UMKM terpilih', data: data.selected_scores },
+            { name: data.umkm.name, data: data.selected_scores },
             { name: portfolioLabel, data: data.portfolio_averages },
         ], data.factors);
-        options.colors = ['#5844b6', '#64748b'];
-        options.fill = { opacity: [0.13, 0.04] };
+        options.colors = ['#0207CA', '#0297DE'];
+        options.fill = { opacity: [0.14, 0.05] };
         options.stroke.dashArray = [0, 5];
-        options.markers = { size: 3 };
+        options.markers = { size: 4, strokeColors: '#fff', strokeWidth: 2 };
         options.tooltip.custom = ({ seriesIndex, dataPointIndex }) => tooltipText([
             seriesIndex === 0 ? data.umkm.name : portfolioLabel,
             `${data.factors[dataPointIndex]}: ${formatScore((seriesIndex === 0 ? data.selected_scores : data.portfolio_averages)[dataPointIndex])}/100`,
@@ -34,6 +128,7 @@ export async function init() {
         ]);
         mount(host, options);
     });
+
     async function select(umkm) {
         const url = new URL(window.location.href);
         if (umkm) url.searchParams.set('umkm_id', umkm.id);

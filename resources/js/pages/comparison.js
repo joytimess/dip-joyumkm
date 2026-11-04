@@ -18,24 +18,49 @@ export async function init() {
             return;
         }
         const host = chartHost('Bar skor faktor tiap UMKM dan garis rerata seluruh portofolio, skala 0 sampai 100');
-        root.append(element('section', { class: 'panel chart-panel' }, [
-            element('h2', { text: 'Perbandingan skor faktor' }),
-            element('p', { class: 'muted chart-caption', text: `${selected.length} UMKM dibandingkan dengan seluruh portofolio. Faktor kosong ditandai “Belum dijawab”.` }),
-            host,
-            scoreTable(data.factors, [
-                ...selected.map((umkm, index) => ({ name: umkm.name, scores: umkm.scores, detail: status(umkm), color: seriesColors[index] })),
-                { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#334155' },
-            ], 'Skor faktor 0–100 dan jumlah sampel baseline seluruh UMKM Anda.'),
-        ]));
+        const legend = element('div', { class: 'legend-inline', style: 'justify-content:center;margin-top:14px;' }, [
+            ...selected.map((umkm, index) => element('span', {}, [
+                element('i', { class: 'legend-swatch', style: `background:${seriesColors[index]};`, 'aria-hidden': true }),
+                element('span', { text: umkm.name, title: umkm.name }),
+            ])),
+            element('span', {}, [
+                element('i', { class: 'baseline-key', style: '--series-color:#334155;', 'aria-hidden': true }),
+                element('span', { text: portfolioLabel }),
+            ]),
+        ]);
+        root.append(
+            element('section', { class: 'card card-pad panel chart-panel', style: 'margin-bottom:20px;' }, [
+                element('div', { class: 'section-top section-heading' }, [
+                    element('div', {}, [
+                        element('h2', { class: 'section-title', text: 'Perbandingan skor faktor' }),
+                        element('p', { class: 'section-desc muted', text: `${selected.length} UMKM dibandingkan dengan seluruh portofolio. Faktor kosong ditandai “Belum dijawab”.` }),
+                    ]),
+                ]),
+                host,
+                legend,
+            ]),
+            element('section', { class: 'card card-pad panel chart-panel section-block' }, [
+                element('div', { class: 'section-top section-heading' }, [
+                    element('div', {}, [
+                        element('h2', { class: 'section-title', text: 'Detail perbandingan' }),
+                        element('p', { class: 'section-desc muted', text: 'Nilai numerik setiap faktor dan status evaluasi tersimpan.' }),
+                    ]),
+                ]),
+                scoreTable(data.factors, [
+                    ...selected.map((umkm, index) => ({ name: umkm.name, scores: umkm.scores, detail: status(umkm), color: seriesColors[index] })),
+                    { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#334155' },
+                ], 'Skor faktor 0–100 dan jumlah sampel baseline seluruh UMKM Anda.'),
+            ]),
+        );
         const options = chartOptions('line', [
-            ...selected.map((umkm, index) => ({ name: `UMKM ${index + 1}`, type: 'column', data: umkm.scores })),
+            ...selected.map((umkm) => ({ name: umkm.name, type: 'column', data: umkm.scores })),
             { name: portfolioLabel, type: 'line', data: data.portfolio_averages },
         ], data.factors);
         options.colors = [...selected.map((_, index) => seriesColors[index]), '#334155'];
         options.stroke = { width: [...selected.map(() => 0), 3], curve: 'straight', dashArray: [...selected.map(() => 0), 5] };
         options.markers = { size: [...selected.map(() => 0), 4] };
         options.fill = { opacity: 1 };
-        options.plotOptions = { bar: { columnWidth: '65%', borderRadius: 2, hideZeroBarsWhenGrouped: false } };
+        options.plotOptions = { bar: { columnWidth: '58%', borderRadius: 5, hideZeroBarsWhenGrouped: false } };
         options.tooltip.custom = ({ seriesIndex, dataPointIndex }) => {
             const umkm = selected[seriesIndex];
             const value = (umkm ? umkm.scores : data.portfolio_averages)[dataPointIndex];
@@ -49,12 +74,17 @@ export async function init() {
     });
 
     function renderSelection() {
-        selectedList.replaceChildren(...selected.map((umkm) => element('li', {}, [
-            element('span', { text: umkm.name }),
-            element('button', { type: 'button', class: 'row-action', text: 'Hapus pilihan', 'aria-label': `Hapus ${umkm.name} dari perbandingan`, onclick: () => { selected = selected.filter((item) => item.id !== umkm.id); update(); } }),
+        selectedList.replaceChildren(...selected.map((umkm) => element('li', { class: 'select-chip' }, [
+            element('span', { text: umkm.name, title: umkm.name }),
+            element('button', {
+                type: 'button',
+                'aria-label': `Hapus ${umkm.name} dari perbandingan`,
+                text: '✕',
+                onclick: () => { selected = selected.filter((item) => item.id !== umkm.id); update(); },
+            }),
         ])));
         document.getElementById('comparison-count').textContent = `${selected.length} dari maksimal 5 UMKM dipilih`;
-        add.disabled = !picker?.selected || selected.length >= 5;
+        add.disabled = !picker?.selected || selected.length >= 5 || selected.some((item) => item.id === picker.selected.id);
         clear.disabled = !selected.length;
     }
 
@@ -81,6 +111,6 @@ export async function init() {
         load('/dashboard/comparison');
     });
     load(`/dashboard/comparison${window.location.search}`);
-    picker = await createUmkmPicker(document.getElementById('umkm-picker'), { onChange: (umkm) => { add.disabled = !umkm || selected.length >= 5; } });
+    picker = await createUmkmPicker(document.getElementById('umkm-picker'), { onChange: (umkm) => { add.disabled = !umkm || selected.length >= 5 || selected.some((item) => item.id === umkm.id); } });
     renderSelection();
 }
