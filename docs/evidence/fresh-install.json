@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-04T06:27:18.365Z",
+  "status": "PASS",
+  "freshCheckout": "C:/laragon/tmp/joyumkm-handover-20261104/checkout",
+  "mysql": "8.4.3 isolated port3308",
+  "install": {
+    "composer": "PASS with documented temporary nonoptimized autoload workaround; manifests restored",
+    "npmCi": "PASS",
+    "keyGenerate": "PASS",
+    "migrate": "PASS eight migrations",
+    "seedTwice": "PASS demo still4umkms/4evaluations/64answers",
+    "build": "PASS",
+    "configRouteViewCache": "PASS"
+  },
+  "httpShells": 9,
+  "buildAssets": "PASS HTTP200 noVite5173",
+  "demoScores": [
+    96.5,
+    95.1,
+    91.7,
+    87.5
+  ],
+  "summary": 92.7,
+  "foreignEndpoints404": 7
+}

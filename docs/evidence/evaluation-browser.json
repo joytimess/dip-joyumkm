@@ -1,0 +1,63 @@
+{
+  "at": "2026-11-04T05:50:17.516Z",
+  "checks": [
+    {
+      "id": "EVAL01",
+      "status": "PASS",
+      "detail": "16 soal API dan opsi sumber modal khusus dirender; tombol batas pagination tetap nonaktif."
+    },
+    {
+      "id": "EVAL02",
+      "status": "PASS",
+      "detail": "Final kosong422 menandai pertanyaan, fokus radio pertama, dan tidak membuat evaluasi."
+    },
+    {
+      "id": "EVAL03",
+      "status": "PASS",
+      "detail": "Pratinjau tidak menyimpan; tombol draft menyimpan kosong dengan skor null."
+    },
+    {
+      "id": "EVAL04",
+      "status": "PASS",
+      "detail": "Preview100 sama dengan server/list; final membuat ID riwayat baru."
+    },
+    {
+      "id": "EVAL05",
+      "status": "PASS",
+      "detail": "Latest final terprefill16jawaban dan radio keyboard memperbarui preview97,2."
+    },
+    {
+      "id": "EVAL06",
+      "status": "PASS",
+      "detail": "Reset hanya lokal; draft kosong setelah final mengganti latest/list tanpa fallback."
+    },
+    {
+      "id": "EVAL07",
+      "status": "PASS",
+      "detail": "Batal ganti UMKM mempertahankan jawaban; setuju memuat latest UMKM tujuan."
+    },
+    {
+      "id": "EVAL08",
+      "status": "PASS",
+      "detail": "Navigasi form dirty meminta satu konfirmasi; 360px tidak overflow; tanpa runtime exception."
+    }
+  ],
+  "dialogs": [
+    {
+      "type": "confirm",
+      "message": "Kosongkan seluruh jawaban pada form ini? Data tersimpan tidak akan dihapus."
+    },
+    {
+      "type": "confirm",
+      "message": "Perubahan belum disimpan. Buang perubahan dan lanjutkan?"
+    },
+    {
+      "type": "confirm",
+      "message": "Perubahan belum disimpan. Buang perubahan dan lanjutkan?"
+    },
+    {
+      "type": "confirm",
+      "message": "Perubahan belum disimpan. Buang perubahan dan lanjutkan?"
+    }
+  ]
+}

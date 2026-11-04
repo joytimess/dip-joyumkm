@@ -1,0 +1,45 @@
+{
+  "at": "2026-11-04T06:23:38.576Z",
+  "checks": [
+    {
+      "id": "INT01",
+      "status": "PASS",
+      "detail": "Tambah dua UMKM lewat modal nyata; omzet integer benar, donut BELUM DINILAI2."
+    },
+    {
+      "id": "INT02",
+      "status": "PASS",
+      "detail": "Final100 dan draft parsial0 tersimpan lewat form; Home50, tabel, radar, comparison dan distribution konsisten."
+    },
+    {
+      "id": "INT03",
+      "status": "PASS",
+      "detail": "Ubah nama/provinsi/omzet/sektor lewat modal; label radar/comparison serta kontribusi sektor mengikuti data baru."
+    },
+    {
+      "id": "INT04",
+      "status": "PASS",
+      "detail": "Draft kosong setelah final mengganti latest di Home/tabel/radar/distribution/default comparison tanpa fallback final."
+    },
+    {
+      "id": "INT05",
+      "status": "PASS",
+      "detail": "Respons POST terputus setelah commit: satu POST saja, latest direkonsiliasi, jawaban lokal tetap ada, tanpa retry otomatis."
+    },
+    {
+      "id": "INT06",
+      "status": "PASS",
+      "detail": "Prefill lama yang lambat tidak menimpa pilihan UMKM lebih baru."
+    },
+    {
+      "id": "INT07",
+      "status": "PASS",
+      "detail": "Penghapusan dua UMKM mengosongkan summary/chart dan deep link form lama memberi404 dengan jalan kembali."
+    },
+    {
+      "id": "INT08",
+      "status": "PASS",
+      "detail": "Logout membersihkan token dan membawa kedua tab ke login; tidak ada runtime exception."
+    }
+  ]
+}

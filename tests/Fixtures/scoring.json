@@ -1,0 +1,415 @@
+{
+  "factors": [
+    {
+      "code": "INS",
+      "scale_min": 1,
+      "scale_max": 3,
+      "question_count": 6
+    },
+    {
+      "code": "ECT",
+      "scale_min": 1,
+      "scale_max": 5,
+      "question_count": 4
+    },
+    {
+      "code": "OPS",
+      "scale_min": 1,
+      "scale_max": 5,
+      "question_count": 6
+    }
+  ],
+  "cases": [
+    {
+      "name": "minimum",
+      "values": {
+        "INS": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ECT": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "OPS": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 0,
+          "ECT": 0,
+          "OPS": 0
+        },
+        "average_score": 0,
+        "category": "KRITIS"
+      }
+    },
+    {
+      "name": "maximum",
+      "values": {
+        "INS": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ECT": [
+          5,
+          5,
+          5,
+          5
+        ],
+        "OPS": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 100,
+          "ECT": 100,
+          "OPS": 100
+        },
+        "average_score": 100,
+        "category": "SANGAT BAIK"
+      }
+    },
+    {
+      "name": "midpoint",
+      "values": {
+        "INS": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ECT": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "OPS": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 50,
+          "ECT": 50,
+          "OPS": 50
+        },
+        "average_score": 50,
+        "category": "KURANG"
+      }
+    },
+    {
+      "name": "partial_ins",
+      "values": {
+        "INS": [
+          3
+        ],
+        "ECT": [],
+        "OPS": []
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 100,
+          "ECT": null,
+          "OPS": null
+        },
+        "average_score": 100,
+        "category": "SANGAT BAIK"
+      }
+    },
+    {
+      "name": "empty",
+      "values": {
+        "INS": [],
+        "ECT": [],
+        "OPS": []
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": null,
+          "ECT": null,
+          "OPS": null
+        },
+        "average_score": null,
+        "category": "BELUM DINILAI"
+      }
+    },
+    {
+      "name": "zero_and_maximum",
+      "values": {
+        "INS": [
+          1
+        ],
+        "ECT": [
+          5
+        ],
+        "OPS": []
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 0,
+          "ECT": 100,
+          "OPS": null
+        },
+        "average_score": 50,
+        "category": "KURANG"
+      }
+    },
+    {
+      "name": "demo_kawalogy",
+      "values": {
+        "INS": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ECT": [
+          5,
+          5,
+          5,
+          4
+        ],
+        "OPS": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          4
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 100,
+          "ECT": 93.75,
+          "OPS": 95.8333
+        },
+        "average_score": 96.5,
+        "category": "SANGAT BAIK"
+      }
+    },
+    {
+      "name": "demo_warjon",
+      "values": {
+        "INS": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ECT": [
+          5,
+          5,
+          5,
+          4
+        ],
+        "OPS": [
+          5,
+          5,
+          5,
+          5,
+          4,
+          4
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 100,
+          "ECT": 93.75,
+          "OPS": 91.6667
+        },
+        "average_score": 95.1,
+        "category": "SANGAT BAIK"
+      }
+    },
+    {
+      "name": "demo_upside_down",
+      "values": {
+        "INS": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ECT": [
+          5,
+          5,
+          4,
+          4
+        ],
+        "OPS": [
+          5,
+          5,
+          5,
+          4,
+          4,
+          4
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 100,
+          "ECT": 87.5,
+          "OPS": 87.5
+        },
+        "average_score": 91.7,
+        "category": "SANGAT BAIK"
+      }
+    },
+    {
+      "name": "demo_ayam_geprek",
+      "values": {
+        "INS": [
+          3,
+          3,
+          3,
+          3,
+          2,
+          2
+        ],
+        "ECT": [
+          5,
+          5,
+          4,
+          4
+        ],
+        "OPS": [
+          5,
+          5,
+          5,
+          5,
+          4,
+          4
+        ]
+      },
+      "expected": {
+        "factor_scores": {
+          "INS": 83.3333,
+          "ECT": 87.5,
+          "OPS": 91.6667
+        },
+        "average_score": 87.5,
+        "category": "SANGAT BAIK"
+      }
+    }
+  ],
+  "rounding": [
+    {
+      "value": null,
+      "expected_score": null,
+      "expected_category": "BELUM DINILAI"
+    },
+    {
+      "value": 0,
+      "expected_score": 0,
+      "expected_category": "KRITIS"
+    },
+    {
+      "value": 39.9,
+      "expected_score": 39.9,
+      "expected_category": "KRITIS"
+    },
+    {
+      "value": 39.94,
+      "expected_score": 39.9,
+      "expected_category": "KRITIS"
+    },
+    {
+      "value": 39.95,
+      "expected_score": 40,
+      "expected_category": "KURANG"
+    },
+    {
+      "value": 40,
+      "expected_score": 40,
+      "expected_category": "KURANG"
+    },
+    {
+      "value": 54.9,
+      "expected_score": 54.9,
+      "expected_category": "KURANG"
+    },
+    {
+      "value": 54.95,
+      "expected_score": 55,
+      "expected_category": "CUKUP"
+    },
+    {
+      "value": 55,
+      "expected_score": 55,
+      "expected_category": "CUKUP"
+    },
+    {
+      "value": 69.9,
+      "expected_score": 69.9,
+      "expected_category": "CUKUP"
+    },
+    {
+      "value": 69.95,
+      "expected_score": 70,
+      "expected_category": "BAIK"
+    },
+    {
+      "value": 70,
+      "expected_score": 70,
+      "expected_category": "BAIK"
+    },
+    {
+      "value": 84.9,
+      "expected_score": 84.9,
+      "expected_category": "BAIK"
+    },
+    {
+      "value": 84.95,
+      "expected_score": 85,
+      "expected_category": "SANGAT BAIK"
+    },
+    {
+      "value": 85,
+      "expected_score": 85,
+      "expected_category": "SANGAT BAIK"
+    },
+    {
+      "value": 100,
+      "expected_score": 100,
+      "expected_category": "SANGAT BAIK"
+    }
+  ]
+}

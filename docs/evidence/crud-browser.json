@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-04T05:39:47.164Z",
+  "browser": "Chrome headless CDP",
+  "checks": [
+    {
+      "id": "CRUD01",
+      "status": "PASS",
+      "detail": "Akun baru menampilkan 0 dari 0 dan empty state."
+    },
+    {
+      "id": "CRUD02",
+      "status": "PASS",
+      "detail": "Inline422 fokus benar; Tambah Data menyimpan omzet 15.000.000 sebagai integer15000000."
+    },
+    {
+      "id": "CRUD03",
+      "status": "PASS",
+      "detail": "Ubah prefill memperbarui database; nama HTML tampil literal tanpa eksekusi."
+    },
+    {
+      "id": "CRUD04",
+      "status": "PASS",
+      "detail": "Filter gabungan dan URL tetap saat modal edit dibuka/ditutup."
+    },
+    {
+      "id": "CRUD05",
+      "status": "PASS",
+      "detail": "Konfirmasi hapus menyebut dampak; tabel dan database benar-benar kosong."
+    },
+    {
+      "id": "CRUD06",
+      "status": "PASS",
+      "detail": "Menghapus item terakhir halaman2 memundurkan halaman dan memuat10data."
+    },
+    {
+      "id": "CRUD07",
+      "status": "PASS",
+      "detail": "Search debounce, empty-filter state, dan back browser memulihkan URL/tabel."
+    },
+    {
+      "id": "CRUD08",
+      "status": "PASS",
+      "detail": "Tidak ada runtime exception browser pada CRUD."
+    }
+  ]
+}

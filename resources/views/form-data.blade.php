@@ -1,0 +1,14 @@
+@extends('layouts.app', ['page' => 'form-data', 'title' => 'Form Data'])
+@section('content')
+<div class="page-heading"><div><h1>Form Data</h1><p class="muted">Isi evaluasi sesuai kondisi UMKM yang Anda dampingi.</p></div></div>
+<section class="panel picker-panel" aria-labelledby="picker-title"><h2 id="picker-title">Pilih UMKM</h2><fieldset id="umkm-picker"><div class="skeleton h-10"></div></fieldset></section>
+<div id="questionnaire-state" aria-live="polite"><div class="skeleton h-32"></div></div>
+<div id="evaluation-layout" class="evaluation-layout" hidden>
+    <form id="evaluation-form" method="post" novalidate><div id="evaluation-message" class="form-message" role="alert" tabindex="-1" hidden></div><div id="evaluation-empty" class="panel empty-state"><h2>Pilih UMKM terlebih dahulu</h2><p class="muted">Kuesioner dan evaluasi terbaru akan dimuat setelah UMKM dipilih.</p></div><div id="questionnaire-factors"></div></form>
+    <aside class="evaluation-sidebar">
+        <section class="panel live-panel"><h2>LIVE CALCULATION</h2><p id="evaluation-completeness" class="muted">0 soal terjawab</p><div id="factor-progress"></div><div class="live-average"><span>Skor Rata-rata (3 Faktor)</span><strong id="live-average">—</strong><small>/100</small></div><div class="live-category"><span>KATEGORI SEMENTARA</span><strong id="live-category">—</strong></div><p id="evaluation-status" class="evaluation-status muted">Pilih UMKM untuk mulai mengisi.</p><p id="evaluation-server-result" class="server-result" role="status" hidden></p><button id="save-evaluation" type="submit" form="evaluation-form" class="button button-primary w-full" disabled>Simpan Evaluasi</button><button id="preview-draft" type="button" class="button button-outline w-full" disabled>Pratinjau Draft</button><button id="reset-evaluation" type="button" class="button button-ghost w-full" disabled>Reset Form</button></section>
+        <section class="guide-panel"><h2>Panduan Pengisian</h2><p>Jawab sesuai kondisi usaha. Draft dapat disimpan sebelum seluruh pertanyaan terisi.</p><button type="button" class="button" disabled>DOWNLOAD PDF PANDUAN</button><small>Panduan PDF belum tersedia</small></section>
+    </aside>
+</div>
+<dialog id="draft-preview-modal" class="modal preview-modal" aria-labelledby="draft-preview-title"><div class="modal-heading"><h2 id="draft-preview-title">Pratinjau Draft</h2><button type="button" class="icon-button" data-close-dialog aria-label="Tutup pratinjau"><x-icon name="close"/></button></div><p class="muted">Pratinjau belum menyimpan evaluasi.</p><div id="draft-preview-content"></div><div class="modal-actions"><button type="button" class="button button-outline" data-close-dialog>Kembali Mengisi</button><button type="button" id="save-draft" class="button button-primary">Simpan sebagai Draft</button></div></dialog>
+@endsection

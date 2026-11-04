@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-04T05:54:48.697Z",
+  "checks": [
+    {
+      "id": "SUMMARY01",
+      "status": "PASS",
+      "detail": "Akun baru memiliki ringkasan netral tanpa kategori kritis palsu."
+    },
+    {
+      "id": "SUMMARY02",
+      "status": "PASS",
+      "detail": "Home merata-ratakan latest0 dan100 menjadi50,0 dari2responden."
+    },
+    {
+      "id": "SUMMARY03",
+      "status": "PASS",
+      "detail": "Draft kosong terbaru menghapus skor100 dari mean; filter kosong tetap ringkasan seluruh akun dan0dihitung."
+    },
+    {
+      "id": "SUMMARY04",
+      "status": "PASS",
+      "detail": "Ubah sektor lewat modal langsung memindahkan kontribusi dan memperbarui kartu."
+    },
+    {
+      "id": "SUMMARY05",
+      "status": "PASS",
+      "detail": "Hapus UMKM berskor membuat mean null/sektor netral, tetapi draft kosong tetap1responden."
+    }
+  ]
+}

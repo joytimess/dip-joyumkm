@@ -1,0 +1,242 @@
+{
+  "at": "2026-11-04T06:25:17.795Z",
+  "checks": [
+    {
+      "id": "PROD01",
+      "status": "PASS",
+      "detail": "Login demo lewat UI memakai akun Warjon dan skor aktual96.5/95.1/91.7/87.5 dari database lokal."
+    },
+    {
+      "id": "PROD02",
+      "status": "PASS",
+      "detail": "Home/tabel/form/radar/donut/bar/comparison berjalan memakai aset hasil build; seluruh request aset build200, tanpa Vite dev5173."
+    },
+    {
+      "id": "PROD03",
+      "status": "PASS",
+      "detail": "Build mobile360px tanpa overflow; drawer keyboardEscape menutup dan mengembalikan fokus."
+    }
+  ],
+  "assets": [
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/home-Dlyb4ySh.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/summary-D0lTiLET.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/summary-D0lTiLET.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/umkms-OcvqpurY.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/umkm-picker-CpQn98ND.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/form-data-P6Ah8QY5.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/factor-profile-DwLXMhLo.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/umkm-picker-CpQn98ND.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/charts-BFNi1mvk.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/distribution-CJMT4M1M.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/charts-BFNi1mvk.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-PozmSGik.css",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/app-Cy-0csXP.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/comparison-BiNbyGuH.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-400-normal-Dhut76fR.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/umkm-picker-CpQn98ND.js",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-700-normal-CfpNZvy6.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-600-normal-DLTa1BUW.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/plus-jakarta-sans-latin-500-normal-Bf-nb4oT.woff2",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/build/assets/charts-BFNi1mvk.js",
+      "status": 200
+    }
+  ]
+}

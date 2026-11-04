@@ -1,0 +1,55 @@
+{
+  "at": "2026-11-04T06:13:07.433Z",
+  "checks": [
+    {
+      "id": "CHART01",
+      "status": "PASS",
+      "detail": "Akun kosong: ketiga halaman menyediakan empty state tanpa grafik atau angka palsu."
+    },
+    {
+      "id": "CHART02",
+      "status": "PASS",
+      "detail": "Pemilihan otomatis menampilkan radar0–100 dengan skor0 valid dan baseline seluruh portofolio."
+    },
+    {
+      "id": "CHART03",
+      "status": "PASS",
+      "detail": "Draft INS saja ditampilkan100,0/Sementara1 dari16; radar tidak menggambar null sebagai0."
+    },
+    {
+      "id": "CHART04",
+      "status": "PASS",
+      "detail": "Donut berjumlah4 termasuk BELUM DINILAI; sektor tanpa skor tertulis belum dinilai; desktop/768/360px tanpa overflow halaman."
+    },
+    {
+      "id": "CHART05",
+      "status": "PASS",
+      "detail": "Comparison memakai grouped bar+line; draft/null tetap terlihat di tabel; kosong eksplisit bertahan sesudah reload dan berbeda dari pilihan otomatis."
+    },
+    {
+      "id": "CHART06",
+      "status": "PASS",
+      "detail": "Pemilih multi memakai API nyata, menerima5UMKM dan menonaktifkan tambahan keenam; mobile360px tetap terjangkau."
+    },
+    {
+      "id": "CHART07",
+      "status": "PASS",
+      "detail": "Respons radar lama tidak menimpa pilihan baru atau pilihan yang dikosongkan."
+    },
+    {
+      "id": "CHART10",
+      "status": "PASS",
+      "detail": "Regresi review frontend: radar awal lambat tidak mengembalikan opsi/paginasi lama setelah pencarian baru."
+    },
+    {
+      "id": "CHART08",
+      "status": "PASS",
+      "detail": "Network error menyediakan Coba lagi, mempertahankan token, dan memuat ulang dataset dengan sukses."
+    },
+    {
+      "id": "CHART09",
+      "status": "PASS",
+      "detail": "Deep link hilang menampilkan404/jalan kembali tanpa data UMKM; seluruh pemeriksaan tanpa runtime exception."
+    }
+  ]
+}
