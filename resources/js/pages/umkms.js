@@ -123,18 +123,29 @@ export async function init() {
             const category = options?.categories.find((item) => item.label === umkm.category);
             const recommendation = element('span', { class: 'category-label', text: umkm.recommendation });
             if (category) recommendation.style.color = category.color;
-            const editButton = element('button', { type: 'button', class: 'row-action', text: 'Ubah', onclick: () => openEdit(umkm.id, editButton) });
-            const removeButton = element('button', { type: 'button', class: 'row-action text-danger', text: 'Hapus', onclick: () => openDelete(umkm, removeButton) });
+            const editButton = element('button', { type: 'button', class: 'table-link row-action', text: 'Ubah', onclick: () => openEdit(umkm.id, editButton) });
+            const removeButton = element('button', { type: 'button', class: 'table-link danger row-action text-danger', text: 'Hapus', onclick: () => openDelete(umkm, removeButton) });
             rows.append(element('tr', {}, [
                 element('td', { class: 'num', text: meta.from + index }),
-                element('td', { class: 'umkm-name', text: umkm.name }),
-                element('td', { class: 'table-location', text: umkm.province }),
-                element('td', {}, [element('span', { class: 'sector-badge', text: umkm.sector.name })]),
-                element('td', { class: 'num', text: formatNumber(umkm.omzet) }),
-                element('td', { class: 'num' }, [element('strong', { text: formatScore(umkm.latest_score) }), umkm.evaluation_status === 'draft' ? element('span', { class: 'draft-badge', text: 'Sementara' }) : null]),
-                element('td', {}, [element('a', { href: `/factor-profile?umkm_id=${umkm.id}`, class: 'row-action', text: 'Lihat profil faktor' })]),
+                element('td', { class: 'umkm-name' }, [
+                    element('strong', { text: umkm.name }),
+                ]),
+                element('td', { class: 'table-location muted', text: umkm.province }),
+                element('td', {}, [element('span', { class: 'pill pill-muted sector-badge', text: umkm.sector.name })]),
+                element('td', { class: 'num' }, [
+                    element('span', { text: `Rp ${formatNumber(umkm.omzet)}` }),
+                ]),
+                element('td', { class: 'num' }, [
+                    element('strong', { text: umkm.latest_score === null ? '—' : `${formatScore(umkm.latest_score)}/100` }),
+                    umkm.evaluation_status === 'draft' ? element('div', { style: 'margin-top:4px;' }, [element('span', { class: 'pill pill-amber', text: 'Sementara' })]) : (umkm.evaluation_status === 'final' ? element('div', { style: 'margin-top:4px;' }, [element('span', { class: 'pill pill-green', text: 'Final' })]) : null),
+                ]),
+                element('td', {}, [element('a', { href: `/factor-profile?umkm_id=${umkm.id}`, class: 'table-link row-action', text: 'Lihat profil faktor' })]),
                 element('td', {}, [recommendation]),
-                element('td', {}, [element('div', { class: 'row-actions' }, [element('a', { href: `/form-data?umkm=${umkm.id}`, class: 'row-action', text: 'Isi Kuesioner' }), editButton, removeButton])]),
+                element('td', {}, [element('div', { class: 'row-actions hstack' }, [
+                    element('a', { href: `/form-data?umkm=${umkm.id}`, class: 'table-link row-action', text: 'Isi Kuesioner' }),
+                    editButton,
+                    removeButton,
+                ])]),
             ]));
         });
         document.getElementById('umkm-page-info').textContent = `Halaman ${meta.current_page} dari ${meta.last_page} (${formatNumber(meta.total)} data)`;

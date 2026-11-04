@@ -7,6 +7,10 @@ export async function init() {
     const form = document.getElementById('evaluation-form');
     const layout = document.getElementById('evaluation-layout');
     const factorContainer = document.getElementById('questionnaire-factors');
+    const factorTabs = document.getElementById('factor-tabs');
+    const factorNav = document.getElementById('factor-navigation');
+    const prevBtn = document.getElementById('previous-factor');
+    const nextBtn = document.getElementById('next-factor');
     const state = document.getElementById('questionnaire-state');
     const message = document.getElementById('evaluation-message');
     const empty = document.getElementById('evaluation-empty');
@@ -26,6 +30,7 @@ export async function init() {
     let ready = false;
     let saving = false;
     let leaving = false;
+    let currentFactorIndex = 0;
     bindDialog(preview);
     preview.addEventListener('cancel', (event) => { if (saving) event.preventDefault(); });
 
@@ -35,12 +40,49 @@ export async function init() {
     const isDirty = () => Boolean(questionnaire && selectedUmkm && fingerprint() !== baseline);
     const confirmDiscard = () => !isDirty() || window.confirm('Perubahan belum disimpan. Buang perubahan dan lanjutkan?');
 
+    function renderTabs() {
+        if (!questionnaire || !selectedUmkm) {
+            factorTabs.hidden = true;
+            factorNav.hidden = true;
+            return;
+        }
+        factorTabs.hidden = false;
+        factorNav.hidden = false;
+        factorTabs.replaceChildren(...questionnaire.factors.map((factor, index) => {
+            const answeredInFactor = factor.questions.filter((q) => answers.has(q.id)).length;
+            const totalInFactor = factor.questions.length;
+            const isCurrent = index === currentFactorIndex;
+            return element('button', {
+                type: 'button',
+                class: `factor-tab ${isCurrent ? 'active' : ''}`,
+                role: 'tab',
+                'aria-selected': isCurrent ? 'true' : 'false',
+                onclick: () => switchFactor(index),
+            }, [
+                element('span', { text: factor.code }),
+                element('span', { class: 'factor-complete', text: ` (${answeredInFactor}/${totalInFactor})` }),
+            ]);
+        }));
+        prevBtn.disabled = currentFactorIndex <= 0;
+        nextBtn.disabled = currentFactorIndex >= questionnaire.factors.length - 1;
+    }
+
+    function switchFactor(index) {
+        if (!questionnaire || index < 0 || index >= questionnaire.factors.length) return;
+        currentFactorIndex = index;
+        renderTabs();
+        const factorCards = factorContainer.querySelectorAll('.factor-card');
+        factorCards.forEach((card, i) => {
+            card.hidden = i !== currentFactorIndex;
+        });
+    }
+
     function setControls() {
         for (const button of [saveButton, previewButton, resetButton, draftButton]) button.disabled = !selectedUmkm || !ready || saving;
         form.querySelectorAll('input').forEach((input) => { input.disabled = saving || !ready; });
         document.getElementById('umkm-picker').disabled = saving;
         preview.querySelectorAll('[data-close-dialog]').forEach((button) => { button.disabled = saving; });
-        saveButton.textContent = saving ? 'Menyimpan…' : 'Simpan Evaluasi';
+        saveButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Final';
         draftButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Draft';
     }
 
@@ -58,10 +100,14 @@ export async function init() {
         progress.replaceChildren(...questionnaire.factors.map((factor) => {
             const score = scores.factor_scores[factor.code];
             const row = element('div', { class: 'factor-progress-row' }, [
-                element('div', { class: 'factor-progress-label' }, [element('span', { text: factor.code }), element('strong', { class: 'num', text: formatScore(score) })]),
-                element('progress', { max: 100, value: score ?? 0, 'aria-label': `${factor.name}: ${score === null ? 'belum dijawab' : formatScore(score)}` }),
+                element('div', { class: 'factor-progress-label between hstack', style: 'margin-bottom:4px;' }, [
+                    element('span', { class: 'small strong', text: factor.code }),
+                    element('strong', { class: 'num small', text: formatScore(score) }),
+                ]),
+                element('div', { class: 'progress', style: 'height:6px;' }, [
+                    element('span', { style: `width:${Math.max(0, Math.min(100, Number(score) || 0))}%;background:${factor.color}` }),
+                ]),
             ]);
-            row.style.setProperty('--factor-color', factor.color);
             return row;
         }));
         document.getElementById('live-average').textContent = formatScore(scores.average_score);
@@ -69,6 +115,7 @@ export async function init() {
         category.textContent = scores.category;
         category.style.color = [...questionnaire.scoring.categories, questionnaire.scoring.unrated].find((item) => item.label === scores.category)?.color || '';
         document.getElementById('evaluation-status').textContent = !selectedUmkm ? 'Pilih UMKM untuk mulai mengisi.' : (latest?.status === 'final' && !isDirty() ? 'Evaluasi terakhir: Final.' : 'Sementara — simpan final setelah seluruh soal terjawab.');
+        renderTabs();
         setControls();
         return scores;
     }
@@ -76,39 +123,61 @@ export async function init() {
     function makeRadio(question, option, pill = false) {
         const radio = element('input', { type: 'radio', name: `question_${question.id}`, value: option.value, 'data-question-id': question.id, 'aria-label': `${question.text} — ${option.value}: ${option.label}`, 'aria-describedby': `question-error-${question.id}` });
         radio.checked = answers.get(question.id) === option.value;
-        return element('label', { class: pill ? 'radio-pill' : 'likert-option' }, [radio, element('span', { text: pill ? `${option.value} = ${option.label}` : option.value })]);
+        return element('label', { class: pill ? 'radio-pill' : 'rating-option' }, [
+            radio,
+            element('span', { text: pill ? `${option.value} = ${option.label}` : option.value }),
+        ]);
     }
 
     function renderQuestions() {
         factorContainer.replaceChildren();
-        for (const factor of questionnaire.factors) {
-            const card = element('section', { class: 'panel factor-card', 'aria-labelledby': `factor-title-${factor.id}` }, [
-                element('h2', { id: `factor-title-${factor.id}`, text: factor.name }),
-                element('p', { class: 'factor-description muted', text: factor.description }),
+        questionnaire.factors.forEach((factor, fIdx) => {
+            const card = element('section', { class: 'card card-pad panel factor-card', 'aria-labelledby': `factor-title-${factor.id}` }, [
+                element('div', { class: 'section-top', style: 'margin-bottom:18px;' }, [
+                    element('div', {}, [
+                        element('h2', { id: `factor-title-${factor.id}`, class: 'section-title', text: factor.name }),
+                        element('p', { class: 'section-desc muted', text: factor.description }),
+                    ]),
+                ]),
             ]);
             card.style.setProperty('--factor-color', factor.color);
+            card.hidden = fIdx !== currentFactorIndex;
+
             if (factor.questions.every((question) => question.input_type === 'likert')) {
-                const options = factor.questions[0]?.options || [];
-                const body = element('tbody');
-                const header = element('tr', {}, [element('th', { scope: 'col', text: 'Pernyataan' }), ...options.map((option) => element('th', { scope: 'col', title: option.label }, [element('span', { text: option.value }), element('small', { text: option.label })]))]);
-                for (const question of factor.questions) {
-                    body.append(element('tr', { role: 'radiogroup', 'aria-labelledby': `question-title-${question.id}` }, [
-                        element('th', { scope: 'row' }, [element('span', { id: `question-title-${question.id}`, text: question.text }), element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id })]),
-                        ...question.options.map((option) => element('td', {}, [makeRadio(question, option)])),
+                const qGroup = element('div', { class: 'question-group' });
+                factor.questions.forEach((question, qIdx) => {
+                    qGroup.append(element('div', { class: 'question-block', role: 'radiogroup', 'aria-labelledby': `question-title-${question.id}` }, [
+                        element('div', { class: 'question-title' }, [
+                            element('span', { class: 'question-index', text: `${qIdx + 1}` }),
+                            element('div', {}, [
+                                element('strong', { id: `question-title-${question.id}`, text: question.text }),
+                                element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
+                            ]),
+                        ]),
+                        element('div', { class: 'rating-options' }, question.options.map((option) => makeRadio(question, option, false))),
                     ]));
-                }
-                card.append(element('div', { class: 'likert-scroll' }, [element('table', { class: 'likert-table' }, [element('thead', {}, [header]), body])]));
+                });
+                card.append(qGroup);
             } else {
-                for (const question of factor.questions) {
-                    card.append(element('fieldset', { class: 'radio-question' }, [
-                        element('legend', { text: question.text }),
-                        element('div', { class: 'radio-options' }, question.options.map((option) => makeRadio(question, option, true))),
-                        element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
+                const qGroup = element('div', { class: 'question-group' });
+                factor.questions.forEach((question, qIdx) => {
+                    qGroup.append(element('div', { class: 'question-block radio-question', role: 'radiogroup', 'aria-labelledby': `question-title-${question.id}` }, [
+                        element('div', { class: 'question-title' }, [
+                            element('span', { class: 'question-index', text: `${qIdx + 1}` }),
+                            element('div', {}, [
+                                element('strong', { id: `question-title-${question.id}`, text: question.text }),
+                                element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
+                            ]),
+                        ]),
+                        element('div', { class: 'radio-options', style: 'display:flex;gap:8px;flex-wrap:wrap;' }, question.options.map((option) => makeRadio(question, option, true))),
                     ]));
-                }
+                });
+                card.append(qGroup);
             }
             factorContainer.append(card);
-        }
+        });
+        renderTabs();
+        switchFactor(currentFactorIndex);
     }
 
     function acceptEvaluation(evaluation) {
@@ -194,6 +263,16 @@ export async function init() {
         }
         message.hidden = false;
         const firstError = form.querySelector('[aria-invalid="true"]') || activeQuestions().filter((question) => !answers.has(question.id)).map((question) => form.querySelector(`[data-question-id="${question.id}"]`))[0];
+        if (firstError) {
+            const qIdAttr = firstError.dataset?.questionId || firstError.closest('[data-question-id]')?.dataset?.questionId;
+            if (qIdAttr) {
+                const questionId = Number(qIdAttr);
+                const fIdx = questionnaire.factors.findIndex((f) => f.questions.some((q) => q.id === questionId));
+                if (fIdx !== -1 && fIdx !== currentFactorIndex) {
+                    switchFactor(fIdx);
+                }
+            }
+        }
         queueMicrotask(() => (firstError || message).focus());
     }
 
@@ -241,6 +320,8 @@ export async function init() {
         renderLive();
     });
     form.addEventListener('submit', (event) => { event.preventDefault(); saveEvaluation('final'); });
+    prevBtn?.addEventListener('click', () => switchFactor(currentFactorIndex - 1));
+    nextBtn?.addEventListener('click', () => switchFactor(currentFactorIndex + 1));
     previewButton.addEventListener('click', renderPreview);
     draftButton.addEventListener('click', () => saveEvaluation('draft'));
     resetButton.addEventListener('click', () => {
