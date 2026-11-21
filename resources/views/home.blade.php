@@ -72,23 +72,95 @@
         </section>
     </div>
 
-    <section class="card home-six section-block" id="six-factor-section" aria-labelledby="home-six-title">
-        <div class="home-six-head">
-            <div><h2 id="home-six-title">Penilaian Enam Faktor</h2><p>Ringkasan penilaian per UMKM dari Sumber Daya, Kepemimpinan, Lingkungan Kerja, Nilai Organisasi, Stabilitas, dan Kinerja.</p><span class="home-six-note">Skala 1–5 per faktor · Total Final 6–30 · Terpisah dari skor 0–100</span></div>
-            <a id="home-six-open" class="btn button button-outline" href="{{ route('umkms', ['mode' => 'six-factor']) }}">Buka halaman penilaian ↗</a>
-        </div>
-        <div class="home-six-controls">
-            <div class="home-six-label">UMKM yang ingin ditinjau</div>
-            <div id="home-six-picker"></div>
-            <div class="home-six-tabs" role="group" aria-label="Jenis hasil enam faktor">
-                <button type="button" data-six-tab="final" aria-pressed="true">Final terbaru</button>
-                <button type="button" data-six-tab="draft" aria-pressed="false">Draft aktif</button>
-                <button type="button" data-six-tab="history" aria-pressed="false">Histori Final</button>
+    <section class="card home-three section-block" id="three-dimension-section" aria-labelledby="home-three-title">
+        <div class="home-three-head">
+            <div>
+                <h2 id="home-three-title">Kesehatan UMKM — Tiga Dimensi</h2>
+                <p>Institutional Resources · Economic Connectivity · Operational Stability</p>
             </div>
         </div>
-        <div class="home-six-body" id="home-six-body" aria-live="polite"><p class="muted">Memuat pilihan UMKM…</p></div>
-        <div class="home-six-bottom"><p id="home-six-note">Hasil Final terpisah dari skor kesehatan tiga dimensi.</p><button class="text-link" type="button" id="home-six-history">Lihat histori Final →</button></div>
+
+        <div id="three-kpis" class="home-three-kpis" aria-live="polite" aria-busy="true"></div>
+
+        <div class="home-three-columns">
+            <div class="home-three-left">
+                <section id="three-profile" class="home-three-card" aria-live="polite" aria-busy="true"></section>
+                <section id="three-selected" class="home-three-card" aria-live="polite" aria-busy="true"></section>
+            </div>
+
+            <section class="home-three-card home-three-list" aria-labelledby="three-list-title">
+                <div class="home-three-list-head">
+                    <div>
+                        <h3 id="three-list-title">Daftar Portofolio UMKM</h3>
+                        <p class="home-three-sub">Memantau evaluasi kesehatan berkala untuk seluruh UMKM binaan</p>
+                    </div>
+                    <span id="three-total" class="home-three-badge home-three-badge-blue" hidden></span>
+                </div>
+                <div class="home-three-tools">
+                    <input id="three-search" class="home-three-input" type="search" maxlength="120" placeholder="Cari nama UMKM..." aria-label="Cari nama UMKM">
+                    <div class="field form-field">
+                        <label for="three-status-filter" class="sr-only">Filter status</label>
+                        <select id="three-status-filter" class="control"></select>
+                    </div>
+                </div>
+                <div id="three-list" aria-live="polite" aria-busy="true"></div>
+                <div id="three-pager" class="home-three-pager" hidden></div>
+            </section>
+        </div>
     </section>
+
+    <section class="card home-six section-block" id="six-factor-section" aria-labelledby="home-six-title">
+        <div class="home-six-head">
+            <div>
+                <h2 id="home-six-title">Penilaian Enam Faktor</h2>
+                <p>Ringkasan hasil Final terbaru dari seluruh UMKM. Setiap UMKM ditampilkan dalam satu kartu.</p>
+            </div>
+            <a id="home-six-open" class="btn button button-outline" href="{{ route('umkms', ['mode' => 'six-factor']) }}">Buka halaman penilaian ↗</a>
+        </div>
+        <div id="six-kpis" class="home-six-kpis" aria-live="polite"></div>
+        <div class="home-six-tools" role="search">
+            <input id="six-search" class="home-six-input" type="search" maxlength="120" placeholder="Cari nama UMKM atau sektor…" aria-label="Cari UMKM">
+            <div class="field form-field">
+                <label for="six-status" class="sr-only">Filter status</label>
+                <select id="six-status" class="control">
+                    <option value="all">Semua status</option>
+                    <option value="final">Sudah Final</option>
+                    <option value="none">Belum ada Final</option>
+                </select>
+            </div>
+            <div class="field form-field">
+                <label for="six-sort" class="sr-only">Urutkan</label>
+                <select id="six-sort" class="control">
+                    <option value="name_asc">Nama A–Z</option>
+                    <option value="score_desc">Skor tertinggi</option>
+                    <option value="score_asc">Skor terendah</option>
+                </select>
+            </div>
+        </div>
+        <div id="six-cards" class="home-six-cards" aria-live="polite"></div>
+        <div id="six-pager" class="home-six-pager" hidden>
+            <span id="six-count" class="muted"></span>
+            <div>
+                <button id="six-prev" type="button" class="button button-outline">← Sebelumnya</button>
+                <button id="six-next" type="button" class="button button-outline">Berikutnya →</button>
+            </div>
+        </div>
+        <p class="home-six-bottom-note">Hanya hasil Final resmi. Nilai Tiga Dimensi tidak digabung dengan Enam Faktor.</p>
+    </section>
+
+    <dialog id="six-factor-detail" class="modal dialog six-factor-detail-dialog" aria-labelledby="six-factor-detail-title" aria-describedby="six-factor-detail-place">
+        <div class="dialog-head">
+            <div class="min-w-0">
+                <h2 id="six-factor-detail-title" class="section-title break-words"></h2>
+                <p id="six-factor-detail-place" class="muted small"></p>
+            </div>
+            <button type="button" class="icon-button" data-close-dialog aria-label="Tutup detail Final"><x-icon name="close"/></button>
+        </div>
+        <div id="six-factor-detail-content" class="dialog-body"></div>
+        <div class="dialog-footer wrap">
+            <a id="six-factor-detail-link" class="btn button button-outline" href="/umkms">Buka halaman penilaian ↗</a>
+        </div>
+    </dialog>
 
     <section class="card card-pad panel priority-panel section-block" aria-labelledby="snapshot-title">
         <div class="section-top section-heading">

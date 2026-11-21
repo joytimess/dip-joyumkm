@@ -80,6 +80,9 @@
     <symbol id="joy-i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 3h14l3 3v15H3V3zM7 3v6h10V3M7 21v-8h10v8"/>
     </symbol>
+    <symbol id="joy-i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/>
+    </symbol>
     <symbol id="joy-i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 19h16M6.5 15v-4m5 4V6m5 9V9"/>
     </symbol>

@@ -271,26 +271,7 @@
     .likert-option { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 44px; cursor: pointer; }
     .likert-option > span { display: none; }
     .evaluation-sidebar { display: grid; gap: 20px; position: sticky; top: 24px; }
-    .live-panel { padding: 22px; }
-    .live-panel h2 { font-size: 12px; letter-spacing: .04em; }
-    #evaluation-completeness { font-size: 11px; margin-top: 9px; }
-    #factor-progress { margin-top: 23px; display: grid; gap: 17px; }
-    .factor-progress-label { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; margin-bottom: 7px; }
-    .factor-progress-label strong { font-weight: 600; }
-    .factor-progress-row progress { display: block; width: 100%; height: 6px; overflow: hidden; border: none; border-radius: 10px; background: #edf0f5; color: var(--factor-color); accent-color: var(--factor-color); }
-    .factor-progress-row progress::-webkit-progress-bar { background: #edf0f5; border-radius: 10px; }
-    .factor-progress-row progress::-webkit-progress-value { background: var(--factor-color); border-radius: 10px; }
-    .factor-progress-row progress::-moz-progress-bar { background: var(--factor-color); border-radius: 10px; }
-    .live-average { margin-top: 27px; padding-top: 22px; border-top: 1px solid #edf0f5; }
-    .live-average > span { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 7px; }
-    .live-average strong { font-size: 33px; font-weight: 700; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-    .live-average small { margin-left: 5px; color: var(--text-muted); }
-    .live-category { padding: 13px; background: #f5f6fa; border-radius: 9px; margin-top: 17px; }
-    .live-category span { display: block; color: var(--text-muted); font-size: 9px; letter-spacing: .025em; margin-bottom: 5px; }
-    .live-category strong { font-size: 13px; }
-    .evaluation-status { font-size: 10px; margin: 12px 0 17px; }
-    .live-panel > .button { margin-top: 9px; }
-    .server-result { background: #edf9f0; color: #17623e; font-size: 11px; padding: 10px; border-radius: 7px; margin-bottom: 10px; }
+    .server-result { background: var(--status-good-surface); color: var(--status-good); font-size: 11px; padding: 10px; border-radius: 7px; margin-bottom: 10px; }
     .guide-panel { padding: 23px; border-radius: 16px; color: #fff; background: #4d3399; }
     .guide-panel h2 { font-size: 15px; }
     .guide-panel p { font-size: 11px; color: #ded8f7; margin: 13px 0 19px; }
@@ -386,10 +367,7 @@
     .evaluation-sidebar { display: contents; }
     .evaluation-layout > form { grid-row: 2; }
     .guide-panel { grid-row: 3; }
-    .live-panel { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; grid-row: 1; }
-    .live-panel h2, #evaluation-completeness, #factor-progress, .evaluation-status, .server-result, #reset-evaluation { grid-column: 1 / -1; }
-    .live-average { border: none; padding-top: 0; margin-top: 18px; }
-    .live-category { align-self: center; }
+    .live-panel { grid-row: 1; }
     .summary-cards { gap: 12px; }
     .summary-cards > article { padding: 18px; }
     .summary-sector { font-size: 16px; }
@@ -448,7 +426,6 @@
     .likert-option > span { display: block; }
     .factor-card h2 { font-size: 15px; }
     .radio-pill { padding: 8px; font-size: 10px; }
-    .live-panel { padding: 20px; }
     .summary-cards { grid-template-columns: 1fr; }
     .summary-heading { align-items: start; flex-direction: column; gap: 5px; }
     .summary-heading:has(#summary-state:empty) { gap: 0; }

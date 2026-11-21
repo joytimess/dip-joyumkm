@@ -19,6 +19,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/dashboard/factor-profile', [DashboardController::class, 'factorProfile']);
     Route::get('/dashboard/distribution', [DashboardController::class, 'distribution']);
     Route::get('/dashboard/comparison', [DashboardController::class, 'comparison']);
+    Route::get('/dashboard/three-dimension-health', [DashboardController::class, 'threeDimensionHealth']);
+    Route::get('/dashboard/three-dimension-detail', [DashboardController::class, 'threeDimensionDetail']);
+    Route::get('/dashboard/six-factor-summary', [DashboardController::class, 'sixFactorSummary']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'show']);
     Route::get('/umkms/{id}/evaluations/latest', [EvaluationController::class, 'latest'])->whereNumber('id');
     Route::post('/umkms/{id}/evaluations', [EvaluationController::class, 'store'])->whereNumber('id');
