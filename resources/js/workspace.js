@@ -1,5 +1,5 @@
 import { getToken, concealWorkspace, redirectToLogin } from './api';
-import { showError } from './ui';
+import { confirmAction, showError } from './ui';
 
 const pages = {
     home: () => import('./pages/home'),
@@ -57,8 +57,11 @@ export function initWorkspace(user, overlays) {
         }
     }
 
-    function canLeave() {
-        return document.dispatchEvent(new Event('joyumkm:before-route-change', { cancelable: true }));
+    // Halaman menolak pindah dengan preventDefault(); bila perlu konfirmasi, halaman menaruh pesannya di event.detail.confirmation.
+    async function allowLeave() {
+        const event = new CustomEvent('joyumkm:before-route-change', { cancelable: true, detail: { confirmation: null } });
+        if (document.dispatchEvent(event)) return true;
+        return event.detail.confirmation ? confirmAction(event.detail.confirmation) : false;
     }
 
     function closeOverlays(returnFocus = true) {
@@ -72,7 +75,7 @@ export function initWorkspace(user, overlays) {
     async function navigate(target, nextPosition = null, retry = false, intent) {
         if (!validSession()) return;
         const traversal = nextPosition !== null;
-        if (traversal && !retry && !canLeave()) {
+        if (traversal && !retry && !(await allowLeave())) {
             if (traversal && nextPosition !== position) {
                 restoring = true;
                 history.go(position - nextPosition);
@@ -110,7 +113,8 @@ export function initWorkspace(user, overlays) {
             const name = content.body.dataset.page;
             if (!incoming || !Object.hasOwn(pages, name)) throw new Error('Missing workspace content');
             if (request.signal.aborted || intent?.aborted || !validSession()) return;
-            if (!traversal && !canLeave()) return;
+            if (!traversal && !(await allowLeave())) return;
+            if (request.signal.aborted || intent?.aborted || !validSession()) return;
             if (!traversal) {
                 scroll.set(position, window.scrollY);
                 nextPosition = (history.state?.workspaceIndex ?? position) + 1;

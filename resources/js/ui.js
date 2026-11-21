@@ -106,3 +106,50 @@ export function bindDialog(dialog) {
     });
     dialog.addEventListener('close', () => dialog._opener?.focus());
 }
+
+let confirmation;
+let pendingAnswer = null;
+
+function ensureConfirmation() {
+    if (confirmation) return confirmation;
+    confirmation = element('dialog', { class: 'modal dialog confirm-dialog', 'aria-labelledby': 'confirm-dialog-title', 'aria-describedby': 'confirm-dialog-description' }, [
+        element('div', { class: 'dialog-head' }, [element('h2', { id: 'confirm-dialog-title', class: 'section-title' })]),
+        element('div', { class: 'dialog-body' }, [element('p', { id: 'confirm-dialog-description', class: 'section-desc' })]),
+        element('div', { class: 'dialog-footer wrap' }, [
+            element('button', { type: 'button', class: 'btn btn-light button button-outline', text: 'Batal', 'data-close-dialog': true, autofocus: true }),
+            element('button', { type: 'button', class: 'btn btn-primary button button-primary', 'data-confirm-accept': true }),
+        ]),
+    ]);
+    confirmation.querySelector('[data-confirm-accept]').addEventListener('click', () => {
+        confirmation.returnValue = 'confirm';
+        confirmation.close();
+    });
+    confirmation.addEventListener('close', () => {
+        const resolve = pendingAnswer;
+        pendingAnswer = null;
+        resolve?.(confirmation.returnValue === 'confirm');
+    });
+    bindDialog(confirmation);
+    document.body.append(confirmation);
+    return confirmation;
+}
+
+/**
+ * Menampilkan konfirmasi bergaya dialog aplikasi (pengganti window.confirm).
+ * @param {{ title: string, message: string, confirmLabel?: string, tone?: 'primary'|'danger' }} options
+ * @returns {Promise<boolean>} true jika pengguna memilih aksi lanjut
+ */
+export function confirmAction({ title, message, confirmLabel = 'Lanjutkan', tone = 'primary' }) {
+    const dialog = ensureConfirmation();
+    pendingAnswer?.(false);
+    dialog.querySelector('#confirm-dialog-title').textContent = title;
+    dialog.querySelector('#confirm-dialog-description').textContent = message;
+    const accept = dialog.querySelector('[data-confirm-accept]');
+    accept.textContent = confirmLabel;
+    accept.className = tone === 'danger' ? 'btn button button-danger' : 'btn btn-primary button button-primary';
+    dialog.returnValue = '';
+    return new Promise((resolve) => {
+        pendingAnswer = resolve;
+        openDialog(dialog, document.activeElement);
+    });
+}

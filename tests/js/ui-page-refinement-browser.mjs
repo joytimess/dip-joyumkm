@@ -172,8 +172,8 @@ try {
             await page.locator('#save-draft').click();
             await page.getByText(/Draft sementara tersimpan/).waitFor();
             await page.locator('#save-evaluation').click();
-            await page.getByText(/Evaluasi final tersimpan/).waitFor();
-            await capture('questionnaire-final', '#evaluation-server-result');
+            await page.locator('.confirm-dialog[open] [data-confirm-accept]').click();
+            await page.waitForURL(/\/umkms\/\d+\/six-factor-evaluations/);
             await request(`/umkms/${scored.id}/evaluations`, 'POST', { status: 'final', answers });
         }
         await open(six);

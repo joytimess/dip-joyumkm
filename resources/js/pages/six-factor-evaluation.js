@@ -2,7 +2,7 @@ import ApexCharts from 'apexcharts';
 import { pageApi, getToken } from '../api';
 import { chartHost, chartOptions } from '../charts';
 import { createSixFactorDraft, sixFactors } from '../six-factor-draft';
-import { bindDialog, element, formatNumber, openDialog, showError, skeleton } from '../ui';
+import { bindDialog, confirmAction, element, formatNumber, openDialog, showError, skeleton } from '../ui';
 
 const dateFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 const emptyFinal = () => element('p', { class: 'muted', text: 'Belum ada penilaian Final' });
@@ -303,15 +303,24 @@ export function initEvaluation(path, signal) {
         byId('draft-title').focus();
     });
     window.addEventListener('focus', () => { if (!confirmation.open && !historical.open) void draft.refresh(true); }, { signal });
+    let logoutConfirmed = false;
     document.addEventListener('click', (event) => {
-        if (event.target.closest('[data-logout]') && draft.snapshot().dirty
-            && !window.confirm('Perubahan belum tersimpan. Keluar dari akun?')) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
+        const logout = event.target.closest('[data-logout]');
+        if (!logout) return;
+        if (logoutConfirmed) { logoutConfirmed = false; return; }
+        if (!draft.snapshot().dirty) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        void confirmAction({ title: 'Keluar dari akun?', message: 'Perubahan belum tersimpan. Keluar dari akun?', confirmLabel: 'Keluar', tone: 'danger' }).then((accepted) => {
+            if (!accepted || signal.aborted) return;
+            logoutConfirmed = true;
+            logout.click();
+        });
     }, { capture: true, signal });
     document.addEventListener('joyumkm:before-route-change', (event) => {
-        if (draft.snapshot().dirty && !window.confirm('Perubahan belum tersimpan. Tinggalkan halaman?')) event.preventDefault();
+        if (!draft.snapshot().dirty) return;
+        event.preventDefault();
+        event.detail.confirmation = { title: 'Tinggalkan halaman?', message: 'Perubahan belum tersimpan. Tinggalkan halaman?', confirmLabel: 'Tinggalkan', tone: 'danger' };
     }, { signal });
     signal.addEventListener('abort', () => {
         draft.stop();

@@ -475,8 +475,10 @@ export async function init(signal) {
     perPage.addEventListener('change', () => updateParams({ per_page: perPage.value }));
     addButton.addEventListener('click', openAdd);
     document.addEventListener('joyumkm:before-route-change', (event) => {
-        if (saving || (deleteModal.open && deleteButton.disabled)
-            || (hasUnsavedEdits() && !window.confirm('Perubahan belum disimpan. Buang perubahan dan lanjutkan?'))) event.preventDefault();
+        if (saving || (deleteModal.open && deleteButton.disabled)) { event.preventDefault(); return; }
+        if (!hasUnsavedEdits()) return;
+        event.preventDefault();
+        event.detail.confirmation = { title: 'Buang perubahan?', message: 'Perubahan belum disimpan. Buang perubahan dan lanjutkan?', confirmLabel: 'Buang perubahan', tone: 'danger' };
     }, { signal });
     window.addEventListener('beforeunload', (event) => {
         if (hasUnsavedEdits()) event.preventDefault();
