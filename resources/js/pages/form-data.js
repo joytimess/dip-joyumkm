@@ -1,9 +1,11 @@
-import { api } from '../api';
+import { pageApi } from '../api';
 import { calculateScores } from '../scoring';
 import { createUmkmPicker } from '../umkm-picker';
-import { element, formatScore, bindDialog, openDialog, showError, toast } from '../ui';
+import { syncUmkmBreadcrumb } from '../umkm-navigation';
+import { element, formatScore, bindDialog, openDialog, showError, skeleton, toast } from '../ui';
 
-export async function init() {
+export async function init(signal) {
+    const api = pageApi(signal);
     const form = document.getElementById('evaluation-form');
     const layout = document.getElementById('evaluation-layout');
     const factorContainer = document.getElementById('questionnaire-factors');
@@ -12,8 +14,10 @@ export async function init() {
     const prevBtn = document.getElementById('previous-factor');
     const nextBtn = document.getElementById('next-factor');
     const state = document.getElementById('questionnaire-state');
+    const picker = document.getElementById('umkm-picker');
     const message = document.getElementById('evaluation-message');
     const empty = document.getElementById('evaluation-empty');
+    const sidebar = layout.querySelector('.evaluation-sidebar');
     const saveButton = document.getElementById('save-evaluation');
     const previewButton = document.getElementById('preview-draft');
     const resetButton = document.getElementById('reset-evaluation');
@@ -22,6 +26,7 @@ export async function init() {
     const serverResult = document.getElementById('evaluation-server-result');
     let questionnaire;
     let selectedUmkm = null;
+    let pendingUmkm = null;
     let answers = new Map();
     let baseline = '';
     let latest = null;
@@ -55,9 +60,11 @@ export async function init() {
             return element('button', {
                 type: 'button',
                 class: `factor-tab ${isCurrent ? 'active' : ''}`,
-                role: 'tab',
-                'aria-selected': isCurrent ? 'true' : 'false',
-                onclick: () => switchFactor(index),
+                'aria-pressed': String(isCurrent),
+                onclick: () => {
+                    switchFactor(index);
+                    factorTabs.children[index].focus();
+                },
             }, [
                 element('span', { text: factor.code }),
                 element('span', { class: 'factor-complete', text: ` (${answeredInFactor}/${totalInFactor})` }),
@@ -80,7 +87,7 @@ export async function init() {
     function setControls() {
         for (const button of [saveButton, previewButton, resetButton, draftButton]) button.disabled = !selectedUmkm || !ready || saving;
         form.querySelectorAll('input').forEach((input) => { input.disabled = saving || !ready; });
-        document.getElementById('umkm-picker').disabled = saving;
+        picker.disabled = saving;
         preview.querySelectorAll('[data-close-dialog]').forEach((button) => { button.disabled = saving; });
         saveButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Final';
         draftButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Draft';
@@ -95,6 +102,9 @@ export async function init() {
 
     function renderLive(result = null) {
         const scores = result || calculateScores(questionnaire, serializeAnswers());
+        const completeness = document.getElementById('evaluation-progress');
+        completeness.max = scores.total_questions || 1;
+        completeness.value = scores.answered_count;
         document.getElementById('evaluation-completeness').textContent = `${scores.answered_count} dari ${scores.total_questions} soal terjawab`;
         const progress = document.getElementById('factor-progress');
         progress.replaceChildren(...questionnaire.factors.map((factor) => {
@@ -111,10 +121,12 @@ export async function init() {
             return row;
         }));
         document.getElementById('live-average').textContent = formatScore(scores.average_score);
+        document.getElementById('live-score-unit').hidden = scores.average_score === null;
         const category = document.getElementById('live-category');
         category.textContent = scores.category;
-        category.style.color = [...questionnaire.scoring.categories, questionnaire.scoring.unrated].find((item) => item.label === scores.category)?.color || '';
-        document.getElementById('evaluation-status').textContent = !selectedUmkm ? 'Pilih UMKM untuk mulai mengisi.' : (latest?.status === 'final' && !isDirty() ? 'Evaluasi terakhir: Final.' : 'Sementara — simpan final setelah seluruh soal terjawab.');
+        document.getElementById('evaluation-status').textContent = isDirty()
+            ? 'Ada perubahan yang belum disimpan.'
+            : { final: 'Evaluasi terakhir: Final.', draft: 'Evaluasi terakhir: Draft tersimpan.' }[latest?.status] || 'Belum ada evaluasi tersimpan.';
         renderTabs();
         setControls();
         return scores;
@@ -192,6 +204,7 @@ export async function init() {
         prefillController?.abort();
         prefillController = new AbortController();
         selectedUmkm = umkm;
+        syncUmkmBreadcrumb(umkm);
         leaving = false;
         ready = false;
         answers = new Map();
@@ -200,13 +213,19 @@ export async function init() {
         clearValidation();
         serverResult.hidden = true;
         empty.hidden = Boolean(umkm);
+        sidebar.hidden = !umkm;
         factorContainer.replaceChildren();
         const query = new URL(window.location.href);
         if (umkm) query.searchParams.set('umkm', umkm.id); else query.searchParams.delete('umkm');
-        window.history.replaceState({}, '', query);
+        window.history.replaceState(history.state, '', query);
+        window.dispatchEvent(new Event('joyumkm:query-updated'));
         renderLive();
-        if (!umkm) return;
-        factorContainer.append(element('div', { class: 'panel' }, [element('div', { class: 'skeleton h-32' }), element('p', { class: 'muted mt-3', text: 'Memuat evaluasi terbaru…' })]));
+        if (!umkm) {
+            factorContainer.setAttribute('aria-busy', 'false');
+            return;
+        }
+        factorContainer.setAttribute('aria-busy', 'true');
+        factorContainer.append(element('div', { class: 'panel card-pad' }, [skeleton('h-4 w-1/3', 'h-10', 'h-4 w-1/4', 'h-10')]));
         try {
             const { data } = await api(`/umkms/${umkm.id}/evaluations/latest`, { signal: prefillController.signal });
             if (sequence !== prefillSequence) return;
@@ -217,6 +236,8 @@ export async function init() {
         } catch (error) {
             if (error.name === 'AbortError' || sequence !== prefillSequence) return;
             showError(factorContainer, error, () => loadSelected(umkm));
+        } finally {
+            if (sequence === prefillSequence) factorContainer.setAttribute('aria-busy', 'false');
         }
     }
 
@@ -294,12 +315,14 @@ export async function init() {
             toast(status === 'draft' ? 'Draft evaluasi berhasil disimpan.' : 'Evaluasi final berhasil disimpan.');
             window.dispatchEvent(new Event('joyumkm:evaluation-saved'));
         } catch (error) {
+            if (signal.aborted || error.name === 'AbortError') return;
             if (error.status === 0) {
                 let latestNotice = '';
                 try {
                     const { data } = await api(`/umkms/${umkmId}/evaluations/latest`);
                     latestNotice = data ? ` Evaluasi terbaru di server: #${data.id}, skor ${formatScore(data.average_score)} (${data.status === 'draft' ? 'Sementara' : 'Final'}).` : ' Belum ada evaluasi tersimpan di server.';
                 } catch { latestNotice = ' Evaluasi terbaru belum dapat diperiksa.'; }
+                if (signal.aborted) return;
                 message.textContent = `${error.message} Hasil simpan perlu diperiksa sebelum Anda mencoba menyimpan kembali.${latestNotice} Jawaban lokal Anda tetap dipertahankan.`;
                 message.hidden = false;
                 preview.close();
@@ -308,7 +331,7 @@ export async function init() {
                 preview.close();
                 showEvaluationErrors(error, submittedAnswers);
             }
-        } finally { saving = false; setControls(); }
+        } finally { if (!signal.aborted) { saving = false; setControls(); } }
     }
 
     form.addEventListener('change', (event) => {
@@ -333,26 +356,43 @@ export async function init() {
         renderQuestions();
         renderLive();
     });
-    window.addEventListener('beforeunload', (event) => { if (isDirty() && !leaving) { event.preventDefault(); event.returnValue = ''; } });
-    window.addEventListener('joyumkm:logout-failed', () => { leaving = false; });
+    window.addEventListener('beforeunload', (event) => { if (isDirty() && !leaving) { event.preventDefault(); event.returnValue = ''; } }, { signal });
+    window.addEventListener('joyumkm:logout-failed', () => { leaving = false; }, { signal });
     document.addEventListener('click', (event) => {
-        const link = event.target.closest('a[href], [data-logout]');
+        const link = event.target.closest('[data-logout]');
         if (!link || link.target === '_blank' || link.getAttribute('href')?.startsWith('#') || event.ctrlKey || event.metaKey || event.shiftKey) return;
         if (isDirty()) {
             if (!confirmDiscard()) { event.preventDefault(); event.stopImmediatePropagation(); }
             else leaving = true;
         }
-    }, true);
+    }, { capture: true, signal });
+    document.addEventListener('joyumkm:before-route-change', (event) => {
+        if (saving || !confirmDiscard()) event.preventDefault();
+    }, { signal });
 
     async function loadQuestionnaire() {
+        state.setAttribute('aria-busy', 'true');
+        state.replaceChildren(skeleton('h-4 w-1/4', 'h-10', 'h-4 w-1/3', 'h-10', 'h-10'));
         try {
             ({ data: questionnaire } = await api('/questionnaire'));
             state.hidden = true;
+            state.setAttribute('aria-busy', 'false');
             layout.hidden = false;
             baseline = fingerprint();
             renderLive();
-            await createUmkmPicker(document.getElementById('umkm-picker'), { initialId: new URLSearchParams(window.location.search).get('umkm'), beforeChange: () => !saving && confirmDiscard(), onChange: loadSelected });
-        } catch (error) { showError(state, error, loadQuestionnaire); }
+            if (pendingUmkm) await loadSelected(pendingUmkm);
+        } catch (error) { if (!signal.aborted && error.name !== 'AbortError') showError(state, error, loadQuestionnaire); }
     }
-    await loadQuestionnaire();
+    await Promise.all([
+        loadQuestionnaire(),
+        createUmkmPicker(picker, {
+            signal,
+            initialId: new URLSearchParams(window.location.search).get('umkm'),
+            beforeChange: () => !saving && confirmDiscard(),
+            onChange: (umkm) => {
+                pendingUmkm = umkm;
+                if (questionnaire) return loadSelected(umkm);
+            },
+        }),
+    ]);
 }

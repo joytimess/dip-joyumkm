@@ -1,0 +1,66 @@
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+    --brand-primary: #0207CA;
+    --brand-secondary: #0297DE;
+    --brand-accent: #FC734D;
+    --text-primary: #101E40;
+    --text-muted-brand: #70819D;
+    --text-muted: #566781;
+    --canvas: #F4F7FC;
+    --surface: #FFFFFF;
+    --border: #E8EDF6;
+    --border-strong: #CBD4E2;
+    --surface-hover: #EEF1F5;
+    --surface-pressed: #E3E8EF;
+    --surface-disabled: #F3F5F8;
+    --skeleton-fill: #E8ECF2;
+    --primary-hover: #0006B0;
+    --soft-blue: #EAF6FF;
+    --status-good: #147D5B;
+    --status-good-surface: #E8F7F0;
+    --status-warn: #9B6508;
+    --status-warn-surface: #FFF6E0;
+    --status-error: #A52135;
+    --status-error-hover: #831A2B;
+    --status-error-surface: #FFF1F2;
+    --focus-ring: var(--brand-primary);
+    --focus-inverse: var(--surface);
+    --overlay: rgb(16 30 64 / .47);
+
+    --font-body: .875rem;
+    --font-control: .8125rem;
+    --font-caption: .75rem;
+    --font-heading: clamp(1.75rem, 2.3vw, 2rem);
+    --font-section: 1.25rem;
+    --font-card: 1rem;
+    --leading-body: 1.6;
+    --leading-control: 1.4;
+    --leading-heading: 1.25;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --control-height: 44px;
+    --icon-size: 20px;
+    --radius-small: 8px;
+    --input-radius: 12px;
+    --card-radius: 16px;
+    --radius-pill: 999px;
+    --card-shadow: 0 2px 8px rgb(16 30 64 / .04);
+    --overlay-shadow: 0 12px 32px rgb(16 30 64 / .15);
+    --motion-fast: .15s;
+
+    --brand-gradient: linear-gradient(112deg, var(--brand-primary) 0%, #0933D2 48%, var(--brand-secondary) 115%);
+    --sidebar-surface: var(--text-primary);
+    --sidebar-text: #DFE8FF;
+    --sidebar-muted: #B5C5E7;
+    --sidebar-hover: rgb(255 255 255 / .10);
+}

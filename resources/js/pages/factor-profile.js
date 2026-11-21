@@ -1,4 +1,5 @@
 import { createUmkmPicker } from '../umkm-picker';
+import { syncUmkmBreadcrumb, withListContext } from '../umkm-navigation';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, portfolioLabel, scoreTable, tooltipText } from '../charts';
 import { element, formatScore } from '../ui';
 
@@ -8,29 +9,28 @@ function renderStatusBadge(status) {
     return element('span', { class: 'pill pill-muted', text: 'Belum dinilai' });
 }
 
-export async function init() {
+export async function init(signal) {
     const root = document.getElementById('page-data');
-    const load = createChartPage(root, (data, mount) => {
+    let selectedBusiness;
+    const load = createChartPage(root, signal, (data, mount) => {
         const complete = data.selected_scores.every((score) => score !== null);
         const status = `${evaluationLabel(data.evaluation_status)} · ${data.answered_count}/${data.total_questions} soal terjawab`;
-        const formUrl = `/form-data?umkm=${data.umkm.id}`;
+        const formUrl = withListContext(`/form-data?umkm=${data.umkm.id}`);
         const host = chartHost('Radar skor faktor UMKM dibandingkan rerata seluruh portofolio, skala 0 sampai 100');
         const colors = ['#0207CA', '#0297DE', '#FC734D'];
+        const business = selectedBusiness?.id === data.umkm.id ? selectedBusiness : null;
+        const average = business?.latest_score ?? null;
 
         const metrics = element('div', { class: 'grid-3 metric-strip', style: 'margin-bottom:20px;' }, data.factors.map((factor, index) => {
             const score = data.selected_scores[index];
             const base = data.portfolio_averages[index];
             return element('section', { class: 'card metric panel' }, [
-                element('span', { class: 'soft-corner', 'aria-hidden': true }),
-                element('div', { class: `metric-icon ${index === 1 ? 'blue' : index === 2 ? 'orange' : ''}` }, [
-                    element('span', { style: 'font-weight:800;font-size:12px;', text: factor }),
-                ]),
                 element('div', { class: 'metric-label', text: `Faktor ${factor}` }),
                 element('div', { class: 'metric-value' }, [
                     element('span', { text: formatScore(score) }),
                     score !== null ? element('span', { class: 'metric-suffix', text: '/100' }) : null,
                 ]),
-                element('div', { class: 'metric-foot', text: `Baseline portofolio ${formatScore(base)}/100` }),
+                element('div', { class: 'metric-foot', text: base === null ? 'Rerata portofolio belum tersedia' : `Rerata portofolio ${formatScore(base)}/100` }),
             ]);
         }));
 
@@ -48,10 +48,7 @@ export async function init() {
         const highestFactorIndex = data.selected_scores.reduce((maxI, cur, i, arr) => (cur ?? -1) > (arr[maxI] ?? -1) ? i : maxI, 0);
         const highestFactor = data.factors[highestFactorIndex];
 
-        root.append(
-            metrics,
-            element('div', { class: 'two-col-6-4 analytics-grid', style: 'margin-bottom:20px;' }, [
-                element('section', { class: 'card card-pad panel chart-panel' }, [
+        const radar = element('section', { class: 'card card-pad panel chart-panel' }, [
                     element('div', { class: 'section-top section-heading' }, [
                         element('div', {}, [
                             element('h2', { class: 'section-title', text: 'Radar profil usaha' }),
@@ -60,23 +57,26 @@ export async function init() {
                     ]),
                     complete ? host : emptyState('Data faktor belum lengkap', 'Nilai yang tersedia tetap ditampilkan. Lengkapi kuesioner untuk melihat radar lengkap.', formUrl, 'Lengkapi kuesioner'),
                     legend,
-                ]),
+        ]);
+        root.append(
+            metrics,
+            element('div', { class: 'two-col analytics-grid' }, [
                 element('section', { class: 'card card-pad panel' }, [
                     element('div', { class: 'section-top section-heading' }, [
                         element('div', {}, [
                             element('h2', { class: 'section-title', text: 'Ringkasan performa' }),
-                            element('p', { class: 'section-desc muted', text: `${data.umkm.name} · ${data.umkm.sector?.name || 'Sektor'}` }),
+                            element('p', { class: 'section-desc muted', text: [data.umkm.name, business?.sector?.name].filter(Boolean).join(' · ') }),
                         ]),
                     ]),
-                    element('div', { class: 'summary-stat', style: 'display:flex;align-items:baseline;gap:6px;' }, [
-                        element('strong', { style: 'font:800 32px var(--font-sans);letter-spacing:-1px;', text: formatScore(data.umkm.latest_score) }),
-                        element('span', { class: 'muted', text: '/100' }),
+                    element('div', { class: 'summary-stat hstack wrap', 'data-profile-average': true }, [
+                        element('strong', { class: average === null ? 'muted' : 'metric-value', text: average === null ? 'Skor keseluruhan belum tersedia' : formatScore(average) }),
+                        average === null ? null : element('span', { class: 'muted', text: '/100' }),
                     ]),
                     element('div', { style: 'margin-bottom:18px;' }, [
                         renderStatusBadge(data.evaluation_status),
                         element('span', { class: 'tiny muted', style: 'margin-left:8px;', text: `${data.answered_count}/${data.total_questions} soal terjawab` }),
                     ]),
-                    element('div', { style: 'margin:20px 0 8px;font-size:12px;font-weight:800;', text: 'Skor per faktor' }),
+                    element('div', { style: 'margin:20px 0 8px;font-size:12px;font-weight:700;', text: 'Skor per faktor' }),
                     element('div', { class: 'factor-score-list' }, data.factors.map((factor, index) => {
                         const val = data.selected_scores[index];
                         return element('div', { class: 'factor-row' }, [
@@ -87,7 +87,7 @@ export async function init() {
                             element('span', { class: 'factor-number', text: formatScore(val) }),
                         ]);
                     })),
-                    element('div', { class: 'note-card', style: 'margin-top:20px;' }, [
+                    data.selected_scores[highestFactorIndex] === null ? null : element('div', { class: 'note-card mt-4' }, [
                         element('div', {}, [
                             element('h4', { text: 'Pembacaan singkat' }),
                             element('p', { text: `${data.umkm.name} mencatat skor tertinggi pada faktor ${highestFactor} (${formatScore(data.selected_scores[highestFactorIndex])}/100). Bandingkan dengan garis baseline untuk prioritas pendampingan.` }),
@@ -97,6 +97,7 @@ export async function init() {
                         element('a', { href: formUrl, class: 'btn btn-primary btn-full button button-primary w-full', text: 'Isi atau perbarui kuesioner' }),
                     ]),
                 ]),
+                radar,
             ]),
             element('section', { class: 'card card-pad panel chart-panel section-block' }, [
                 element('div', { class: 'section-top section-heading' }, [
@@ -130,15 +131,20 @@ export async function init() {
     });
 
     async function select(umkm) {
+        selectedBusiness = umkm;
+        syncUmkmBreadcrumb(umkm);
         const url = new URL(window.location.href);
         if (umkm) url.searchParams.set('umkm_id', umkm.id);
         else url.searchParams.delete('umkm_id');
-        history.replaceState(null, '', url);
+        history.replaceState(history.state, '', url);
+        window.dispatchEvent(new Event('joyumkm:query-updated'));
         if (umkm) await load(`/dashboard/factor-profile?${new URLSearchParams({ umkm_id: umkm.id })}`);
         else { load.cancel(); root.replaceChildren(emptyState('Pilih UMKM terlebih dahulu', 'Pilih usaha untuk membandingkan skor INS, ECT, dan OPS.')); }
     }
     const initialId = new URLSearchParams(window.location.search).get('umkm_id');
-    root.setAttribute('aria-busy', 'false');
-    root.replaceChildren(emptyState('Pilih UMKM terlebih dahulu', 'Pilih usaha untuk membandingkan skor INS, ECT, dan OPS.'));
-    await createUmkmPicker(document.getElementById('umkm-picker'), { initialId, autoSelect: initialId === null, onChange: select });
+    const picker = await createUmkmPicker(document.getElementById('umkm-picker'), { signal, initialId, autoSelect: initialId === null, onChange: select });
+    if (!signal.aborted && !picker.selected) {
+        root.setAttribute('aria-busy', 'false');
+        root.replaceChildren(emptyState('Pilih UMKM terlebih dahulu', 'Pilih usaha untuk membandingkan skor INS, ECT, dan OPS.'));
+    }
 }

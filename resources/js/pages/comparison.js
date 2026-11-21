@@ -1,8 +1,8 @@
 import { createUmkmPicker } from '../umkm-picker';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, portfolioLabel, scoreTable, seriesColors, tooltipText } from '../charts';
-import { element, formatScore, toast } from '../ui';
+import { element, formatScore, icon, toast } from '../ui';
 
-export async function init() {
+export async function init(signal) {
     const root = document.getElementById('page-data');
     const selectedList = document.getElementById('comparison-selected');
     const add = document.getElementById('comparison-add');
@@ -10,7 +10,7 @@ export async function init() {
     let selected = [];
     let picker;
     const status = (umkm) => `${evaluationLabel(umkm.evaluation_status)} · ${umkm.answered_count}/${umkm.total_questions} soal terjawab`;
-    const load = createChartPage(root, (data, mount) => {
+    const load = createChartPage(root, signal, (data, mount) => {
         selected = data.umkms;
         renderSelection();
         if (!selected.length) {
@@ -18,6 +18,7 @@ export async function init() {
             return;
         }
         const host = chartHost('Bar skor faktor tiap UMKM dan garis rerata seluruh portofolio, skala 0 sampai 100');
+        const hasScores = [...selected.flatMap((umkm) => umkm.scores), ...data.portfolio_averages].some((score) => score !== null);
         const legend = element('div', { class: 'legend-inline', style: 'justify-content:center;margin-top:14px;' }, [
             ...selected.map((umkm, index) => element('span', {}, [
                 element('i', { class: 'legend-swatch', style: `background:${seriesColors[index]};`, 'aria-hidden': true }),
@@ -36,10 +37,10 @@ export async function init() {
                         element('p', { class: 'section-desc muted', text: `${selected.length} UMKM dibandingkan dengan seluruh portofolio. Faktor kosong ditandai “Belum dijawab”.` }),
                     ]),
                 ]),
-                host,
-                legend,
+                hasScores ? host : emptyState('Belum ada skor untuk ditampilkan', 'Tabel di bawah menunjukkan faktor yang belum dijawab.'),
+                hasScores ? legend : null,
             ]),
-            element('section', { class: 'card card-pad panel chart-panel section-block' }, [
+            element('section', { class: 'card card-pad panel chart-panel section-block comparison-detail' }, [
                 element('div', { class: 'section-top section-heading' }, [
                     element('div', {}, [
                         element('h2', { class: 'section-title', text: 'Detail perbandingan' }),
@@ -47,11 +48,12 @@ export async function init() {
                     ]),
                 ]),
                 scoreTable(data.factors, [
-                    ...selected.map((umkm, index) => ({ name: umkm.name, scores: umkm.scores, detail: status(umkm), color: seriesColors[index] })),
-                    { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#334155' },
+                    ...selected.map((umkm, index) => ({ name: umkm.name, scores: umkm.scores, detail: status(umkm), color: seriesColors[index], statusClass: ({ final: 'pill-green', draft: 'pill-amber' })[umkm.evaluation_status] || 'pill-muted' })),
+                    { name: portfolioLabel, scores: data.portfolio_averages, detail: data.factors.map((code, index) => `${code}: ${data.sample_count_per_factor[index]} UMKM`).join(' · '), color: '#334155', baseline: true },
                 ], 'Skor faktor 0–100 dan jumlah sampel baseline seluruh UMKM Anda.'),
             ]),
         );
+        if (!hasScores) return;
         const options = chartOptions('line', [
             ...selected.map((umkm) => ({ name: umkm.name, type: 'column', data: umkm.scores })),
             { name: portfolioLabel, type: 'line', data: data.portfolio_averages },
@@ -74,16 +76,20 @@ export async function init() {
     });
 
     function renderSelection() {
-        selectedList.replaceChildren(...selected.map((umkm) => element('li', { class: 'select-chip' }, [
-            element('span', { text: umkm.name, title: umkm.name }),
+        selectedList.replaceChildren(...selected.map((umkm, index) => element('li', { class: 'select-chip' }, [
+            element('span', { class: 'comparison-chip-key', style: `background:${seriesColors[index]}`, 'aria-hidden': true }),
+            element('span', { class: 'comparison-chip-content' }, [
+                element('strong', { text: umkm.name, title: umkm.name }),
+                element('small', { text: evaluationLabel(umkm.evaluation_status) || 'Memuat status…' }),
+            ]),
             element('button', {
                 type: 'button',
                 'aria-label': `Hapus ${umkm.name} dari perbandingan`,
-                text: '✕',
                 onclick: () => { selected = selected.filter((item) => item.id !== umkm.id); update(); },
-            }),
+            }, icon('close')),
         ])));
         document.getElementById('comparison-count').textContent = `${selected.length} dari maksimal 5 UMKM dipilih`;
+        document.getElementById('comparison-capacity').textContent = `${selected.length} / 5 terisi${selected.length === 5 ? ' · Penuh' : ''}`;
         add.disabled = !picker?.selected || selected.length >= 5 || selected.some((item) => item.id === picker.selected.id);
         clear.disabled = !selected.length;
     }
@@ -94,7 +100,8 @@ export async function init() {
         url.search = '';
         if (selected.length) selected.forEach((umkm) => url.searchParams.append('umkm_ids[]', umkm.id));
         else url.searchParams.set('umkm_ids', '');
-        history.replaceState(null, '', url);
+        history.replaceState(history.state, '', url);
+        window.dispatchEvent(new Event('joyumkm:query-updated'));
         load(`/dashboard/comparison?${url.searchParams}`);
     }
 
@@ -107,10 +114,11 @@ export async function init() {
     });
     clear.addEventListener('click', () => { selected = []; update(); });
     document.getElementById('comparison-default').addEventListener('click', () => {
-        history.replaceState(null, '', window.location.pathname);
+        history.replaceState(history.state, '', window.location.pathname);
+        window.dispatchEvent(new Event('joyumkm:query-updated'));
         load('/dashboard/comparison');
     });
     load(`/dashboard/comparison${window.location.search}`);
-    picker = await createUmkmPicker(document.getElementById('umkm-picker'), { onChange: (umkm) => { add.disabled = !umkm || selected.length >= 5 || selected.some((item) => item.id === umkm.id); } });
-    renderSelection();
+    picker = await createUmkmPicker(document.getElementById('umkm-picker'), { signal, onChange: (umkm) => { add.disabled = !umkm || selected.length >= 5 || selected.some((item) => item.id === umkm.id); } });
+    if (!signal.aborted) renderSelection();
 }

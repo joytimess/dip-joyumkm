@@ -1,5 +1,5 @@
 import { createSummary } from '../summary';
-import { api } from '../api';
+import { pageApi } from '../api';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, tooltipText } from '../charts';
 import { element, formatNumber, formatScore, showError } from '../ui';
 
@@ -9,16 +9,17 @@ function renderStatusBadge(status) {
     return element('span', { class: 'pill pill-muted', text: 'Belum dinilai' });
 }
 
-export function init() {
+export function init(signal) {
+    const api = pageApi(signal);
     const draftCaption = document.getElementById('home-draft-caption');
-    const summary = createSummary(document.getElementById('umkm-summary'), (data) => {
+    const summary = createSummary(document.getElementById('umkm-summary'), signal, (data) => {
         if (draftCaption) {
             draftCaption.textContent = `${formatNumber(data.draft_count)} UMKM memiliki evaluasi berstatus sementara`;
         }
     });
 
     const health = document.getElementById('home-health');
-    const loadHealth = createChartPage(health, (data, mount) => {
+    const loadHealth = createChartPage(health, signal, (data, mount) => {
         if (!data.total_umkms) {
             health.append(emptyState('Portofolio Anda dimulai di sini', 'Tambahkan UMKM pertama untuk mulai memahami kesehatan usaha.', '/umkms', 'Tambah UMKM'));
             return;
@@ -44,8 +45,8 @@ export function init() {
                     size: '76%',
                     labels: {
                         show: true,
-                        value: { fontSize: '26px', fontWeight: 800, color: '#101E40', formatter: formatNumber },
-                        total: { show: true, showAlways: true, label: 'Total UMKM', color: '#70819D', fontSize: '11px', formatter: () => formatNumber(data.total_umkms) },
+                        value: { fontSize: '26px', fontWeight: 700, color: 'var(--text-primary)', formatter: formatNumber },
+                        total: { show: true, showAlways: true, label: 'Total UMKM', color: options.chart.foreColor, fontSize: '11px', formatter: () => formatNumber(data.total_umkms) },
                     },
                 },
             },
@@ -92,7 +93,7 @@ export function init() {
             ]);
             priorities.replaceChildren(table);
         } catch (error) {
-            showError(priorities, error, loadPriorities);
+            if (!signal.aborted && error.name !== 'AbortError') showError(priorities, error, loadPriorities);
         } finally {
             priorities.setAttribute('aria-busy', 'false');
         }
@@ -104,5 +105,5 @@ export function init() {
         summary.reload();
         loadHealth('/dashboard/distribution');
         loadPriorities();
-    });
+    }, { signal });
 }

@@ -1,11 +1,11 @@
-import { api, TOKEN_KEY, USER_KEY, clearSession, getToken, redirectToLogin, saveSession } from './api';
+import { api, TOKEN_KEY, USER_KEY, clearSession, concealWorkspace, getToken, redirectToLogin, saveSession } from './api';
 import { renderErrors, clearErrors, setBusy, showError, toast } from './ui';
 
 export function bindSessionEvents() {
     window.addEventListener('storage', (event) => {
         if (event.key !== TOKEN_KEY && event.key !== null) return;
         if (document.body.dataset.protected) {
-            document.getElementById('app-shell').hidden = true;
+            concealWorkspace();
             if (!getToken()) redirectToLogin();
             else window.location.reload();
         } else if (['login', 'register'].includes(document.body.dataset.page) && getToken()) {
@@ -15,37 +15,45 @@ export function bindSessionEvents() {
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) window.location.reload();
     });
+    window.addEventListener('pagehide', () => concealWorkspace());
 }
 
-export async function guardProtectedPage() {
+export async function guardProtectedPage(retry) {
     if (!getToken()) { clearSession(); redirectToLogin(); return null; }
+    const shell = document.getElementById('app-shell');
     const status = document.getElementById('auth-status');
+    status.hidden = false;
+    status.textContent = 'Memverifikasi sesi…';
+    status.setAttribute('aria-busy', 'true');
     try {
         const { data: user } = await api('/auth/me');
+        if (shell.hidden) return null;
         localStorage.setItem(USER_KEY, JSON.stringify(user));
         document.querySelectorAll('[data-user-name]').forEach((node) => { node.textContent = user.name; });
         const initials = user.name.trim().split(/\s+/u).slice(0, 2).map((word) => Array.from(word)[0]).join('').toLocaleUpperCase('id-ID');
         document.querySelectorAll('[data-user-initials]').forEach((node) => { node.textContent = initials; });
         status.hidden = true;
-        document.getElementById('app-shell').hidden = false;
         return user;
     } catch (error) {
-        if (error.status !== 401) {
-            showError(status, error, () => window.location.reload());
-        }
+        if (error.name === 'AbortError' || error.status === 401) return null;
+        const message = error.status === 403 ? error.message : 'Sesi belum dapat diverifikasi. Periksa koneksi Anda, lalu coba lagi.';
+        showError(status, { message }, retry);
         return null;
     }
 }
 
 export function bindLogout() {
+    const token = getToken();
     document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', async () => {
+        if (!token || getToken() !== token) return;
         setBusy(button, true, 'Keluar…');
         try {
             await api('/auth/logout', { method: 'POST' });
+            if (getToken() !== token) return;
             clearSession();
             redirectToLogin();
         } catch (error) {
-            if (error.status !== 401) {
+            if (error.status !== 401 && error.name !== 'AbortError') {
                 window.dispatchEvent(new Event('joyumkm:logout-failed'));
                 toast(error.message, 'error');
                 setBusy(button, false);

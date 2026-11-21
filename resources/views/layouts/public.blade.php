@@ -11,7 +11,7 @@
 </head>
 <body data-page="{{ $page }}" class="public-body">
     <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
-    <x-public-icons />
+    <x-icon-sprite />
     @yield('content')
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="false"></div>
 </body>

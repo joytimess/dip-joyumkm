@@ -1,9 +1,9 @@
 @extends('layouts.app', ['page' => 'factor-profile', 'title' => 'Factor Profile'])
 @section('content')
 <div class="page">
+    @include('components.umkm-breadcrumb', ['current' => 'Profil Faktor', 'dynamic' => true])
     <div class="page-heading">
         <div>
-            <div class="eyebrow">Analitik / faktor</div>
             <h1>Profil Faktor</h1>
             <p class="muted">Bandingkan profil tiga faktor pada satu UMKM dengan rata-rata seluruh portofolio.</p>
         </div>
@@ -20,6 +20,6 @@
         </div>
         <div id="umkm-picker"><div class="skeleton h-10"></div></div>
     </section>
-    <div id="page-data" aria-live="polite" aria-busy="true"><div class="panel card"><div class="skeleton h-64"></div></div></div>
+    <div id="page-data" aria-live="polite" aria-busy="true"><x-chart-skeleton /></div>
 </div>
 @endsection

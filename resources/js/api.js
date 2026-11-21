@@ -23,7 +23,12 @@ export function saveSession(data) {
 export function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    concealWorkspace();
+}
+
+export function concealWorkspace() {
     document.getElementById('app-shell')?.setAttribute('hidden', '');
+    document.dispatchEvent(new Event('joyumkm:session-ended'));
 }
 
 export function redirectToLogin() {
@@ -34,9 +39,11 @@ export function redirectToLogin() {
 }
 
 export async function api(path, { method = 'GET', body, signal, authenticated = true, redirectOnUnauthorized = true } = {}) {
+    signal?.throwIfAborted();
+    const token = authenticated ? getToken() : null;
     const headers = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
-    if (authenticated && getToken()) headers.Authorization = `Bearer ${getToken()}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
     let response;
     let payload;
     try {
@@ -45,18 +52,38 @@ export async function api(path, { method = 'GET', body, signal, authenticated = 
             method, headers, body: body === undefined ? undefined : JSON.stringify(body),
             credentials: 'omit', cache: 'no-store', signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
         });
-        payload = await response.json();
+        payload = await response.json().catch((error) => {
+            if (error.name === 'SyntaxError' && !response.ok) return {};
+            throw error;
+        });
     } catch (error) {
         if (error.name === 'AbortError') throw error;
         if (error.name === 'TimeoutError') throw new ApiError('Waktu tunggu habis. Periksa koneksi dan hasil permintaan sebelum mencoba lagi.');
         throw new ApiError('Tidak dapat terhubung. Periksa koneksi Anda, lalu coba lagi.');
     }
+    signal?.throwIfAborted();
+    if (authenticated && getToken() !== token) throw new DOMException('Sesi berubah.', 'AbortError');
     if (!response.ok) {
         if (response.status === 401 && authenticated) {
             clearSession();
             if (redirectOnUnauthorized) redirectToLogin();
         }
-        throw new ApiError(payload.message || 'Permintaan gagal. Silakan coba lagi.', response.status, payload.errors || {});
+        const message = response.status === 403 ? 'Anda tidak memiliki akses ke bagian ini.'
+            : response.status >= 500 ? 'Terjadi gangguan pada server. Silakan coba lagi.'
+                : payload.message || 'Permintaan gagal. Silakan coba lagi.';
+        throw new ApiError(message, response.status, payload.errors || {});
     }
     return payload;
+}
+
+export function pageApi(pageSignal) {
+    const token = getToken();
+    return async (path, options = {}) => {
+        pageSignal.throwIfAborted();
+        if (!token || getToken() !== token) throw new DOMException('Sesi berubah.', 'AbortError');
+        return api(path, {
+            ...options,
+            signal: options.signal ? AbortSignal.any([pageSignal, options.signal]) : pageSignal,
+        });
+    };
 }

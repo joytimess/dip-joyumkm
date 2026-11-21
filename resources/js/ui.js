@@ -13,6 +13,18 @@ export function element(tag, attributes = {}, children = []) {
     return node;
 }
 
+export function icon(name) {
+    const namespace = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(namespace, 'svg');
+    svg.setAttribute('class', 'icon');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    const use = document.createElementNS(namespace, 'use');
+    use.setAttribute('href', '#joy-i-' + name);
+    svg.append(use);
+    return svg;
+}
+
 export const formatNumber = (value) => new Intl.NumberFormat('id-ID').format(value);
 export const formatScore = (value) => value === null || value === undefined ? '—' : new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 export const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -22,7 +34,7 @@ export function toast(message, type = 'success') {
     if (!region) return;
     const notice = element('div', { class: `toast toast-${type}`, role: type === 'error' ? 'alert' : 'status' }, [
         element('span', { text: message }),
-        element('button', { type: 'button', 'aria-label': 'Tutup notifikasi', text: '×', onclick: () => notice.remove() }),
+        element('button', { type: 'button', class: 'icon-button', 'aria-label': 'Tutup notifikasi', onclick: () => notice.remove() }, icon('close')),
     ]);
     region.append(notice);
     window.setTimeout(() => notice.remove(), type === 'error' ? 10000 : 6000);
@@ -72,6 +84,11 @@ export function showError(container, error, retry) {
         error.status === 404 ? element('a', { href: '/umkms', class: 'text-link', text: 'Kembali ke daftar UMKM' }) : null,
     ]));
     container.setAttribute('aria-busy', 'false');
+}
+
+export function skeleton(...blocks) {
+    return element('div', { class: 'grid gap-3', 'aria-hidden': 'true' }, blocks.map((classes) =>
+        element('div', { class: `skeleton ${classes}` })));
 }
 
 export function openDialog(dialog, opener = document.activeElement) {

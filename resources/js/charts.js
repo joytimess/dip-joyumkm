@@ -1,18 +1,21 @@
 import ApexCharts from 'apexcharts';
-import { api } from './api';
-import { element, formatScore, showError } from './ui';
+import { pageApi } from './api';
+import { element, formatScore, showError, skeleton } from './ui';
 
 export const portfolioLabel = 'Rerata seluruh portofolio';
 export const seriesColors = ['#0207CA', '#0297DE', '#FC734D', '#147D5B', '#8B4A25'];
 export const evaluationLabel = (status) => ({ draft: 'Sementara', final: 'Final', none: 'Belum dinilai' })[status];
 
 export function chartOptions(type, series, categories = []) {
+    const tokens = getComputedStyle(document.documentElement);
+    const fontFamily = tokens.getPropertyValue('--font-sans').trim();
+    const foreColor = tokens.getPropertyValue('--text-muted').trim();
     return {
-        chart: { type, height: 320, fontFamily: 'Plus Jakarta Sans, sans-serif', foreColor: '#59657a', toolbar: { show: false }, animations: { enabled: false }, parentHeightOffset: 0 },
+        chart: { type, height: 320, fontFamily, foreColor, toolbar: { show: false }, animations: { enabled: false }, parentHeightOffset: 0 },
         series, colors: seriesColors,
         dataLabels: { enabled: false }, legend: { show: false },
         stroke: { width: 2, curve: 'straight' },
-        grid: { borderColor: '#e9ecf2', strokeDashArray: 3 },
+        grid: { borderColor: tokens.getPropertyValue('--border').trim(), strokeDashArray: 3 },
         xaxis: { categories, tooltip: { enabled: false }, axisBorder: { show: false }, axisTicks: { show: false } },
         yaxis: { min: 0, max: 100, tickAmount: 4, labels: { formatter: (value) => formatScore(value) } },
         tooltip: { shared: false, intersect: false, custom: ({ seriesIndex, dataPointIndex, w }) => tooltipText([
@@ -38,37 +41,52 @@ export function emptyState(title, description, href = '/umkms', action = 'Kelola
 }
 
 export function scoreTable(factors, rows, caption) {
-    return element('div', { class: 'chart-table-wrap', tabindex: 0, 'aria-label': caption }, [
+    const table = element('div', { class: 'chart-table-wrap', role: 'region', tabindex: 0, 'aria-label': caption }, [
         element('table', { class: 'chart-table' }, [
             element('caption', { text: caption }),
             element('thead', {}, [element('tr', {}, ['UMKM / pembanding', ...factors, 'Keterangan'].map((label) => element('th', { scope: 'col', text: label })))]),
-            element('tbody', {}, rows.map((row) => element('tr', {}, [
+            element('tbody', {}, rows.map((row) => element('tr', { class: row.baseline ? 'comparison-baseline' : null }, [
                 element('th', { scope: 'row' }, [row.color ? element('span', { class: 'chart-key', style: `--series-color:${row.color}`, 'aria-hidden': true }) : null, row.name]),
                 ...row.scores.map((score) => element('td', { text: score === null ? 'Belum dijawab' : formatScore(score) })),
-                element('td', { class: 'chart-detail', text: row.detail }),
+                element('td', { class: 'chart-detail' }, row.statusClass
+                    ? element('span', { class: `pill ${row.statusClass}`, text: row.detail })
+                    : row.detail),
             ]))),
         ]),
     ]);
+    return element('div', {}, [
+        element('p', { class: 'chart-table-hint', text: 'Geser tabel untuk melihat semua kolom.' }),
+        table,
+    ]);
 }
 
-export function createChartPage(root, render) {
+export function createChartPage(root, signal, render) {
+    const api = pageApi(signal);
     let charts = [];
     let controller;
     let sequence = 0;
+    let displayedPath;
+    const placeholder = root.firstElementChild;
     function clear() {
         charts.forEach((chart) => chart.destroy());
         charts = [];
     }
     async function load(path) {
+        if (signal.aborted) return;
         const requestSequence = ++sequence;
         controller?.abort();
         controller = new AbortController();
-        clear();
         root.setAttribute('aria-busy', 'true');
-        root.replaceChildren(element('div', { class: 'panel', role: 'status', 'aria-label': 'Memuat grafik' }, [element('div', { class: 'skeleton h-64' })]));
+        if (displayedPath !== path) {
+            displayedPath = undefined;
+            clear();
+            root.replaceChildren(placeholder?.cloneNode(true) || element('div', { class: 'panel card' }, [skeleton('h-64', 'h-3 w-1/3', 'h-3 w-1/4')]));
+        }
         try {
             const { data } = await api(path, { signal: controller.signal });
             if (requestSequence !== sequence) return;
+            displayedPath = undefined;
+            clear();
             root.replaceChildren();
             const pending = [];
             render(data, (host, options) => {
@@ -77,16 +95,25 @@ export function createChartPage(root, render) {
                 pending.push(chart.render());
             });
             await Promise.all(pending);
+            if (requestSequence === sequence) displayedPath = path;
         } catch (error) {
             if (error.name !== 'AbortError' && requestSequence === sequence) {
-                clear();
-                showError(root, error, () => load(path));
+                if (displayedPath === path && error.status !== 403) {
+                    root.querySelector('[data-chart-error]')?.remove();
+                    const feedback = element('div', { 'data-chart-error': true });
+                    root.append(feedback);
+                    showError(feedback, error, () => load(path));
+                } else {
+                    displayedPath = undefined;
+                    clear();
+                    showError(root, error, () => load(path));
+                }
             }
         } finally {
             if (requestSequence === sequence) root.setAttribute('aria-busy', 'false');
         }
     }
-    window.addEventListener('pagehide', () => { sequence++; controller?.abort(); clear(); });
-    load.cancel = () => { sequence++; controller?.abort(); clear(); root.setAttribute('aria-busy', 'false'); };
+    signal.addEventListener('abort', () => { sequence++; controller?.abort(); clear(); }, { once: true });
+    load.cancel = () => { sequence++; controller?.abort(); displayedPath = undefined; clear(); root.setAttribute('aria-busy', 'false'); };
     return load;
 }
