@@ -3,6 +3,7 @@ import { pageApi } from '../api';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, tooltipText } from '../charts';
 import { element, formatNumber, formatScore, showError } from '../ui';
 import { initSixFactorDashboard } from '../six-factor-dashboard';
+import { initThreeDimensionHealth } from '../three-dimension-health';
 
 function renderStatusBadge(status) {
     if (status === 'final') return element('span', { class: 'pill pill-green', text: 'Final' });
@@ -11,6 +12,7 @@ function renderStatusBadge(status) {
 }
 
 export function init(signal) {
+    initThreeDimensionHealth(signal);
     initSixFactorDashboard(signal);
     const api = pageApi(signal);
     const draftCaption = document.getElementById('home-draft-caption');

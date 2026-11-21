@@ -52,6 +52,8 @@ Field bertingkat pada errors adalah key literal, misalnya `answers.0.value`. Fin
 | GET | `/umkms/{id}/six-factor-evaluations/latest` | ID path | 200 Final terbaru atau `data: null` |
 | GET | `/dashboard/factor-profile` | Query umkm_id | 200 FactorProfileResource |
 | GET | `/dashboard/distribution` | Tanpa input | 200 DistributionResource |
+| GET | `/dashboard/three-dimension-health` | Query status, page, per_page opsional | 200 koleksi item + `summary` |
+| GET | `/dashboard/three-dimension-detail` | Query umkm_id wajib | 200 item detail |
 | GET | `/dashboard/comparison` | Query umkm_ids opsional | 200 ComparisonResource |
 
 GET dibaca dari query string, bukan body JSON. Owner ditetapkan dari token; user_id pada mutasi UMKM ditolak. ID internal path berasal dari route dan tidak dapat ditimpa body.
@@ -215,6 +217,14 @@ Tanpa parameter, `GET /dashboard/comparison` memilih maksimal lima UMKM berskor 
 Pilihan kosong eksplisit pada HTTP query: `?umkm_ids=`. FormRequest menormalisasikannya ke list kosong; umkms/selected_ids kosong, tidak otomatis memilih default. Jangan memakai `?umkm_ids[]=` (list berisi ID kosong, gagal 422). Body JSON GET diabaikan.
 
 Data: factors, selected_ids, umkms, portfolio_averages, sample_count_per_factor. Item umkms: `{id,name,scores:[number|null],sample_count_per_factor:[0|1],evaluation_status,answered_count,total_questions}`. Count tingkat atas adalah seluruh sampel portofolio per faktor; baseline seluruh portofolio, bukan hanya pilihan. Grafik memakai column series per UMKM dan satu line series mean faktor, skala 0–100. Null bukan bar nol; label Belum dijawab. Pilihan kosong menampilkan empty state.
+
+### Three Dimension Health (read-only)
+
+`GET /dashboard/three-dimension-health?status=all|final|draft|none&page=&per_page=` (per_page maksimal 50, default 10). Response: `data[]` (paginated) dan `summary` yang selalu dihitung dari seluruh cakupan akun, tidak dipengaruhi filter status. `summary`: `total_umkms`, `with_final`, `draft_only`, `not_assessed`, `overall_final_average`, `dimension_final_averages{INS,ECT,OPS}`. Rerata hanya memakai satu Final terbaru per UMKM; tanpa Final bernilai null.
+
+Setiap item: `umkm_id`, `name`, `state` (`final|draft|none`), `has_active_draft`, `latest_final` (null bila belum Final: `evaluation_id`, `overall_score`, `category`, `answered_count`, `question_count`, `dimensions`, `finalized_at`, `is_complete`), dan `draft` (hanya Draft yang lebih baru dari Final; `evaluation_id`, `answered_count`, `question_count`, `updated_at`). Skor Tiga Dimensi 0–100 dan tidak disetarakan dengan Enam Faktor.
+
+`GET /dashboard/three-dimension-detail?umkm_id=<id>` mengembalikan satu item dengan bentuk yang sama. ID asing dan ID hilang menghasilkan 404 yang identik. Endpoint ini tidak mengubah data.
 
 ## Contoh permintaan
 
