@@ -4,7 +4,7 @@ Base path `/api`. Semua endpoint mengembalikan JSON, termasuk error tanpa Accept
 
 ## Response dan status
 
-Sukses tunggal: `{"data":{...}}`. Collection: `data`, `links` (first/last/prev/next), `meta` (current_page, from, last_page, links, path, per_page, to, total). Latest belum tersedia: `{"data":null}`. ID, jumlah, omzet, jawaban berupa number/integer; skor number atau null. Null bukan nol. Timestamp string UTC ISO 8601; submitted_at draft null.
+Sukses tunggal: `{"data":{...}}`. Koleksi berhalaman memuat `data`, `links` (first/last/prev/next), dan `meta` (current_page, from, last_page, links, path, per_page, to, total). Latest belum tersedia: `{"data":null}`. ID, jumlah, omzet, jawaban berupa number/integer; skor number atau null. Null bukan nol. Timestamp string UTC ISO 8601; submitted_at draft null.
 
 | HTTP | Arti |
 |---|---|
@@ -13,6 +13,7 @@ Sukses tunggal: `{"data":{...}}`. Collection: `data`, `links` (first/last/prev/n
 | 400 | Request tidak valid |
 | 401 | Token tidak ada/invalid/expired atau kredensial salah |
 | 404 | Record tidak ada atau bukan milik akun |
+| 409 | Penilaian enam faktor sudah selesai, atau UMKM memiliki riwayat penilaian enam faktor |
 | 422 | Validasi gagal; message dan errors per field |
 | 429 | Rate limit; hormati Retry-After |
 | 500 | Pesan generik; detail hanya di log server |
@@ -43,6 +44,12 @@ Field bertingkat pada errors adalah key literal, misalnya `answers.0.value`. Fin
 | GET | `/questionnaire` | Tanpa input | 200 QuestionnaireResource |
 | GET | `/umkms/{id}/evaluations/latest` | ID path | 200 EvaluationResource atau data null |
 | POST | `/umkms/{id}/evaluations` | ID path dan body evaluasi | 201 EvaluationResource |
+| GET | `/umkms/{id}/six-factor-evaluations/draft` | ID path | 200 Draft atau `data: null` |
+| PUT, PATCH | `/umkms/{id}/six-factor-evaluations/draft` | ID path dan body Draft opsional | 201 Draft baru atau 200 Draft yang diperbarui |
+| POST | `/umkms/{id}/six-factor-evaluations/{evaluationId}/finalize` | Dua ID path dan body kosong | 200 Final |
+| POST | `/umkms/{id}/six-factor-evaluations/{evaluationId}/cancel` | Dua ID path dan body kosong | 200 Cancelled |
+| GET | `/umkms/{id}/six-factor-evaluations` | ID path | 200 array Final tanpa paginasi |
+| GET | `/umkms/{id}/six-factor-evaluations/latest` | ID path | 200 Final terbaru atau `data: null` |
 | GET | `/dashboard/factor-profile` | Query umkm_id | 200 FactorProfileResource |
 | GET | `/dashboard/distribution` | Tanpa input | 200 DistributionResource |
 | GET | `/dashboard/comparison` | Query umkm_ids opsional | 200 ComparisonResource |
@@ -68,7 +75,7 @@ Register dibatasi lima request/menit/IP; login lima request/menit/IP+email. Klie
 | sector_id | Integer ID sektor valid dari options |
 | omzet | Integer rupiah 0–9007199254740991; tanpa pemisah ribuan dan tanpa periode |
 
-POST/PUT membutuhkan keempat field. PATCH hanya memvalidasi field yang hadir tetapi wajib memuat setidaknya satu field UMKM yang dapat diubah. Nama sama boleh digunakan akun berbeda. Update/delete ID asing diperiksa kepemilikannya lebih dahulu dan menghasilkan 404. Delete menghapus seluruh evaluasi/jawaban melalui FK cascade; response data.message mengonfirmasi penghapusan.
+POST/PUT membutuhkan keempat field. PATCH hanya memvalidasi field yang hadir tetapi wajib memuat setidaknya satu field UMKM yang dapat diubah. Nama sama boleh digunakan akun berbeda. Update/delete ID asing diperiksa kepemilikannya lebih dahulu dan menghasilkan 404. Untuk UMKM tanpa riwayat penilaian enam faktor, DELETE menghapus UMKM dan evaluasi serta jawaban V1 melalui FK cascade. Jika ada penilaian enam faktor, DELETE menghasilkan 409 dan data tetap tersimpan.
 
 UmkmResource data: `id`, `name`, `province`, `sector:{id,name}`, `omzet`, `latest_score`, `category`, `recommendation`, `evaluation_status`, `evaluation_id`. Recommendation adalah alias kategori, bukan saran naratif. Tanpa evaluasi: skor/evaluation_id null, status none, kategori BELUM DINILAI. Draft kosong tetap draft dengan skor null.
 
@@ -112,6 +119,81 @@ Rumus: mean jawaban faktor → `(mean-min)/(max-min)*100` → mean faktor non-nu
 
 Tidak ada backend idempotency key V1. Klien menonaktifkan submit saat berjalan, tidak retry POST otomatis saat timeout, dan membaca latest untuk rekonsiliasi. Dua POST sukses yang disengaja menghasilkan dua riwayat. Reset form hanya lokal sampai disimpan.
 
+## Penilaian enam faktor P1
+
+Gunakan prefix `/api/umkms/{id}/six-factor-evaluations`, ID numerik, dan token Sanctum pemilik UMKM. Kirim `Accept: application/json` serta `Content-Type: application/json` saat mengirim JSON.
+
+| ID | Metode dan suffix | Status dan isi `data` |
+|---|---|---|
+| E1 | GET `/draft` | 200 Draft aktif atau `null`. Pembacaan tidak membuat Draft. |
+| E2 | PUT/PATCH `/draft` | 201 ketika membuat Draft. 200 ketika memperbarui Draft yang sama. Kedua metode menyimpan faktor yang dikirim. |
+| E3 | POST `/{evaluationId}/finalize` | 200 Final dengan ID Draft semula. Keenam skor harus tersimpan sebelum aksi ini. |
+| E4 | POST `/{evaluationId}/cancel` | 200 Cancelled dengan ID Draft semula. Seluruh skor terakhir termasuk `null` dipertahankan. |
+| E5 | GET pada prefix | 200 array Final milik UMKM, urut `finalized_at DESC, id DESC`. Tanpa hasil, `{"data":[]}`. |
+| E6 | GET `/latest` | 200 objek yang sama dengan elemen pertama E5 untuk histori yang sama. Tanpa hasil, `{"data":null}`. |
+
+E2 menerima body tanpa isi, `{}`, atau objek `scores`. Skor yang disertakan harus berupa integer JSON 1–5 atau `null`. Skor yang absen mempertahankan nilai sebelumnya dan `null` mengosongkan skor. Contoh berikut menyimpan Sumber Daya dan mengosongkan Kepemimpinan.
+
+```http
+PATCH /api/umkms/12/six-factor-evaluations/draft
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{"scores":{"sumber_daya":4,"kepemimpinan":null}}
+```
+
+E3 dan E4 menerima body tanpa isi atau `{}`. Setelah salah satu aksi sukses, penyimpanan berikutnya membuat Draft baru dengan ID baru. Aksi terminal berikutnya pada ID lama menghasilkan 409. E1 juga memakai `{"data":null}` saat slot Draft kosong.
+
+Contoh Final dengan total 24. ID mengikuti data UMKM yang dipilih.
+
+```json
+{
+  "data": {
+    "id": 34,
+    "umkm_id": 12,
+    "status": "final",
+    "scores": {
+      "sumber_daya": 4,
+      "kepemimpinan": 4,
+      "lingkungan_kerja": 4,
+      "nilai_organisasi": 4,
+      "stabilitas": 4,
+      "kinerja": 4
+    },
+    "total_score": 24,
+    "category": "Sehat",
+    "finalized_at": "2026-11-20T08:00:00.000000Z",
+    "cancelled_at": null,
+    "created_at": "2026-11-20T08:00:00.000000Z",
+    "updated_at": "2026-11-20T08:00:00.000000Z"
+  }
+}
+```
+
+`scores` selalu memuat keenam kunci. Status terdiri dari `draft`, `final`, dan `cancelled`. `total_score` dan `category` terisi pada Final. `finalized_at` terisi pada Final dan `cancelled_at` pada Cancelled. Tanggal yang terisi memakai UTC ISO 8601 dengan enam digit mikrodetik. Jika `created_at` atau `updated_at` absen pada baris P0, API membaca kolom tersebut sebagai `null`. Kategori server adalah Kurang Sehat (6–12), Cukup Sehat (13–18), Sehat (19–24), dan Sangat Sehat (25–30).
+
+| HTTP | Pesan publik |
+|---|---|
+| 401 | `Silakan masuk untuk melanjutkan.` |
+| 404 | `Data tidak ditemukan.` untuk format ID yang tidak cocok, UMKM asing atau hilang, dan evaluasi di luar UMKM terkait. |
+| 409 pada Final | `Evaluasi sudah Final dan tidak dapat diubah.` |
+| 409 pada Cancelled | `Evaluasi sudah dibatalkan dan tidak dapat diubah.` |
+| 409 pada DELETE UMKM | `UMKM tidak dapat dihapus karena memiliki riwayat penilaian enam faktor.` Berlaku untuk ketiga status. |
+| 422 | `Data yang diberikan tidak valid.` beserta objek `errors`. |
+| 500 | `Terjadi kesalahan pada server. Silakan coba lagi.` |
+
+Kunci bertingkat pada `errors` bersifat literal. Contoh berikut berlaku ketika skor Kinerja dikirim sebagai string.
+
+```json
+{
+  "message": "Data yang diberikan tidak valid.",
+  "errors": {"scores.kinerja": ["Nilai faktor harus berupa bilangan bulat 1 sampai 5 atau null."]}
+}
+```
+
+Body JSON rusak memakai kunci `body`. Bentuk `scores` yang salah memakai kunci `scores`. Finalisasi parsial juga memakai `scores` dan pesannya mencantumkan kunci faktor yang belum diisi. Field di luar kontrak ditolak meskipun nilainya `null`.
+
 ## Dashboard
 
 Semua memakai latest per UMKM dengan scope akun seperti summary. Array faktor selalu INS, ECT, OPS. Baseline mempertahankan presisi agregat skor faktor tersimpan; klien menampilkan satu desimal. Denominator berbeda per faktor karena null dikeluarkan.
@@ -148,4 +230,4 @@ printf '%s' '{"omzet":20000000}' | curl -fsS "$BASE/umkms/$UMKM_ID" -X PATCH -H 
 curl -fsS "$BASE/umkms/$UMKM_ID" -X DELETE -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN"
 ```
 
-Draft kosong membuat latest baru dan mengubah ringkasan/grafik; delete menghapus UMKM beserta seluruh evaluasi. Gunakan hanya record uji milik Anda. Status pemeriksaan aktual dicatat pada [IMPLEMENTATION.md](IMPLEMENTATION.md), bukan disimpulkan dari contoh request.
+Draft V1 kosong membuat latest baru dan mengubah ringkasan serta grafik. DELETE UMKM menghapus evaluasi V1 saat UMKM tidak memiliki riwayat penilaian enam faktor. Gunakan record uji milik Anda. Status pemeriksaan aktual tersedia di [IMPLEMENTATION.md](IMPLEMENTATION.md).

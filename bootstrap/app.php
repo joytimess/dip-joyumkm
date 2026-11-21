@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\PreserveSixFactorHttpMethod;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -9,6 +10,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -19,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(PreserveSixFactorHttpMethod::class);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -33,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($exception instanceof ValidationException) {
                 return response()->json([
                     'message' => 'Data yang diberikan tidak valid.',
-                    'errors' => $exception->errors(),
+                    'errors' => (object) $exception->errors(),
                 ], 422);
             }
 
@@ -50,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 400 => 'Permintaan tidak valid.',
                 401 => 'Email atau kata sandi tidak sesuai.',
                 404 => 'Data tidak ditemukan.',
+                409 => $exception instanceof ConflictHttpException ? $exception->getMessage() : 'Permintaan tidak dapat diproses.',
                 429 => 'Terlalu banyak percobaan. Silakan coba lagi nanti.',
                 default => $status >= 500
                     ? 'Terjadi kesalahan pada server. Silakan coba lagi.'

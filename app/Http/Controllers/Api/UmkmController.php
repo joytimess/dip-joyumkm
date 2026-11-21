@@ -17,8 +17,10 @@ use App\Http\Resources\UmkmResource;
 use App\Http\Resources\UmkmSummaryResource;
 use App\Services\UmkmService;
 use App\Services\UmkmSummaryService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class UmkmController extends Controller
 {
@@ -67,9 +69,18 @@ class UmkmController extends Controller
 
     public function destroy(DeleteUmkmRequest $request): MessageResource
     {
-        return new MessageResource($this->umkmService->delete(
-            $request->user(),
-            (int) $request->validated('record_id'),
-        ));
+        try {
+            return new MessageResource($this->umkmService->delete(
+                $request->user(),
+                (int) $request->validated('record_id'),
+            ));
+        } catch (QueryException $exception) {
+            if ((int) ($exception->errorInfo[1] ?? 0) !== 1451
+                || ! str_contains($exception->errorInfo[2] ?? '', 'CONSTRAINT `six_factor_umkm_foreign`')) {
+                throw $exception;
+            }
+
+            throw new ConflictHttpException('UMKM tidak dapat dihapus karena memiliki riwayat penilaian enam faktor.', $exception);
+        }
     }
 }

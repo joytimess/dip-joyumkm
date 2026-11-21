@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Database\Factories\UmkmFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,24 @@ class Umkm extends Model
     public function latestEvaluation(): HasOne
     {
         return $this->hasOne(Evaluation::class)->latestOfMany('id');
+    }
+
+    public function sixFactorEvaluations(): HasMany
+    {
+        return $this->hasMany(SixFactorEvaluation::class);
+    }
+
+    public function activeSixFactorDraft(): HasOne
+    {
+        return $this->hasOne(SixFactorEvaluation::class)->where('status', SixFactorEvaluation::DRAFT);
+    }
+
+    public function latestSixFactorFinal(): HasOne
+    {
+        return $this->hasOne(SixFactorEvaluation::class)->ofMany(
+            ['finalized_at' => 'max', 'id' => 'max'],
+            fn (Builder $query): Builder => $query->where('status', SixFactorEvaluation::FINAL),
+        );
     }
 
     protected function casts(): array

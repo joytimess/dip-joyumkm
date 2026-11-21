@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\QuestionnaireController;
+use App\Http\Controllers\Api\SixFactorEvaluationController;
 use App\Http\Controllers\Api\UmkmController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/questionnaire', [QuestionnaireController::class, 'show']);
     Route::get('/umkms/{id}/evaluations/latest', [EvaluationController::class, 'latest'])->whereNumber('id');
     Route::post('/umkms/{id}/evaluations', [EvaluationController::class, 'store'])->whereNumber('id');
+    Route::prefix('/umkms/{id}/six-factor-evaluations')
+        ->where(['id' => '[0-9]+', 'evaluationId' => '[0-9]+'])
+        ->controller(SixFactorEvaluationController::class)
+        ->group(function (): void {
+            Route::get('/draft', 'draft');
+            Route::match(['put', 'patch'], '/draft', 'save');
+            Route::post('/{evaluationId}/finalize', 'finalize');
+            Route::post('/{evaluationId}/cancel', 'cancel');
+            Route::get('/', 'history');
+            Route::get('/latest', 'latest');
+        });
     Route::get('/umkms/options', [UmkmController::class, 'options']);
     Route::get('/umkms/summary', [UmkmController::class, 'summary']);
     Route::get('/umkms', [UmkmController::class, 'index']);
