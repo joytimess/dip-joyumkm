@@ -393,12 +393,10 @@ try {
     await saveStatus('Gagal menyimpan');
     assert.equal(await control('kinerja').inputValue(), '2');
     assert.equal((await readDraft()).scores.kinerja, null);
-    const leaveWarning = page.waitForEvent('dialog');
     const leaving = page.locator('.workspace-breadcrumb [data-context-umkm]').click();
-    const warning = await leaveWarning;
-    assert.equal(warning.type(), 'confirm');
-    assert.match(warning.message(), /Perubahan belum tersimpan/);
-    await warning.dismiss();
+    await page.locator('#confirm-dialog[open]').waitFor();
+    assert.match(await page.locator('#confirm-dialog-description').textContent(), /Perubahan belum tersimpan/);
+    await page.locator('#confirm-dialog [data-close-dialog]').click();
     await leaving;
     const refreshWarning = page.waitForEvent('dialog');
     const refreshing = page.evaluate(() => window.location.reload());
@@ -406,11 +404,9 @@ try {
     assert.equal(warningRefresh.type(), 'beforeunload');
     await warningRefresh.dismiss();
     await refreshing;
-    const logoutWarning = page.waitForEvent('dialog');
     const loggingOut = page.locator('#desktop-sidebar [data-logout]').click();
-    const warningLogout = await logoutWarning;
-    assert.equal(warningLogout.type(), 'confirm');
-    await warningLogout.dismiss();
+    await page.locator('#confirm-dialog[open]').waitFor();
+    await page.locator('#confirm-dialog [data-close-dialog]').click();
     await loggingOut;
     assert.equal(new URL(page.url()).pathname, prefix);
 

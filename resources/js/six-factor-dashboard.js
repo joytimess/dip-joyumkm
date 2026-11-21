@@ -1,152 +1,209 @@
-import ApexCharts from 'apexcharts';
 import { pageApi } from './api';
-import { chartHost, chartOptions } from './charts';
+import { buildSummaryQuery, categoryTone, formatAverage, pageRange, summaryPageSize } from './six-factor-dashboard-data';
+import { createSelectControl } from './select-control';
+import { renderFinalResult } from './six-factor-final-result';
 import { sixFactors } from './six-factor-draft';
-import { draftProgress } from './six-factor-dashboard-data';
-import { createUmkmPicker } from './umkm-picker';
-import { element, showError } from './ui';
+import { bindDialog, element, formatNumber, openDialog, showError } from './ui';
 
-const factors = Object.entries(sixFactors);
-const labels = ['SD', 'KP', 'LK', 'NO', 'ST', 'KI'];
+const factorEntries = Object.entries(sixFactors);
+const shortLabels = ['SD', 'KP', 'LK', 'NO', 'ST', 'KI'];
 const dateFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-const date = (value) => value && Number.isFinite(new Date(value).getTime()) ? dateFormat.format(new Date(value)) : 'Tidak tersedia';
+const formatDate = (value) => (value && Number.isFinite(new Date(value).getTime()) ? dateFormat.format(new Date(value)) : null);
+const searchDelay = 300;
 
 export function initSixFactorDashboard(signal) {
     const api = pageApi(signal);
-    const root = document.getElementById('six-factor-section');
-    const body = document.getElementById('home-six-body');
-    const link = document.getElementById('home-six-open');
-    const note = document.getElementById('home-six-note');
-    const buttons = [...root.querySelectorAll('[data-six-tab]')];
-    let selected = null;
-    let tab = 'final';
-    let history = [];
-    let draft = null;
-    let historical = null;
+    const section = document.getElementById('six-factor-section');
+    const kpis = document.getElementById('six-kpis');
+    const search = document.getElementById('six-search');
+    const status = document.getElementById('six-status');
+    const sort = document.getElementById('six-sort');
+    const statusControl = createSelectControl(status, signal);
+    const sortControl = createSelectControl(sort, signal);
+    const cards = document.getElementById('six-cards');
+    const pager = document.getElementById('six-pager');
+    const count = document.getElementById('six-count');
+    const previous = document.getElementById('six-prev');
+    const next = document.getElementById('six-next');
+    let page = 1;
     let sequence = 0;
-    let chart;
+    let controller;
+    let searchTimer;
 
-    function setTab(next) {
-        tab = next;
-        historical = null;
-        render();
+    function renderKpis(summary) {
+        const items = [
+            ['Total UMKM', formatNumber(summary.total_umkm)],
+            ['Sudah Final', formatNumber(summary.sudah_final)],
+            ['Belum ada Final', formatNumber(summary.belum_ada_final)],
+            ['Rata-rata skor Final', formatAverage(summary.rata_rata_skor_final)],
+        ];
+        kpis.replaceChildren(...items.map(([label, value]) => element('div', { class: 'card home-six-kpi' }, [
+            element('span', { class: 'home-six-kpi-label', text: label }),
+            element('strong', { class: 'home-six-kpi-value num', text: value }),
+        ])));
     }
 
-    buttons.forEach((button) => button.addEventListener('click', () => setTab(button.dataset.sixTab), { signal }));
-    document.getElementById('home-six-history').addEventListener('click', () => setTab('history'), { signal });
-    signal.addEventListener('abort', () => chart?.destroy(), { once: true });
+    function renderFactors(final) {
+        return element('div', { class: 'home-six-factors', role: 'list' }, factorEntries.map(([key, label], index) => {
+            const value = final.factors[key];
+            return element('div', { class: 'home-six-factor-box', role: 'listitem', title: label, 'aria-label': `${label}: ${value} dari 5` }, [
+                element('small', { text: shortLabels[index], 'aria-hidden': true }),
+                element('strong', { class: 'num', text: `${value}/5`, 'aria-hidden': true }),
+            ]);
+        }));
+    }
 
-    function infoCard(title, value, status, updated) {
-        return element('div', { class: 'home-six-summary' }, [
-            element('div', { class: 'home-six-summary-top' }, [element('span', { text: title }), element('span', { class: `pill ${tab === 'draft' ? 'pill-amber' : 'pill-green'}`, text: status })]),
-            element('div', { class: 'home-six-major num', text: value }),
-            element('strong', { text: selected.name }),
-            element('p', { class: 'muted small', text: [selected.sector?.name, selected.province].filter(Boolean).join(' · ') }),
-            element('div', { class: 'home-six-meta' }, [element('p', { class: 'muted small', text: 'Tanggal / pembaruan' }), element('strong', { text: date(updated) }), element('p', { class: 'muted small', text: 'Jenis evaluasi' }), element('strong', { text: 'Penilaian Enam Faktor · 6 variabel' })]),
+    function renderCard(item) {
+        const place = [item.sector, item.province].filter(Boolean).join(' · ');
+        const final = item.latest_final;
+        const body = final
+            ? [
+                element('div', { class: 'home-six-score' }, [
+                    element('strong', { class: 'home-six-total num', text: `${final.total_score}/30` }),
+                    element('span', { class: `pill ${categoryTone(final.category)}`, text: final.category }),
+                ]),
+                renderFactors(final),
+                element('p', { class: 'muted small', text: `Final terbaru: ${formatDate(final.finalized_at) ?? 'Tidak tersedia'}` }),
+            ]
+            : [element('div', { class: 'home-six-none' }, element('p', { text: 'Belum ada hasil Final untuk UMKM ini.' }))];
+
+        return element('article', { class: 'card home-six-card' }, [
+            element('div', { class: 'home-six-card-head' }, [
+                element('div', { class: 'min-w-0' }, [
+                    element('h3', { class: 'break-words', text: item.name }),
+                    place ? element('p', { text: place }) : null,
+                ]),
+                element('span', { class: `pill ${final ? 'pill-green' : 'pill-muted'}`, text: final ? 'Final' : 'Belum ada Final' }),
+            ]),
+            ...body,
+            element('div', { class: 'home-six-card-foot' }, [
+                element('span', { class: 'muted', text: final ? 'Hasil Final resmi' : 'Belum tersedia' }),
+                final
+                    ? element('button', { type: 'button', class: 'text-link home-six-detail-button', text: 'Lihat detail →', onclick: (event) => openDetail(item, event.currentTarget) })
+                    : element('a', { class: 'text-link', href: `/umkms/${item.umkm_id}/six-factor-evaluations`, text: 'Buka penilaian →' }),
+            ]),
         ]);
     }
 
-    function factorCard(result, isDraft) {
-        return element('div', { class: 'home-six-feature' }, [
-            element('h3', { text: isDraft ? 'Progres pengisian Draft' : 'Nilai tiap faktor' }),
-            element('p', { class: 'muted small', text: isDraft ? 'Hanya nilai yang sudah dipilih; belum ada total atau kategori Final.' : 'Nilai tersimpan pada hasil Final dan tidak dapat diubah.' }),
-            ...factors.map(([key, label], index) => {
-                const value = result.scores[key];
-                return element('div', { class: 'home-six-factor' }, [
-                    element('div', { class: 'home-six-factor-title' }, [element('strong', { text: `${labels[index]} · ${label}` }), element('span', { text: value == null ? 'Belum dipilih' : `${value} / 5` })]),
-                    element('div', { class: 'home-six-track', 'aria-hidden': 'true' }, element('div', { class: 'home-six-fill', style: `width:${value == null ? 0 : value * 20}%` })),
-                ]);
-            }),
+    const detail = document.getElementById('six-factor-detail');
+    const detailTitle = document.getElementById('six-factor-detail-title');
+    const detailPlace = document.getElementById('six-factor-detail-place');
+    const detailContent = document.getElementById('six-factor-detail-content');
+    const detailLink = document.getElementById('six-factor-detail-link');
+    let detailChart = null;
+
+    function clearDetail() {
+        detailChart?.destroy();
+        detailChart = null;
+        detailContent.replaceChildren();
+    }
+
+    function openDetail(item, opener) {
+        const final = item.latest_final;
+        const place = [item.sector, item.province].filter(Boolean).join(' · ');
+        clearDetail();
+        detailTitle.textContent = item.name;
+        detailPlace.textContent = place;
+        detailPlace.hidden = !place;
+        detailLink.href = `/umkms/${item.umkm_id}/six-factor-evaluations`;
+        detailChart = renderFinalResult(detailContent, {
+            total_score: final.total_score,
+            category: final.category,
+            finalized_at: final.finalized_at,
+            scores: final.factors,
+        }, { name: item.name, place, label: 'Final terbaru' });
+        openDialog(detail, opener);
+    }
+
+    bindDialog(detail);
+    detail.addEventListener('close', clearDetail, { signal });
+
+    function resetFilters() {
+        clearTimeout(searchTimer);
+        search.value = '';
+        status.value = 'all';
+        sort.value = 'name_asc';
+        statusControl.sync();
+        sortControl.sync();
+        page = 1;
+        void load();
+    }
+
+    function renderEmpty(title, description, action) {
+        return element('div', { class: 'home-six-empty' }, [
+            element('h3', { text: title }),
+            element('p', { text: description }),
+            action,
         ]);
     }
 
-    function render() {
-        chart?.destroy();
-        chart = null;
-        buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.sixTab === tab)));
-        note.textContent = tab === 'draft' ? 'Draft menyimpan nilai sementara. Total skor dan kategori hanya tersedia pada hasil Final.' : 'Hasil Final terpisah dari skor kesehatan tiga dimensi.';
-        body.replaceChildren();
-        if (!selected) {
-            body.append(element('p', { class: 'home-six-empty muted', text: 'Pilih UMKM untuk meninjau penilaian enam faktor.' }));
+    function render({ data, summary, meta }) {
+        renderKpis(summary);
+        if (!summary.total_umkm) {
+            cards.replaceChildren(renderEmpty('Belum ada UMKM', 'Tambahkan UMKM untuk mulai menilai enam faktor.', element('a', { class: 'text-link', href: '/umkms', text: 'Tambah UMKM' })));
+            pager.hidden = true;
             return;
         }
-        const result = tab === 'draft' ? draft : (historical || history[0]);
-        if (tab === 'history') {
-            if (!history.length) {
-                body.append(element('div', { class: 'home-six-empty' }, [element('h3', { text: 'Belum ada histori Final' }), element('p', { class: 'muted', text: 'UMKM ini belum mempunyai penilaian yang pernah difinalisasi.' })]));
+        if (!data.length) {
+            if (page > 1 && meta.last_page >= 1) {
+                page = meta.last_page;
+                void load();
                 return;
             }
-            const list = element('div', { class: 'home-six-feature home-six-history' }, [element('h3', { text: 'Histori Final' }), element('p', { class: 'muted small', text: 'Urutan terbaru dulu; pilih hasil untuk melihat nilai dan radar Final.' })]);
-            history.forEach((item) => list.append(element('button', { type: 'button', class: 'home-six-history-item', onclick: () => { tab = 'final'; historical = item; render(); } }, [element('span', {}, [element('strong', { text: `Final #${item.id} · ${item.category}` }), element('small', { text: date(item.finalized_at) })]), element('strong', { text: `${item.total_score}/30 →` })])));
-            body.append(infoCard('UMKM terpilih', `${history.length} hasil`, 'Final', history[0].finalized_at), list);
+            cards.replaceChildren(renderEmpty('Tidak ada UMKM yang cocok', 'Ubah kata kunci atau filter untuk melihat UMKM lain.', element('button', { type: 'button', class: 'button button-outline', text: 'Reset filter', onclick: resetFilters })));
+            pager.hidden = true;
             return;
         }
-        if (!result) {
-            body.append(element('div', { class: 'home-six-empty' }, [element('h3', { text: tab === 'draft' ? 'Tidak ada Draft aktif' : 'Belum ada hasil Final' }), element('p', { class: 'muted', text: tab === 'draft' ? 'UMKM ini belum memiliki Draft yang sedang dikerjakan.' : 'Mulai penilaian dari halaman penilaian enam faktor.' })]));
-            return;
-        }
-        const isDraft = tab === 'draft';
-        const count = draftProgress(result.scores);
-        body.append(infoCard(isDraft ? 'Draft aktif' : historical ? 'Final historis' : 'Final terbaru', isDraft ? `${count}/6 terisi` : `${result.total_score}/30`, isDraft ? 'Draft belum Final' : result.category, isDraft ? result.updated_at : result.finalized_at), factorCard(result, isDraft));
-        const chartBox = element('div', { class: 'home-six-chart' });
-        body.append(chartBox);
-        if (isDraft) {
-            chartBox.append(element('h3', { text: `${count} dari 6 faktor terisi` }), element('p', { class: 'muted small', text: 'Draft belum ditampilkan sebagai radar Final.' }), element('div', { class: 'home-six-track' }, element('div', { class: 'home-six-fill', style: `width:${count / 6 * 100}%` })), element('span', { class: 'pill pill-amber', text: 'Draft aktif' }));
-        } else {
-            const host = chartHost('Radar hasil Final enam faktor skala satu sampai lima');
-            chartBox.append(element('h3', { text: 'Profil enam faktor' }), host, element('p', { class: 'muted small', text: 'Skala 1–5 · SD, KP, LK, NO, ST, KI' }));
-            const options = chartOptions('radar', [{ name: 'Nilai faktor', data: factors.map(([key]) => result.scores[key]) }], labels);
-            options.chart.height = 260;
-            options.yaxis = { min: 1, max: 5, tickAmount: 4, labels: { formatter: (value) => new Intl.NumberFormat('id-ID').format(value) } };
-            options.xaxis.labels = { style: { colors: labels.map(() => 'var(--text-muted)'), fontSize: '12px' } };
-            options.grid.padding = { top: 16, left: 12, right: 12 };
-            options.tooltip = { enabled: false };
-            options.markers = { size: 4 };
-            chart = new ApexCharts(host, options);
-            chart.render().catch(() => { if (host.isConnected) host.replaceChildren(element('p', { text: 'Radar belum dapat ditampilkan.' })); });
-        }
+        cards.replaceChildren(...data.map(renderCard));
+        const range = pageRange(meta.current_page, meta.per_page, meta.total);
+        count.textContent = `Menampilkan ${range.from}–${range.to} dari ${formatNumber(meta.total)} UMKM`;
+        previous.disabled = meta.current_page <= 1;
+        next.disabled = meta.current_page >= meta.last_page;
+        pager.hidden = false;
     }
 
     async function load() {
         const current = ++sequence;
-        chart?.destroy(); chart = null;
-        historical = null;
-        history = []; draft = null;
-        if (!selected) {
-            buttons.forEach((button) => { button.disabled = false; });
-            document.getElementById('home-six-history').disabled = false;
-            body.setAttribute('aria-busy', 'false');
-            render();
-            return;
-        }
-        buttons.forEach((button) => { button.disabled = true; });
-        document.getElementById('home-six-history').disabled = true;
-        body.setAttribute('aria-busy', 'true');
-        body.replaceChildren(element('p', { class: 'muted', text: 'Memuat penilaian…' }));
-        let loaded = false;
+        controller?.abort();
+        controller = new AbortController();
+        section.setAttribute('aria-busy', 'true');
+        kpis.replaceChildren(...Array.from({ length: 4 }, () => element('div', { class: 'card home-six-kpi skeleton h-16', 'aria-hidden': true })));
+        cards.replaceChildren(...Array.from({ length: summaryPageSize }, () => element('div', { class: 'card home-six-card skeleton h-40', 'aria-hidden': true })));
+        pager.hidden = true;
+        const query = buildSummaryQuery({ page, perPage: summaryPageSize, search: search.value, status: status.value, sort: sort.value });
         try {
-            const path = `/umkms/${selected.id}/six-factor-evaluations`;
-            const [historyResponse, draftResponse] = await Promise.all([api(path), api(`${path}/draft`)]);
+            const response = await api(`/dashboard/six-factor-summary?${query}`, { signal: controller.signal });
             if (current !== sequence || signal.aborted) return;
-            history = historyResponse.data;
-            draft = draftResponse.data;
-            loaded = true;
-            render();
+            render(response);
         } catch (error) {
-            if (current === sequence && !signal.aborted && error.name !== 'AbortError') showError(body, error, load);
+            if (current !== sequence || signal.aborted || error.name === 'AbortError') return;
+            kpis.replaceChildren();
+            showError(cards, error, load);
+            pager.hidden = true;
         } finally {
-            if (current === sequence && !signal.aborted) {
-                body.setAttribute('aria-busy', 'false');
-                buttons.forEach((button) => { button.disabled = !loaded; });
-                document.getElementById('home-six-history').disabled = !loaded;
-            }
+            if (current === sequence) section.setAttribute('aria-busy', 'false');
         }
     }
 
-    createUmkmPicker(document.getElementById('home-six-picker'), { signal, onChange: (item) => {
-        selected = item;
-        link.href = item ? `/umkms/${item.id}/six-factor-evaluations` : '/umkms?mode=six-factor';
-        return load();
-    } });
-    render();
+    search.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            page = 1;
+            void load();
+        }, searchDelay);
+    }, { signal });
+    [status, sort].forEach((control) => control.addEventListener('change', () => {
+        clearTimeout(searchTimer);
+        page = 1;
+        void load();
+    }, { signal }));
+    previous.addEventListener('click', () => { page = Math.max(1, page - 1); void load(); }, { signal });
+    next.addEventListener('click', () => { page += 1; void load(); }, { signal });
+    signal.addEventListener('abort', () => {
+        clearTimeout(searchTimer);
+        controller?.abort();
+        clearDetail();
+    }, { once: true });
+
+    void load();
 }
