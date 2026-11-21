@@ -1,0 +1,32 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-11-20T10:30:18.759Z",
+        "reason": "JoyUMKM Dashboard Relayout V1 PRD: preserve the existing self-hosted dashboard typeface; this is the installed project font."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "resources/css/dashboard.css"
+        ],
+        "createdAt": "2026-11-20T10:30:18.809Z",
+        "reason": "JoyUMKM Dashboard Relayout V1 mockup: note-card has the same 3px secondary border; this established callout is outside the UMKM table adjustment."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "resources/css/app.css"
+        ],
+        "createdAt": "2026-11-20T15:14:13.441Z",
+        "reason": "Agent: border pada toast dari commit 201da54 menandai status sukses atau gagal; PRD UI-0 mempertahankan visual toast yang ada."
+      }
+    ]
+  }
+}
