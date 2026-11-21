@@ -2,7 +2,7 @@ import { pageApi } from './api';
 import { element, showError } from './ui';
 import { createSelectControl } from './select-control';
 
-export async function createUmkmPicker(root, { signal, initialId = null, autoSelect = false, beforeChange = () => true, onChange = () => {} }) {
+export async function createUmkmPicker(root, { signal, initialId = null, autoSelect = false, searchable = true, beforeChange = () => true, onChange = () => {} }) {
     const api = pageApi(signal);
     let selected = null;
     let page = 1;
@@ -11,17 +11,17 @@ export async function createUmkmPicker(root, { signal, initialId = null, autoSel
     let sequence = 0;
     let searchTimer;
     let currentItems = [];
-    const searchInput = element('input', { type: 'search', maxlength: 120, placeholder: 'Cari nama UMKM...', 'aria-label': 'Cari UMKM dalam pemilih', 'data-picker-search': true });
+    const searchInput = searchable ? element('input', { type: 'search', maxlength: 120, placeholder: 'Cari nama UMKM...', 'aria-label': 'Cari UMKM dalam pemilih', 'data-picker-search': true }) : null;
     const select = element('select', { 'aria-label': 'Pilih UMKM', 'data-picker-select': true, disabled: true });
     const status = element('div', { class: 'picker-status', 'aria-live': 'polite' });
     const range = element('span', { class: 'muted' });
     const previous = element('button', { type: 'button', class: 'page-button', text: 'Sebelumnya', onclick: () => { page--; loadChoices(); } });
     const next = element('button', { type: 'button', class: 'page-button', text: 'Berikutnya', onclick: () => { page++; loadChoices(); } });
     const pagination = element('div', { class: 'picker-pagination' }, [range, element('div', {}, [previous, next])]);
-    const controls = element('div', { class: 'picker-controls' }, [searchInput, select]);
-    const placeholder = element('div', { class: 'picker-controls', 'aria-hidden': 'true' }, [
-        element('div', { class: 'skeleton h-10' }), element('div', { class: 'skeleton h-10' }),
-    ]);
+    const controlsClass = searchable ? 'picker-controls' : 'picker-controls picker-controls-single';
+    const controls = element('div', { class: controlsClass }, [searchInput, select]);
+    const placeholder = element('div', { class: controlsClass, 'aria-hidden': 'true' },
+        (searchable ? [0, 1] : [0]).map(() => element('div', { class: 'skeleton h-10' })));
     controls.hidden = true;
     pagination.hidden = true;
     root.replaceChildren(placeholder, controls, status, pagination);
@@ -77,7 +77,7 @@ export async function createUmkmPicker(root, { signal, initialId = null, autoSel
 
     async function setSelected(id, notify = true) {
         if (id !== null && String(id) === String(selected?.id)) return true;
-        if (!beforeChange()) { select.value = selected ? String(selected.id) : ''; selectControl.sync(); return false; }
+        if (!(await beforeChange())) { select.value = selected ? String(selected.id) : ''; selectControl.sync(); return false; }
         const candidate = id === null ? null : currentItems.find((item) => String(item.id) === String(id)) || (await api(`/umkms/${id}`)).data;
         selected = candidate;
         renderOptions(currentItems);
@@ -88,7 +88,7 @@ export async function createUmkmPicker(root, { signal, initialId = null, autoSel
     select.addEventListener('change', () => setSelected(select.value === '' ? null : Number(select.value)).catch((error) => {
         if (!signal.aborted && error.name !== 'AbortError') showError(status, error, loadChoices);
     }));
-    searchInput.addEventListener('input', () => {
+    searchInput?.addEventListener('input', () => {
         window.clearTimeout(searchTimer);
         searchTimer = window.setTimeout(() => { search = searchInput.value.trim(); page = 1; loadChoices(); }, 300);
     });

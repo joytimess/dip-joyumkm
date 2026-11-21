@@ -31,49 +31,71 @@
             <div id="factor-tabs" class="factor-tabs mb-4" role="group" aria-label="Dimensi evaluasi"></div>
             <div id="questionnaire-factors"></div>
             <div id="factor-navigation" class="factor-navigation between wrap mt-4 gap-3">
-                <button type="button" id="previous-factor" class="btn btn-light button button-outline">Faktor sebelumnya</button>
-                <button type="button" id="next-factor" class="btn btn-primary button button-primary">Faktor berikutnya</button>
+                <button type="button" id="previous-factor" class="btn btn-light button button-outline">Dimensi sebelumnya</button>
+                <button type="button" id="next-factor" class="btn btn-primary button button-primary">Dimensi berikutnya</button>
             </div>
         </form>
 
         <aside class="evaluation-sidebar sticky" hidden>
-            <section class="card card-pad panel live-panel" style="margin-bottom:18px;">
-                <div class="section-top" style="margin-bottom:14px;">
+            <section class="card card-pad panel live-panel" aria-labelledby="live-title">
+                <div class="live-head">
+                    <h2 id="live-title" class="section-title">Progres dan skor</h2>
+                    <span id="evaluation-badge" class="live-badge" hidden></span>
+                </div>
+
+                <div class="live-progress">
+                    <div class="live-progress-meta">
+                        <p id="evaluation-completeness" class="muted">0 dari 0 soal terjawab</p>
+                        <strong id="evaluation-percent" class="num">0%</strong>
+                    </div>
+                    <progress id="evaluation-progress" class="live-meter" max="100" value="0" aria-label="Kelengkapan jawaban"></progress>
+                </div>
+
+                <div class="live-score">
                     <div>
-                        <h2 class="section-title">Progres dan skor</h2>
-                        <p id="evaluation-completeness" class="section-desc muted">0 soal terjawab</p>
+                        <span class="live-label">Skor rata-rata (3 faktor)</span>
+                        <div class="live-score-value">
+                            <strong id="live-average" class="num">—</strong>
+                            <small id="live-score-unit" class="muted" hidden>/100</small>
+                        </div>
+                    </div>
+                    <div class="live-category-block">
+                        <span class="live-label">Kategori saat ini</span>
+                        <span id="live-category" class="live-category">—</span>
                     </div>
                 </div>
-                <progress id="evaluation-progress" max="100" value="0" aria-label="Kelengkapan jawaban"></progress>
-                <div id="factor-progress" style="display:grid;gap:10px;margin-bottom:18px;"></div>
-                <div class="card-inset" style="padding:16px;background:var(--canvas);border-radius:12px;margin-bottom:16px;">
-                    <div class="tiny uppercase muted" style="font-weight:700;letter-spacing:.5px;">Skor rata-rata (3 faktor)</div>
-                    <div class="form-score" style="display:flex;align-items:baseline;gap:4px;margin:6px 0;">
-                        <strong id="live-average" style="font:700 34px var(--font-sans);color:var(--brand-primary);">—</strong>
-                        <small id="live-score-unit" class="muted" hidden>/100</small>
-                    </div>
-                    <div style="margin-top:6px;">
-                        <span class="tiny muted" style="display:block;margin-bottom:2px;">Kategori saat ini:</span>
-                        <strong id="live-category" style="font-size:12px;">—</strong>
-                    </div>
+
+                <div class="live-factors">
+                    <h3 class="live-label">Rincian per faktor</h3>
+                    <div id="factor-progress"></div>
                 </div>
-                <p id="evaluation-status" class="evaluation-status muted mb-4" role="status"></p>
-                <p id="evaluation-server-result" class="server-result note-card" role="status" style="margin-bottom:14px;" hidden></p>
-                <div style="display:grid;gap:8px;">
-                    <button id="save-evaluation" type="submit" form="evaluation-form" class="btn btn-primary btn-full button button-primary w-full" disabled>Simpan sebagai Final</button>
-                    <button id="preview-draft" type="button" class="btn btn-light btn-full button button-outline w-full" disabled>Pratinjau & Simpan Draft</button>
-                    <button id="reset-evaluation" type="button" class="btn btn-light btn-full button button-ghost w-full" disabled>Reset Form</button>
+
+                <p id="evaluation-status" class="evaluation-status" role="status"></p>
+                <p id="evaluation-server-result" class="server-result" role="status" hidden></p>
+
+                <div class="live-actions">
+                    <button id="save-evaluation" type="submit" form="evaluation-form" class="btn btn-primary btn-full button button-primary" disabled>
+                        <x-icon name="check"/><span data-button-label>Simpan sebagai Final</span>
+                    </button>
+                    <button id="preview-draft" type="button" class="btn btn-light btn-full button button-outline" disabled>
+                        <x-icon name="eye"/><span>Pratinjau &amp; Simpan Draft</span>
+                    </button>
+                    <button id="reset-evaluation" type="button" class="btn btn-light btn-full button button-ghost" disabled>
+                        <x-icon name="reset"/><span>Reset Form</span>
+                    </button>
                 </div>
             </section>
 
-            <section class="card card-pad panel evaluation-guide" aria-labelledby="guide-title">
-                <h3 id="guide-title">Panduan pengisian</h3>
+            <details class="card card-pad panel evaluation-guide" open>
+                <summary>
+                    <x-icon name="info"/><span id="guide-title">Panduan pengisian</span>
+                </summary>
                 <ul>
-                    <li>Simpan sebagai Draft untuk melanjutkan pengisian nanti.</li>
-                    <li>Setelah semua soal dijawab, pilih Simpan sebagai Final untuk menetapkan hasil.</li>
-                    <li>Reset Form mengosongkan isian saat ini. Evaluasi yang tersimpan tetap tersedia.</li>
+                    <li><x-icon name="save"/><span>Simpan sebagai <strong>Draft</strong> untuk melanjutkan pengisian nanti.</span></li>
+                    <li><x-icon name="check"/><span>Setelah semua soal dijawab, pilih <strong>Simpan sebagai Final</strong> untuk menetapkan hasil.</span></li>
+                    <li><x-icon name="reset"/><span><strong>Reset Form</strong> mengosongkan isian saat ini. Evaluasi yang tersimpan tetap tersedia.</span></li>
                 </ul>
-            </section>
+            </details>
         </aside>
     </div>
 </div>

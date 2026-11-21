@@ -1,8 +1,10 @@
 import { pageApi } from '../api';
 import { calculateScores } from '../scoring';
 import { createUmkmPicker } from '../umkm-picker';
-import { syncUmkmBreadcrumb } from '../umkm-navigation';
-import { element, formatScore, bindDialog, openDialog, showError, skeleton, toast } from '../ui';
+import { syncUmkmBreadcrumb, withListContext } from '../umkm-navigation';
+import { confirmAction, element, formatScore, bindDialog, openDialog, showError, skeleton, toast } from '../ui';
+
+const sliderKeys = ['Home', 'End', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'];
 
 export async function init(signal) {
     const api = pageApi(signal);
@@ -36,6 +38,7 @@ export async function init(signal) {
     let saving = false;
     let leaving = false;
     let currentFactorIndex = 0;
+    const sliders = new Map();
     bindDialog(preview);
     preview.addEventListener('cancel', (event) => { if (saving) event.preventDefault(); });
 
@@ -43,7 +46,9 @@ export async function init(signal) {
     const serializeAnswers = () => activeQuestions().filter((question) => answers.has(question.id)).map((question) => ({ question_id: question.id, value: answers.get(question.id) }));
     const fingerprint = () => JSON.stringify(serializeAnswers());
     const isDirty = () => Boolean(questionnaire && selectedUmkm && fingerprint() !== baseline);
-    const confirmDiscard = () => !isDirty() || window.confirm('Perubahan belum disimpan. Buang perubahan dan lanjutkan?');
+    const discardConfirmation = { title: 'Buang perubahan?', message: 'Perubahan belum disimpan. Buang perubahan dan lanjutkan?', confirmLabel: 'Buang perubahan', tone: 'danger' };
+    const confirmDiscard = async () => !isDirty() || confirmAction(discardConfirmation);
+    const finalConfirmation = { title: 'Simpan sebagai Final?', message: 'Evaluasi final akan menjadi hasil terbaru untuk UMKM ini. Pastikan seluruh jawaban sudah sesuai.', confirmLabel: 'Simpan Final' };
 
     function renderTabs() {
         if (!questionnaire || !selectedUmkm) {
@@ -70,8 +75,16 @@ export async function init(signal) {
                 element('span', { class: 'factor-complete', text: ` (${answeredInFactor}/${totalInFactor})` }),
             ]);
         }));
+        syncFactorNavigation();
+    }
+
+    function syncFactorNavigation() {
+        if (!questionnaire) return;
+        const onLastFactor = currentFactorIndex >= questionnaire.factors.length - 1;
         prevBtn.disabled = currentFactorIndex <= 0;
-        nextBtn.disabled = currentFactorIndex >= questionnaire.factors.length - 1;
+        nextBtn.type = onLastFactor ? 'submit' : 'button';
+        nextBtn.textContent = onLastFactor ? (saving ? 'Menyimpan…' : 'Simpan sebagai Final') : 'Dimensi berikutnya';
+        nextBtn.disabled = onLastFactor && !(selectedUmkm && ready && !saving);
     }
 
     function switchFactor(index) {
@@ -87,10 +100,12 @@ export async function init(signal) {
     function setControls() {
         for (const button of [saveButton, previewButton, resetButton, draftButton]) button.disabled = !selectedUmkm || !ready || saving;
         form.querySelectorAll('input').forEach((input) => { input.disabled = saving || !ready; });
+        for (const { input, clear } of sliders.values()) clear.disabled = saving || !ready || input.hasAttribute('data-unselected');
         picker.disabled = saving;
         preview.querySelectorAll('[data-close-dialog]').forEach((button) => { button.disabled = saving; });
-        saveButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Final';
+        saveButton.querySelector('[data-button-label]').textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Final';
         draftButton.textContent = saving ? 'Menyimpan…' : 'Simpan sebagai Draft';
+        syncFactorNavigation();
     }
 
     function clearValidation() {
@@ -100,49 +115,141 @@ export async function init(signal) {
         form.querySelectorAll('[aria-invalid]').forEach((node) => node.removeAttribute('aria-invalid'));
     }
 
+    function categoryTone(category) {
+        if (/^(SANGAT BAIK|BAIK)$/i.test(category)) return 'good';
+        if (/^CUKUP$/i.test(category)) return 'warn';
+        if (/^(KURANG|KRITIS)$/i.test(category)) return 'danger';
+        return 'muted';
+    }
+
+    function renderBadge() {
+        const badge = document.getElementById('evaluation-badge');
+        const state = !selectedUmkm ? null
+            : isDirty() ? { label: 'Belum disimpan', tone: 'warn' }
+                : { final: { label: 'Final', tone: 'good' }, draft: { label: 'Draft', tone: 'draft' } }[latest?.status] || null;
+        badge.hidden = !state;
+        badge.textContent = state?.label || '';
+        badge.dataset.tone = state?.tone || '';
+    }
+
     function renderLive(result = null) {
         const scores = result || calculateScores(questionnaire, serializeAnswers());
+        const total = scores.total_questions || 0;
+        const answered = scores.answered_count;
         const completeness = document.getElementById('evaluation-progress');
-        completeness.max = scores.total_questions || 1;
-        completeness.value = scores.answered_count;
-        document.getElementById('evaluation-completeness').textContent = `${scores.answered_count} dari ${scores.total_questions} soal terjawab`;
+        completeness.max = total || 1;
+        completeness.value = answered;
+        completeness.classList.toggle('is-complete', total > 0 && answered === total);
+        document.getElementById('evaluation-completeness').textContent = `${answered} dari ${total} soal terjawab`;
+        document.getElementById('evaluation-percent').textContent = `${total ? Math.round((answered / total) * 100) : 0}%`;
         const progress = document.getElementById('factor-progress');
         progress.replaceChildren(...questionnaire.factors.map((factor) => {
             const score = scores.factor_scores[factor.code];
-            const row = element('div', { class: 'factor-progress-row' }, [
-                element('div', { class: 'factor-progress-label between hstack', style: 'margin-bottom:4px;' }, [
-                    element('span', { class: 'small strong', text: factor.code }),
-                    element('strong', { class: 'num small', text: formatScore(score) }),
+            return element('div', { class: 'live-factor-row' }, [
+                element('div', { class: 'live-factor-head' }, [
+                    element('span', { class: 'live-factor-code', text: factor.code }),
+                    element('strong', { class: 'num', text: formatScore(score) }),
                 ]),
-                element('div', { class: 'progress', style: 'height:6px;' }, [
-                    element('span', { style: `width:${Math.max(0, Math.min(100, Number(score) || 0))}%;background:${factor.color}` }),
+                element('div', { class: 'live-bar', 'aria-hidden': 'true' }, [
+                    element('span', { style: `width:${Math.max(0, Math.min(100, Number(score) || 0))}%` }),
                 ]),
             ]);
-            return row;
         }));
         document.getElementById('live-average').textContent = formatScore(scores.average_score);
         document.getElementById('live-score-unit').hidden = scores.average_score === null;
         const category = document.getElementById('live-category');
         category.textContent = scores.category;
+        category.dataset.tone = categoryTone(scores.category);
+        renderBadge();
         document.getElementById('evaluation-status').textContent = isDirty()
             ? 'Ada perubahan yang belum disimpan.'
             : { final: 'Evaluasi terakhir: Final.', draft: 'Evaluasi terakhir: Draft tersimpan.' }[latest?.status] || 'Belum ada evaluasi tersimpan.';
+        syncSliders();
         renderTabs();
         setControls();
         return scores;
     }
 
-    function makeRadio(question, option, pill = false) {
-        const radio = element('input', { type: 'radio', name: `question_${question.id}`, value: option.value, 'data-question-id': question.id, 'aria-label': `${question.text} — ${option.value}: ${option.label}`, 'aria-describedby': `question-error-${question.id}` });
-        radio.checked = answers.get(question.id) === option.value;
-        return element('label', { class: pill ? 'radio-pill' : 'rating-option' }, [
-            radio,
-            element('span', { text: pill ? `${option.value} = ${option.label}` : option.value }),
+    function setAnswer(questionId, value) {
+        if (value === null) answers.delete(questionId); else answers.set(questionId, value);
+        leaving = false;
+        clearValidation();
+        serverResult.hidden = true;
+        renderLive();
+    }
+
+    function syncSlider({ question, input, selected, ticks }) {
+        const answer = answers.get(question.id);
+        const index = question.options.findIndex((option) => option.value === answer);
+        const unselected = index === -1;
+        const current = unselected ? 0 : index;
+        const label = unselected ? 'Belum dipilih' : `${question.options[current].value} · ${question.options[current].label}`;
+        if (input.value !== String(current)) input.value = String(current);
+        input.toggleAttribute('data-unselected', unselected);
+        input.setAttribute('aria-valuetext', label);
+        selected.textContent = label;
+        selected.classList.toggle('pill-muted', unselected);
+        ticks.forEach((tick, tickIndex) => tick.classList.toggle('is-selected', !unselected && tickIndex === index));
+    }
+
+    function makeSlider(question, number) {
+        const { options } = question;
+        const tickLabelled = question.input_type === 'labeled_radio';
+        const input = element('input', {
+            type: 'range', min: 0, max: options.length - 1, step: 1, value: 0,
+            id: `question-slider-${question.id}`, name: `question_${question.id}`, class: 'six-factor-range',
+            'data-question-id': question.id, 'aria-labelledby': `question-title-${question.id}`, 'aria-describedby': `question-error-${question.id}`,
+        });
+        const selected = element('span', { class: 'pill six-factor-value num', 'aria-hidden': 'true' });
+        const clear = element('button', {
+            type: 'button', class: 'btn button button-ghost six-factor-clear', text: 'Kosongkan',
+            'aria-label': `Kosongkan jawaban: ${question.text}`,
+            onclick: () => { input.focus(); setAnswer(question.id, null); },
+        });
+        const chooseFromSlider = () => setAnswer(question.id, options[Number(input.value)].value);
+        let activePointer;
+        const releasePointer = (event) => {
+            if (event.pointerId === activePointer) activePointer = undefined;
+        };
+        input.addEventListener('input', chooseFromSlider);
+        // Only a pointer gesture on the slider selects its resting value, so the thumb is not chosen by accident.
+        input.addEventListener('pointerdown', (event) => {
+            if (event.isPrimary && event.button === 0) activePointer = event.pointerId;
+        });
+        input.addEventListener('pointerup', (event) => {
+            if (event.pointerId !== activePointer) return;
+            releasePointer(event);
+            if (input.hasAttribute('data-unselected')) chooseFromSlider();
+        });
+        input.addEventListener('pointercancel', releasePointer);
+        input.addEventListener('pointerleave', releasePointer);
+        input.addEventListener('keyup', (event) => {
+            if (sliderKeys.includes(event.key) && input.hasAttribute('data-unselected')) chooseFromSlider();
+        });
+        const ticks = options.map((option) => element('span', { text: tickLabelled ? option.label : option.value }));
+        const control = { question, input, selected, clear, ticks };
+        sliders.set(question.id, control);
+        syncSlider(control);
+
+        return element('div', { class: 'question-block question-slider' }, [
+            element('div', { class: 'between wrap six-factor-field-heading' }, [
+                element('div', { class: 'question-title' }, [
+                    element('span', { class: 'question-index', text: number }),
+                    element('div', {}, [
+                        element('strong', { id: `question-title-${question.id}`, text: question.text }),
+                        element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
+                    ]),
+                ]),
+                element('div', { class: 'hstack six-factor-field-tools' }, [selected, clear]),
+            ]),
+            element('div', { class: 'six-factor-range-track' }, input),
+            element('div', { class: 'six-factor-range-scale', 'aria-hidden': 'true' }, ticks),
         ]);
     }
 
     function renderQuestions() {
         factorContainer.replaceChildren();
+        sliders.clear();
         questionnaire.factors.forEach((factor, fIdx) => {
             const card = element('section', { class: 'card card-pad panel factor-card', 'aria-labelledby': `factor-title-${factor.id}` }, [
                 element('div', { class: 'section-top', style: 'margin-bottom:18px;' }, [
@@ -155,41 +262,17 @@ export async function init(signal) {
             card.style.setProperty('--factor-color', factor.color);
             card.hidden = fIdx !== currentFactorIndex;
 
-            if (factor.questions.every((question) => question.input_type === 'likert')) {
-                const qGroup = element('div', { class: 'question-group' });
-                factor.questions.forEach((question, qIdx) => {
-                    qGroup.append(element('div', { class: 'question-block', role: 'radiogroup', 'aria-labelledby': `question-title-${question.id}` }, [
-                        element('div', { class: 'question-title' }, [
-                            element('span', { class: 'question-index', text: `${qIdx + 1}` }),
-                            element('div', {}, [
-                                element('strong', { id: `question-title-${question.id}`, text: question.text }),
-                                element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
-                            ]),
-                        ]),
-                        element('div', { class: 'rating-options' }, question.options.map((option) => makeRadio(question, option, false))),
-                    ]));
-                });
-                card.append(qGroup);
-            } else {
-                const qGroup = element('div', { class: 'question-group' });
-                factor.questions.forEach((question, qIdx) => {
-                    qGroup.append(element('div', { class: 'question-block radio-question', role: 'radiogroup', 'aria-labelledby': `question-title-${question.id}` }, [
-                        element('div', { class: 'question-title' }, [
-                            element('span', { class: 'question-index', text: `${qIdx + 1}` }),
-                            element('div', {}, [
-                                element('strong', { id: `question-title-${question.id}`, text: question.text }),
-                                element('p', { id: `question-error-${question.id}`, class: 'field-error', 'data-question-error': question.id }),
-                            ]),
-                        ]),
-                        element('div', { class: 'radio-options', style: 'display:flex;gap:8px;flex-wrap:wrap;' }, question.options.map((option) => makeRadio(question, option, true))),
-                    ]));
-                });
-                card.append(qGroup);
-            }
+            const qGroup = element('div', { class: 'question-group' });
+            factor.questions.forEach((question, qIdx) => qGroup.append(makeSlider(question, qIdx + 1)));
+            card.append(qGroup);
             factorContainer.append(card);
         });
         renderTabs();
         switchFactor(currentFactorIndex);
+    }
+
+    function syncSliders() {
+        for (const control of sliders.values()) syncSlider(control);
     }
 
     function acceptEvaluation(evaluation) {
@@ -215,6 +298,7 @@ export async function init(signal) {
         empty.hidden = Boolean(umkm);
         sidebar.hidden = !umkm;
         factorContainer.replaceChildren();
+        sliders.clear();
         const query = new URL(window.location.href);
         if (umkm) query.searchParams.set('umkm', umkm.id); else query.searchParams.delete('umkm');
         window.history.replaceState(history.state, '', query);
@@ -272,7 +356,7 @@ export async function init(signal) {
             const output = id ? form.querySelector(`[data-question-error="${id}"]`) : null;
             if (output) {
                 output.textContent = Array.isArray(messages) ? messages.join(' ') : String(messages);
-                form.querySelectorAll(`[data-question-id="${id}"]`).forEach((radio) => radio.setAttribute('aria-invalid', 'true'));
+                form.querySelectorAll(`[data-question-id="${id}"]`).forEach((slider) => slider.setAttribute('aria-invalid', 'true'));
             } else if (Array.isArray(messages)) messages.forEach((text) => extraMessages.add(String(text)));
         }
         if (extraMessages.size) message.append(' ', [...extraMessages].join(' '));
@@ -304,6 +388,7 @@ export async function init(signal) {
         const umkmId = selectedUmkm.id;
         saving = true;
         setControls();
+        let saved = false;
         try {
             const { data } = await api(`/umkms/${umkmId}/evaluations`, { method: 'POST', body: { status, answers: submittedAnswers } });
             acceptEvaluation(data);
@@ -314,6 +399,7 @@ export async function init(signal) {
             preview.close();
             toast(status === 'draft' ? 'Draft evaluasi berhasil disimpan.' : 'Evaluasi final berhasil disimpan.');
             window.dispatchEvent(new Event('joyumkm:evaluation-saved'));
+            saved = true;
         } catch (error) {
             if (signal.aborted || error.name === 'AbortError') return;
             if (error.status === 0) {
@@ -332,23 +418,29 @@ export async function init(signal) {
                 showEvaluationErrors(error, submittedAnswers);
             }
         } finally { if (!signal.aborted) { saving = false; setControls(); } }
+        if (saved && status === 'final' && !signal.aborted) openSixFactorEvaluation(umkmId);
     }
 
-    form.addEventListener('change', (event) => {
-        if (!event.target.matches('[data-question-id]')) return;
-        leaving = false;
-        answers.set(Number(event.target.dataset.questionId), Number(event.target.value));
-        clearValidation();
-        serverResult.hidden = true;
-        renderLive();
+    // Dipanggil setelah saving dilepas, agar guard "belum disimpan" tidak menahan perpindahan halaman.
+    function openSixFactorEvaluation(umkmId) {
+        const link = element('a', { href: withListContext(`/umkms/${umkmId}/six-factor-evaluations`), hidden: true });
+        document.body.append(link);
+        link.click();
+        link.remove();
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!selectedUmkm || !ready || saving) return;
+        if (!(await confirmAction(finalConfirmation))) return;
+        saveEvaluation('final');
     });
-    form.addEventListener('submit', (event) => { event.preventDefault(); saveEvaluation('final'); });
     prevBtn?.addEventListener('click', () => switchFactor(currentFactorIndex - 1));
     nextBtn?.addEventListener('click', () => switchFactor(currentFactorIndex + 1));
     previewButton.addEventListener('click', renderPreview);
     draftButton.addEventListener('click', () => saveEvaluation('draft'));
-    resetButton.addEventListener('click', () => {
-        if (answers.size && !window.confirm('Kosongkan seluruh jawaban pada form ini? Data tersimpan tidak akan dihapus.')) return;
+    resetButton.addEventListener('click', async () => {
+        if (answers.size && !(await confirmAction({ title: 'Kosongkan jawaban?', message: 'Kosongkan seluruh jawaban pada form ini? Data tersimpan tidak akan dihapus.', confirmLabel: 'Kosongkan', tone: 'danger' }))) return;
         answers = new Map();
         leaving = false;
         clearValidation();
@@ -358,16 +450,26 @@ export async function init(signal) {
     });
     window.addEventListener('beforeunload', (event) => { if (isDirty() && !leaving) { event.preventDefault(); event.returnValue = ''; } }, { signal });
     window.addEventListener('joyumkm:logout-failed', () => { leaving = false; }, { signal });
+    let logoutConfirmed = false;
     document.addEventListener('click', (event) => {
         const link = event.target.closest('[data-logout]');
+        if (logoutConfirmed) { logoutConfirmed = false; return; }
         if (!link || link.target === '_blank' || link.getAttribute('href')?.startsWith('#') || event.ctrlKey || event.metaKey || event.shiftKey) return;
-        if (isDirty()) {
-            if (!confirmDiscard()) { event.preventDefault(); event.stopImmediatePropagation(); }
-            else leaving = true;
-        }
+        if (!isDirty()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        void confirmAction(discardConfirmation).then((accepted) => {
+            if (!accepted || signal.aborted) return;
+            leaving = true;
+            logoutConfirmed = true;
+            link.click();
+        });
     }, { capture: true, signal });
     document.addEventListener('joyumkm:before-route-change', (event) => {
-        if (saving || !confirmDiscard()) event.preventDefault();
+        if (saving) { event.preventDefault(); return; }
+        if (!isDirty()) return;
+        event.preventDefault();
+        event.detail.confirmation = discardConfirmation;
     }, { signal });
 
     async function loadQuestionnaire() {
@@ -387,8 +489,9 @@ export async function init(signal) {
         loadQuestionnaire(),
         createUmkmPicker(picker, {
             signal,
+            searchable: false,
             initialId: new URLSearchParams(window.location.search).get('umkm'),
-            beforeChange: () => !saving && confirmDiscard(),
+            beforeChange: async () => !saving && (await confirmDiscard()),
             onChange: (umkm) => {
                 pendingUmkm = umkm;
                 if (questionnaire) return loadSelected(umkm);
