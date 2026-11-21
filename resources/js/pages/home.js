@@ -2,6 +2,7 @@ import { createSummary } from '../summary';
 import { pageApi } from '../api';
 import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, tooltipText } from '../charts';
 import { element, formatNumber, formatScore, showError } from '../ui';
+import { initSixFactorDashboard } from '../six-factor-dashboard';
 
 function renderStatusBadge(status) {
     if (status === 'final') return element('span', { class: 'pill pill-green', text: 'Final' });
@@ -10,6 +11,7 @@ function renderStatusBadge(status) {
 }
 
 export function init(signal) {
+    initSixFactorDashboard(signal);
     const api = pageApi(signal);
     const draftCaption = document.getElementById('home-draft-caption');
     const summary = createSummary(document.getElementById('umkm-summary'), signal, (data) => {

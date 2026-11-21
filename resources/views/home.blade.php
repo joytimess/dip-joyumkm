@@ -72,6 +72,24 @@
         </section>
     </div>
 
+    <section class="card home-six section-block" id="six-factor-section" aria-labelledby="home-six-title">
+        <div class="home-six-head">
+            <div><h2 id="home-six-title">Penilaian Enam Faktor</h2><p>Ringkasan penilaian per UMKM dari Sumber Daya, Kepemimpinan, Lingkungan Kerja, Nilai Organisasi, Stabilitas, dan Kinerja.</p><span class="home-six-note">Skala 1–5 per faktor · Total Final 6–30 · Terpisah dari skor 0–100</span></div>
+            <a id="home-six-open" class="btn button button-outline" href="{{ route('umkms', ['mode' => 'six-factor']) }}">Buka halaman penilaian ↗</a>
+        </div>
+        <div class="home-six-controls">
+            <div class="home-six-label">UMKM yang ingin ditinjau</div>
+            <div id="home-six-picker"></div>
+            <div class="home-six-tabs" role="group" aria-label="Jenis hasil enam faktor">
+                <button type="button" data-six-tab="final" aria-pressed="true">Final terbaru</button>
+                <button type="button" data-six-tab="draft" aria-pressed="false">Draft aktif</button>
+                <button type="button" data-six-tab="history" aria-pressed="false">Histori Final</button>
+            </div>
+        </div>
+        <div class="home-six-body" id="home-six-body" aria-live="polite"><p class="muted">Memuat pilihan UMKM…</p></div>
+        <div class="home-six-bottom"><p id="home-six-note">Hasil Final terpisah dari skor kesehatan tiga dimensi.</p><button class="text-link" type="button" id="home-six-history">Lihat histori Final →</button></div>
+    </section>
+
     <section class="card card-pad panel priority-panel section-block" aria-labelledby="snapshot-title">
         <div class="section-top section-heading">
             <div>
