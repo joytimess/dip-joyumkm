@@ -1,0 +1,688 @@
+{
+  "shots": [
+    {
+      "file": "non-auth/desktop/landing.png",
+      "route": "/",
+      "label": "landing",
+      "authstate": "non-auth",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/tablet/landing.png",
+      "route": "/",
+      "label": "landing",
+      "authstate": "non-auth",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/mobile/landing.png",
+      "route": "/",
+      "label": "landing",
+      "authstate": "non-auth",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/desktop/login.png",
+      "route": "/login",
+      "label": "login",
+      "authstate": "non-auth",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/tablet/login.png",
+      "route": "/login",
+      "label": "login",
+      "authstate": "non-auth",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/mobile/login.png",
+      "route": "/login",
+      "label": "login",
+      "authstate": "non-auth",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/desktop/register.png",
+      "route": "/register",
+      "label": "register",
+      "authstate": "non-auth",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/tablet/register.png",
+      "route": "/register",
+      "label": "register",
+      "authstate": "non-auth",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "non-auth/mobile/register.png",
+      "route": "/register",
+      "label": "register",
+      "authstate": "non-auth",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "interactive-states/validation/login-empty.png",
+      "route": "/login",
+      "label": "login",
+      "authstate": "non-auth",
+      "viewport": "desktop",
+      "state": "validation kosong"
+    },
+    {
+      "file": "interactive-states/validation/register-empty.png",
+      "route": "/register",
+      "label": "register",
+      "authstate": "non-auth",
+      "viewport": "desktop",
+      "state": "validation kosong"
+    },
+    {
+      "file": "authenticated/desktop/dashboard.png",
+      "route": "/home",
+      "label": "dashboard",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/dashboard.png",
+      "route": "/home",
+      "label": "dashboard",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/dashboard.png",
+      "route": "/home",
+      "label": "dashboard",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/umkm-list.png",
+      "route": "/umkms",
+      "label": "umkm-list",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/umkm-list.png",
+      "route": "/umkms",
+      "label": "umkm-list",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/umkm-list.png",
+      "route": "/umkms",
+      "label": "umkm-list",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/form-data.png",
+      "route": "/form-data",
+      "label": "form-data",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/form-data.png",
+      "route": "/form-data",
+      "label": "form-data",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/form-data.png",
+      "route": "/form-data",
+      "label": "form-data",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/factor-profile.png",
+      "route": "/factor-profile",
+      "label": "factor-profile",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/factor-profile.png",
+      "route": "/factor-profile",
+      "label": "factor-profile",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/factor-profile.png",
+      "route": "/factor-profile",
+      "label": "factor-profile",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/distribution.png",
+      "route": "/distribution",
+      "label": "distribution",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/distribution.png",
+      "route": "/distribution",
+      "label": "distribution",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/distribution.png",
+      "route": "/distribution",
+      "label": "distribution",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/comparison.png",
+      "route": "/comparison",
+      "label": "comparison",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/comparison.png",
+      "route": "/comparison",
+      "label": "comparison",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/comparison.png",
+      "route": "/comparison",
+      "label": "comparison",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/umkm-detail.png",
+      "route": "/umkms/5",
+      "label": "umkm-detail",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/umkm-detail.png",
+      "route": "/umkms/5",
+      "label": "umkm-detail",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/umkm-detail.png",
+      "route": "/umkms/5",
+      "label": "umkm-detail",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/desktop/six-factor-evaluation.png",
+      "route": "/umkms/5/six-factor-evaluations",
+      "label": "six-factor-evaluation",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/tablet/six-factor-evaluation.png",
+      "route": "/umkms/5/six-factor-evaluations",
+      "label": "six-factor-evaluation",
+      "authstate": "authenticated",
+      "viewport": "tablet",
+      "state": "default"
+    },
+    {
+      "file": "authenticated/mobile/six-factor-evaluation.png",
+      "route": "/umkms/5/six-factor-evaluations",
+      "label": "six-factor-evaluation",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "default"
+    },
+    {
+      "file": "interactive-states/others/profile-feedback.png",
+      "route": "/home",
+      "label": "profile-feedback",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "profile-feedback"
+    },
+    {
+      "file": "interactive-states/modals/umkm-create-dialog.png",
+      "route": "/umkms",
+      "label": "umkm-create-dialog",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-create-dialog"
+    },
+    {
+      "file": "interactive-states/validation/umkm-create-validation.png",
+      "route": "/umkms",
+      "label": "umkm-create-validation",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-create-validation"
+    },
+    {
+      "file": "interactive-states/dropdowns/umkm-actions.png",
+      "route": "/umkms",
+      "label": "umkm-actions",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-actions"
+    },
+    {
+      "file": "interactive-states/modals/umkm-edit-dialog.png",
+      "route": "/umkms",
+      "label": "umkm-edit-dialog",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-edit-dialog"
+    },
+    {
+      "file": "interactive-states/modals/umkm-delete-confirmation.png",
+      "route": "/umkms",
+      "label": "umkm-delete-confirmation",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-delete-confirmation"
+    },
+    {
+      "file": "interactive-states/others/umkm-filter-empty.png",
+      "route": "/umkms?search=zzzzjoyumkmnomatch",
+      "label": "umkm-filter-empty",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "umkm-filter-empty"
+    },
+    {
+      "file": "interactive-states/forms/questionnaire-selected.png",
+      "route": "/form-data?umkm=5",
+      "label": "questionnaire-selected",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "questionnaire-selected"
+    },
+    {
+      "file": "interactive-states/others/mobile-navigation.png",
+      "route": "/home",
+      "label": "menu mobile",
+      "authstate": "authenticated",
+      "viewport": "mobile",
+      "state": "menu mobile"
+    },
+    {
+      "file": "interactive-states/modals/six-factor-historical-result.png",
+      "route": "/umkms/5/six-factor-evaluations",
+      "label": "hasil historis",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "hasil historis"
+    },
+    {
+      "file": "interactive-states/forms/questionnaire-factor-1.png",
+      "route": "/form-data?umkm=5",
+      "label": "faktor kuesioner 1",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "faktor kuesioner 1"
+    },
+    {
+      "file": "interactive-states/forms/questionnaire-factor-2.png",
+      "route": "/form-data?umkm=5",
+      "label": "faktor kuesioner 2",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "faktor kuesioner 2"
+    },
+    {
+      "file": "interactive-states/forms/questionnaire-factor-3.png",
+      "route": "/form-data?umkm=5",
+      "label": "faktor kuesioner 3",
+      "authstate": "authenticated",
+      "viewport": "desktop",
+      "state": "faktor kuesioner 3"
+    }
+  ],
+  "failures": [
+    "STATE navigation-drawer: locator.click: Timeout 30000ms exceeded.",
+    "STATE filter applied: locator.waitFor: Timeout 8000ms exceeded."
+  ],
+  "apiErrors": [],
+  "metrics": [
+    {
+      "file": "non-auth/desktop/landing.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Kenali Kondisi Usaha — JoyUMKM"
+    },
+    {
+      "file": "non-auth/tablet/landing.png",
+      "width": 768,
+      "client": 768,
+      "title": "Kenali Kondisi Usaha — JoyUMKM"
+    },
+    {
+      "file": "non-auth/mobile/landing.png",
+      "width": 390,
+      "client": 390,
+      "title": "Kenali Kondisi Usaha — JoyUMKM"
+    },
+    {
+      "file": "non-auth/desktop/login.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Masuk — JoyUMKM"
+    },
+    {
+      "file": "non-auth/tablet/login.png",
+      "width": 768,
+      "client": 768,
+      "title": "Masuk — JoyUMKM"
+    },
+    {
+      "file": "non-auth/mobile/login.png",
+      "width": 390,
+      "client": 390,
+      "title": "Masuk — JoyUMKM"
+    },
+    {
+      "file": "non-auth/desktop/register.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Daftar Akun — JoyUMKM"
+    },
+    {
+      "file": "non-auth/tablet/register.png",
+      "width": 768,
+      "client": 768,
+      "title": "Daftar Akun — JoyUMKM"
+    },
+    {
+      "file": "non-auth/mobile/register.png",
+      "width": 390,
+      "client": 390,
+      "title": "Daftar Akun — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/validation/login-empty.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Masuk — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/validation/register-empty.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Daftar Akun — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/dashboard.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Home — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/dashboard.png",
+      "width": 768,
+      "client": 768,
+      "title": "Home — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/dashboard.png",
+      "width": 390,
+      "client": 390,
+      "title": "Home — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/umkm-list.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/umkm-list.png",
+      "width": 768,
+      "client": 768,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/umkm-list.png",
+      "width": 390,
+      "client": 390,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/form-data.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Form Data — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/form-data.png",
+      "width": 768,
+      "client": 768,
+      "title": "Form Data — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/form-data.png",
+      "width": 390,
+      "client": 390,
+      "title": "Form Data — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/factor-profile.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Factor Profile — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/factor-profile.png",
+      "width": 768,
+      "client": 768,
+      "title": "Factor Profile — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/factor-profile.png",
+      "width": 390,
+      "client": 390,
+      "title": "Factor Profile — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/distribution.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Distribution — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/distribution.png",
+      "width": 768,
+      "client": 768,
+      "title": "Distribution — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/distribution.png",
+      "width": 390,
+      "client": 390,
+      "title": "Distribution — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/comparison.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Comparison — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/comparison.png",
+      "width": 768,
+      "client": 768,
+      "title": "Comparison — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/comparison.png",
+      "width": 390,
+      "client": 390,
+      "title": "Comparison — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/umkm-detail.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Detail UMKM — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/umkm-detail.png",
+      "width": 768,
+      "client": 768,
+      "title": "Detail UMKM — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/umkm-detail.png",
+      "width": 390,
+      "client": 390,
+      "title": "Detail UMKM — JoyUMKM"
+    },
+    {
+      "file": "authenticated/desktop/six-factor-evaluation.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Penilaian Enam Faktor — JoyUMKM"
+    },
+    {
+      "file": "authenticated/tablet/six-factor-evaluation.png",
+      "width": 768,
+      "client": 768,
+      "title": "Penilaian Enam Faktor — JoyUMKM"
+    },
+    {
+      "file": "authenticated/mobile/six-factor-evaluation.png",
+      "width": 390,
+      "client": 390,
+      "title": "Penilaian Enam Faktor — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/others/profile-feedback.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Home — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/modals/umkm-create-dialog.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/validation/umkm-create-validation.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/dropdowns/umkm-actions.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/modals/umkm-edit-dialog.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/modals/umkm-delete-confirmation.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/others/umkm-filter-empty.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "UMKM & Recommendations — JoyUMKM"
+    },
+    {
+      "file": "interactive-states/forms/questionnaire-selected.png",
+      "width": 1440,
+      "client": 1440,
+      "title": "Form Data — JoyUMKM"
+    }
+  ],
+  "logged": true,
+  "auth": [
+    [
+      "dashboard",
+      "/home"
+    ],
+    [
+      "umkm-list",
+      "/umkms"
+    ],
+    [
+      "form-data",
+      "/form-data"
+    ],
+    [
+      "factor-profile",
+      "/factor-profile"
+    ],
+    [
+      "distribution",
+      "/distribution"
+    ],
+    [
+      "comparison",
+      "/comparison"
+    ],
+    [
+      "umkm-detail",
+      "/umkms/5"
+    ],
+    [
+      "six-factor-evaluation",
+      "/umkms/5/six-factor-evaluations"
+    ]
+  ]
+}
