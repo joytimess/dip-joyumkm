@@ -1,0 +1,399 @@
+[
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "/",
+        "name":  "welcome",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/auth/login",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\AuthController@login",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Routing\\Middleware\\ThrottleRequests:joyumkm-login"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/auth/logout",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\AuthController@logout",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/auth/me",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\AuthController@me",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/auth/register",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\AuthController@register",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Routing\\Middleware\\ThrottleRequests:joyumkm-register"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/dashboard/comparison",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\DashboardController@comparison",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/dashboard/distribution",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\DashboardController@distribution",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/dashboard/factor-profile",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\DashboardController@factorProfile",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/questionnaire",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\QuestionnaireController@show",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@index",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/umkms",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@store",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/options",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@options",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/summary",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@summary",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/{id}",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@show",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "PUT|PATCH",
+        "uri":  "api/umkms/{id}",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@update",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "DELETE",
+        "uri":  "api/umkms/{id}",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\UmkmController@destroy",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/umkms/{id}/evaluations",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\EvaluationController@store",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/{id}/evaluations/latest",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\EvaluationController@latest",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/{id}/six-factor-evaluations",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@history",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/{id}/six-factor-evaluations/draft",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@draft",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "PUT|PATCH",
+        "uri":  "api/umkms/{id}/six-factor-evaluations/draft",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@save",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "api/umkms/{id}/six-factor-evaluations/latest",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@latest",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/umkms/{id}/six-factor-evaluations/{evaluationId}/cancel",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@cancel",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "POST",
+        "uri":  "api/umkms/{id}/six-factor-evaluations/{evaluationId}/finalize",
+        "name":  null,
+        "action":  "App\\Http\\Controllers\\Api\\SixFactorEvaluationController@finalize",
+        "middleware":  [
+                           "api",
+                           "Illuminate\\Auth\\Middleware\\Authenticate:sanctum"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "comparison",
+        "name":  "comparison",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "distribution",
+        "name":  "distribution",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "factor-profile",
+        "name":  "factor-profile",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "form-data",
+        "name":  "form-data",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "home",
+        "name":  "home",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "login",
+        "name":  "login",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "register",
+        "name":  "register",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "umkms",
+        "name":  "umkms",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "umkms/{id}",
+        "name":  "umkms.show",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    },
+    {
+        "domain":  null,
+        "method":  "GET|HEAD",
+        "uri":  "umkms/{id}/six-factor-evaluations",
+        "name":  "umkms.six-factor-evaluations",
+        "action":  "Illuminate\\Routing\\ViewController",
+        "middleware":  [
+                           "web"
+                       ],
+        "path":  null
+    }
+]

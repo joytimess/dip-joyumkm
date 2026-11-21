@@ -1,0 +1,44 @@
+{
+  "initialTransition": {
+    "documents": 0,
+    "authChecks": 0
+  },
+  "routeTransitions": [
+    {
+      "path": "/factor-profile",
+      "elapsedMs": 358,
+      "documents": 0,
+      "authChecks": 0
+    },
+    {
+      "path": "/distribution",
+      "elapsedMs": 848,
+      "documents": 0,
+      "authChecks": 0
+    },
+    {
+      "path": "/comparison",
+      "elapsedMs": 844,
+      "documents": 0,
+      "authChecks": 0
+    },
+    {
+      "path": "/form-data",
+      "elapsedMs": 835,
+      "documents": 0,
+      "authChecks": 0
+    },
+    {
+      "path": "/home",
+      "elapsedMs": 846,
+      "documents": 0,
+      "authChecks": 0
+    },
+    {
+      "path": "/umkms",
+      "elapsedMs": 844,
+      "documents": 0,
+      "authChecks": 0
+    }
+  ]
+}

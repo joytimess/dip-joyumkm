@@ -1,0 +1,842 @@
+[
+  {
+    "name": "landing",
+    "route": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-landing.png",
+    "capturedAt": "2026-11-20T17:24:16.092Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "register",
+    "route": "/register",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-register.png",
+    "capturedAt": "2026-11-20T17:24:16.567Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 400.34375
+  },
+  {
+    "name": "login",
+    "route": "/login",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-login.png",
+    "capturedAt": "2026-11-20T17:24:17.010Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 383.96875
+  },
+  {
+    "name": "home",
+    "route": "/home",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-home.png",
+    "capturedAt": "2026-11-20T17:24:19.160Z",
+    "overflow": 0,
+    "headings": 0,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "umkms",
+    "route": "/umkms",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-umkms.png",
+    "capturedAt": "2026-11-20T17:24:20.855Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-scored",
+    "route": "/umkms/512",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-detail-scored.png",
+    "capturedAt": "2026-11-20T17:24:21.734Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-unscored",
+    "route": "/umkms/513",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-detail-unscored.png",
+    "capturedAt": "2026-11-20T17:24:22.592Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-empty",
+    "route": "/form-data",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-questionnaire-empty.png",
+    "capturedAt": "2026-11-20T17:24:23.377Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-1",
+    "route": "/form-data",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-questionnaire-1.png",
+    "capturedAt": "2026-11-20T17:24:24.913Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-2",
+    "route": "/form-data",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-questionnaire-2.png",
+    "capturedAt": "2026-11-20T17:24:25.033Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-3",
+    "route": "/form-data",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-questionnaire-3.png",
+    "capturedAt": "2026-11-20T17:24:25.170Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "six-factor",
+    "route": "/umkms/512/six-factor-evaluations",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-six-factor.png",
+    "capturedAt": "2026-11-20T17:24:26.899Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "factor-profile",
+    "route": "/factor-profile",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-factor-profile.png",
+    "capturedAt": "2026-11-20T17:24:28.305Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "distribution",
+    "route": "/distribution",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-distribution.png",
+    "capturedAt": "2026-11-20T17:24:29.335Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "comparison",
+    "route": "/comparison",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshot": "1440-comparison.png",
+    "capturedAt": "2026-11-20T17:24:30.279Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "landing",
+    "route": "/",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-landing.png",
+    "capturedAt": "2026-11-20T17:24:31.260Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "register",
+    "route": "/register",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-register.png",
+    "capturedAt": "2026-11-20T17:24:31.661Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 717.578125
+  },
+  {
+    "name": "login",
+    "route": "/login",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-login.png",
+    "capturedAt": "2026-11-20T17:24:32.035Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 648.796875
+  },
+  {
+    "name": "home",
+    "route": "/home",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-home.png",
+    "capturedAt": "2026-11-20T17:24:34.044Z",
+    "overflow": 0,
+    "headings": 0,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "umkms",
+    "route": "/umkms",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-umkms.png",
+    "capturedAt": "2026-11-20T17:24:35.466Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-scored",
+    "route": "/umkms/512",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-detail-scored.png",
+    "capturedAt": "2026-11-20T17:24:36.365Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-unscored",
+    "route": "/umkms/513",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-detail-unscored.png",
+    "capturedAt": "2026-11-20T17:24:37.485Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-empty",
+    "route": "/form-data",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-questionnaire-empty.png",
+    "capturedAt": "2026-11-20T17:24:38.338Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-1",
+    "route": "/form-data",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-questionnaire-1.png",
+    "capturedAt": "2026-11-20T17:24:39.859Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-2",
+    "route": "/form-data",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-questionnaire-2.png",
+    "capturedAt": "2026-11-20T17:24:39.969Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-3",
+    "route": "/form-data",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-questionnaire-3.png",
+    "capturedAt": "2026-11-20T17:24:40.060Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "six-factor",
+    "route": "/umkms/512/six-factor-evaluations",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-six-factor.png",
+    "capturedAt": "2026-11-20T17:24:41.780Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "factor-profile",
+    "route": "/factor-profile",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-factor-profile.png",
+    "capturedAt": "2026-11-20T17:24:43.176Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "distribution",
+    "route": "/distribution",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-distribution.png",
+    "capturedAt": "2026-11-20T17:24:44.062Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "comparison",
+    "route": "/comparison",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "screenshot": "768-comparison.png",
+    "capturedAt": "2026-11-20T17:24:44.919Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "landing",
+    "route": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-landing.png",
+    "capturedAt": "2026-11-20T17:24:45.884Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "register",
+    "route": "/register",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-register.png",
+    "capturedAt": "2026-11-20T17:24:46.229Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 656.625
+  },
+  {
+    "name": "login",
+    "route": "/login",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-login.png",
+    "capturedAt": "2026-11-20T17:24:46.567Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 546.640625
+  },
+  {
+    "name": "home",
+    "route": "/home",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-home.png",
+    "capturedAt": "2026-11-20T17:24:48.501Z",
+    "overflow": 0,
+    "headings": 0,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "umkms",
+    "route": "/umkms",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-umkms.png",
+    "capturedAt": "2026-11-20T17:24:49.874Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-scored",
+    "route": "/umkms/512",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-detail-scored.png",
+    "capturedAt": "2026-11-20T17:24:50.740Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-unscored",
+    "route": "/umkms/513",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-detail-unscored.png",
+    "capturedAt": "2026-11-20T17:24:51.596Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-empty",
+    "route": "/form-data",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-questionnaire-empty.png",
+    "capturedAt": "2026-11-20T17:24:52.458Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-1",
+    "route": "/form-data",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-questionnaire-1.png",
+    "capturedAt": "2026-11-20T17:24:53.978Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-2",
+    "route": "/form-data",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-questionnaire-2.png",
+    "capturedAt": "2026-11-20T17:24:54.065Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-3",
+    "route": "/form-data",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-questionnaire-3.png",
+    "capturedAt": "2026-11-20T17:24:54.140Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "six-factor",
+    "route": "/umkms/512/six-factor-evaluations",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-six-factor.png",
+    "capturedAt": "2026-11-20T17:24:55.865Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "factor-profile",
+    "route": "/factor-profile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-factor-profile.png",
+    "capturedAt": "2026-11-20T17:24:57.236Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "distribution",
+    "route": "/distribution",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-distribution.png",
+    "capturedAt": "2026-11-20T17:24:58.098Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "comparison",
+    "route": "/comparison",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshot": "390-comparison.png",
+    "capturedAt": "2026-11-20T17:24:58.935Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "landing",
+    "route": "/",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-landing.png",
+    "capturedAt": "2026-11-20T17:24:59.896Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "register",
+    "route": "/register",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-register.png",
+    "capturedAt": "2026-11-20T17:25:00.256Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 743.640625
+  },
+  {
+    "name": "login",
+    "route": "/login",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-login.png",
+    "capturedAt": "2026-11-20T17:25:00.574Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": 596.015625
+  },
+  {
+    "name": "home",
+    "route": "/home",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-home.png",
+    "capturedAt": "2026-11-20T17:25:02.497Z",
+    "overflow": 0,
+    "headings": 0,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "umkms",
+    "route": "/umkms",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-umkms.png",
+    "capturedAt": "2026-11-20T17:25:03.902Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-scored",
+    "route": "/umkms/512",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-detail-scored.png",
+    "capturedAt": "2026-11-20T17:25:04.786Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "detail-unscored",
+    "route": "/umkms/513",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-detail-unscored.png",
+    "capturedAt": "2026-11-20T17:25:05.638Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-empty",
+    "route": "/form-data",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-questionnaire-empty.png",
+    "capturedAt": "2026-11-20T17:25:06.499Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-1",
+    "route": "/form-data",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-questionnaire-1.png",
+    "capturedAt": "2026-11-20T17:25:07.969Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-2",
+    "route": "/form-data",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-questionnaire-2.png",
+    "capturedAt": "2026-11-20T17:25:08.047Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "questionnaire-3",
+    "route": "/form-data",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-questionnaire-3.png",
+    "capturedAt": "2026-11-20T17:25:08.120Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "six-factor",
+    "route": "/umkms/512/six-factor-evaluations",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-six-factor.png",
+    "capturedAt": "2026-11-20T17:25:09.724Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "factor-profile",
+    "route": "/factor-profile",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-factor-profile.png",
+    "capturedAt": "2026-11-20T17:25:11.137Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "distribution",
+    "route": "/distribution",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-distribution.png",
+    "capturedAt": "2026-11-20T17:25:11.994Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  },
+  {
+    "name": "comparison",
+    "route": "/comparison",
+    "viewport": {
+      "width": 320,
+      "height": 720
+    },
+    "screenshot": "320-comparison.png",
+    "capturedAt": "2026-11-20T17:25:12.818Z",
+    "overflow": 0,
+    "headings": 1,
+    "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+    "emailTop": null
+  }
+]

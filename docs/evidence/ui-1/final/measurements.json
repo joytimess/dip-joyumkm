@@ -1,0 +1,335 @@
+{
+  "390": {
+    "landing": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "longNameFits": true,
+    "umkm-table": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgba(0, 0, 0, 0)",
+      "text": "rgb(16, 30, 64)",
+      "hover": "rgb(238, 241, 245)",
+      "danger": "rgb(165, 33, 53)",
+      "fits": true,
+      "icons": 3
+    },
+    "umkm-delete-long-name": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-saving": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-success-toast": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "factor-profile-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "distribution": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "distribution-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "comparison": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "comparison-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    }
+  },
+  "768": {
+    "landing": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "longNameFits": true,
+    "umkm-table": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgba(0, 0, 0, 0)",
+      "text": "rgb(16, 30, 64)",
+      "hover": "rgb(238, 241, 245)",
+      "danger": "rgb(165, 33, 53)",
+      "fits": true,
+      "icons": 3
+    },
+    "umkm-delete-long-name": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-saving": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-success-toast": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "factor-profile-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "distribution": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "distribution-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "comparison": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "comparison-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    }
+  },
+  "1440": {
+    "landing": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "longNameFits": true,
+    "umkm-table": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgba(0, 0, 0, 0)",
+      "text": "rgb(16, 30, 64)",
+      "hover": "rgb(238, 241, 245)",
+      "danger": "rgb(165, 33, 53)",
+      "fits": true,
+      "icons": 3
+    },
+    "umkm-delete-long-name": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-saving": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-success-toast": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "factor-profile-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "distribution": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "distribution-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "comparison": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0,
+      "labelFont": "Poppins, ui-sans-serif, system-ui, sans-serif"
+    },
+    "comparison-tooltip": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "Poppins, ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    }
+  }
+}

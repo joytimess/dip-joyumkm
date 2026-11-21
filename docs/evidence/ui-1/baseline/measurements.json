@@ -1,0 +1,272 @@
+{
+  "390": {
+    "landing": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-table": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgb(238, 241, 255)",
+      "text": "rgb(2, 7, 202)",
+      "hover": "rgb(225, 230, 255)",
+      "danger": "rgb(212, 80, 66)",
+      "fits": true,
+      "icons": 0
+    },
+    "umkm-delete-long-name": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "distribution": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "comparison": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "home-skeleton": {
+      "font": "",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    }
+  },
+  "768": {
+    "landing": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-table": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgb(238, 241, 255)",
+      "text": "rgb(2, 7, 202)",
+      "hover": "rgb(225, 230, 255)",
+      "danger": "rgb(212, 80, 66)",
+      "fits": true,
+      "icons": 0
+    },
+    "umkm-delete-long-name": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "distribution": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "comparison": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "home-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    }
+  },
+  "1440": {
+    "landing": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "register": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "login": {
+      "font": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "overflow": 0
+    },
+    "home": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-table": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-menu-hover": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "menu": {
+      "surface": "rgb(255, 255, 255)",
+      "normal": "rgb(238, 241, 255)",
+      "text": "rgb(2, 7, 202)",
+      "hover": "rgb(225, 230, 255)",
+      "danger": "rgb(212, 80, 66)",
+      "fits": true,
+      "icons": 0
+    },
+    "umkm-delete-long-name": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-focus": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-form-invalid": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "questionnaire-dialog": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "factor-profile": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "distribution": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "comparison": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0,
+      "labelFont": "\"Plus Jakarta Sans\", sans-serif"
+    },
+    "home-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "umkm-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "chart-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    },
+    "picker-skeleton": {
+      "font": "\"Plus Jakarta Sans\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "overflow": 0
+    }
+  }
+}
