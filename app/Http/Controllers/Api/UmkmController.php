@@ -81,7 +81,7 @@ class UmkmController extends Controller
         return new UmkmResource($this->umkmService->update(
             $request->user(),
             (int) $request->validated('record_id'),
-            $request->safe()->only(['name', 'province', 'sector_id', 'omzet']),
+            $request->safe()->except(['record_id', 'user_id']),
         ));
     }
 

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import { businessProfile } from './umkm-fixture.mjs';
 
 assert.equal(process.env.JOYUMKM_BROWSER_DB, 'joyumkm_testing');
 const { chromium } = createRequire(import.meta.url)(process.env.JOYUMKM_PLAYWRIGHT || 'playwright-core');
@@ -43,7 +44,7 @@ try {
     headers = { ...headers, Authorization: 'Bearer ' + account.token };
     const options = await request('/umkms/options');
     for (const businessName of [name, 'Usaha QA Pembanding']) {
-        businesses.push(await request('/umkms', 'POST', { name: businessName, sector_id: options.sectors[0].id, province: 'DKI Jakarta', omzet: 1000000 }));
+        businesses.push(await request('/umkms', 'POST', { name: businessName, sector_id: options.sectors[0].id, province: 'DKI Jakarta', omzet: 1000000, ...businessProfile }));
     }
     await page.goto(origin + '/login');
     await page.locator('#email').fill(account.user.email);

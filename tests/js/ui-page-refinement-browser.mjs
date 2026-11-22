@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import { businessProfile } from './umkm-fixture.mjs';
 
 assert.equal(process.env.JOYUMKM_BROWSER_DB, 'joyumkm_testing');
 const { chromium } = createRequire(import.meta.url)(process.env.JOYUMKM_PLAYWRIGHT || 'playwright-core');
@@ -32,7 +33,7 @@ try {
     const { sectors } = await request('/umkms/options');
     const questionnaire = await request('/questionnaire');
     for (const name of ['Koperasi Pangan Nusantara dan Sentra Olahan Binaan Kecamatan Sukamaju', 'Usaha Anyaman Sukamaju']) {
-        fixtures.push(await request('/umkms', 'POST', { name, sector_id: sectors[0].id, province: 'DKI Jakarta', omzet: 12000000 }));
+        fixtures.push(await request('/umkms', 'POST', { name, sector_id: sectors[0].id, province: 'DKI Jakarta', omzet: 12000000, ...businessProfile }));
     }
     const [scored, unscored] = fixtures;
     const answers = questionnaire.factors.flatMap((factor) => factor.questions.map((question) => ({ question_id: question.id, value: factor.scale_max })));

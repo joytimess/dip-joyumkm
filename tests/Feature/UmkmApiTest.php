@@ -9,6 +9,8 @@ use App\Models\Sector;
 use App\Models\Umkm;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
@@ -58,6 +60,128 @@ class UmkmApiTest extends TestCase
 
         $this->assertDatabaseCount('umkms', 2);
         $this->assertSame(1, $owner->umkms()->count());
+    }
+
+    #[TestWith(['0812 3456-7890', true, 'registered'])]
+    #[TestWith(['+6281234567890', false, 'unregistered'])]
+    #[TestWith(['6281234567890', '503', 'unchecked'])]
+    #[TestWith(['081234567890', 'invalid', 'unchecked'])]
+    #[TestWith(['081234567890', 'timeout', 'unchecked'])]
+    #[TestWith(['081234567890', 'wrong-number', 'unchecked'])]
+    #[TestWith(['081234567890', 'disconnected', 'unchecked'])]
+    public function test_whatsapp_check_and_create_use_only_the_server_result(string $input, bool|string $result, string $status): void
+    {
+        $this->authenticate();
+        $this->fakeOpenWa($result);
+
+        $this->postJson('/api/umkms/whatsapp-check', ['whatsapp_number' => $input])
+            ->assertOk()->assertJsonPath('data.normalized_number', '6281234567890')
+            ->assertJsonPath('data.status', $status)
+            ->assertDontSee('test-only-openwa-key');
+
+        $saved = $this->postJson('/api/umkms', $this->payload([
+            'whatsapp_number' => $input,
+            'wa_registration_status' => 'forged',
+            'whatsapp_registration_status' => 'forged',
+            'wa_checked_at' => '2000-01-01',
+        ]))->assertCreated()
+            ->assertJsonPath('data.whatsapp_number', '6281234567890')
+            ->assertJsonPath('data.whatsapp_registration_status', $status)
+            ->assertDontSee('test-only-openwa-key');
+
+        $checkedAt = $saved->json('data.whatsapp_checked_at');
+        if ($status === 'unchecked') {
+            $this->assertNull($checkedAt);
+        } else {
+            $this->assertSame(now()->utc()->toDateString(), substr($checkedAt, 0, 10));
+        }
+        $this->assertDatabaseHas('umkms', [
+            'id' => $saved->json('data.id'), 'whatsapp_number' => '6281234567890', 'wa_registration_status' => $status,
+        ]);
+        if ($result !== 'timeout') {
+            Http::assertSentCount(2);
+            Http::assertSent(fn (Request $request): bool => $request->method() === 'GET'
+                && $request->url() === 'https://openwa.test/api/sessions/test-session/contacts/check/6281234567890'
+                && $request->hasHeader('X-API-Key', 'test-only-openwa-key'));
+        }
+    }
+
+    public function test_whatsapp_check_requires_auth_and_is_throttled_independently_of_creation(): void
+    {
+        $payload = ['whatsapp_number' => '081234567890'];
+        $this->postJson('/api/umkms/whatsapp-check', $payload)->assertUnauthorized();
+        $this->authenticate();
+        $this->fakeOpenWa(false);
+        $this->postJson('/api/umkms/whatsapp-check', ['whatsapp_number' => '0812abc34567890'])
+            ->assertUnprocessable()->assertJsonValidationErrors('whatsapp_number');
+        Http::assertNothingSent();
+        for ($attempt = 1; $attempt < 10; $attempt++) {
+            $this->postJson('/api/umkms/whatsapp-check', $payload)->assertOk();
+        }
+        $this->postJson('/api/umkms/whatsapp-check', $payload)->assertTooManyRequests();
+        $this->postJson('/api/umkms', $this->payload())->assertCreated();
+        $this->authenticate();
+        $this->postJson('/api/umkms/whatsapp-check', $payload)->assertOk();
+    }
+
+    public function test_new_fields_validate_and_legacy_partial_updates_keep_existing_data(): void
+    {
+        $owner = $this->authenticate();
+        $legacy = Umkm::factory()->for($owner)->create(['omzet' => 100000]);
+        $evaluation = $legacy->evaluations()->create(['status' => 'final', 'average_score' => 80, 'category' => 'BAIK']);
+
+        $this->getJson('/api/umkms/'.$legacy->id)->assertOk()
+            ->assertJsonPath('data.omzet_period', null)
+            ->assertJsonPath('data.whatsapp_registration_status', 'unchecked');
+        $this->patchJson('/api/umkms/'.$legacy->id, ['city' => '  Denpasar  '])->assertOk()
+            ->assertJsonPath('data.city', 'Denpasar')->assertJsonPath('data.omzet', 100000)
+            ->assertJsonPath('data.omzet_period', null)->assertJsonPath('data.evaluation_id', $evaluation->id);
+        $this->postJson('/api/umkms', $this->payload([
+            'omzet_period' => 'weekly', 'city' => '  ', 'address' => ' ', 'owner_name' => '',
+            'whatsapp_number' => '0812ABC', 'business_email' => 'bad', 'latitude' => 91, 'longitude' => null,
+            'postal_code' => '1234', 'year_founded' => now()->year + 1, 'employee_count' => -1,
+            'nib' => '12A', 'website_url' => 'ftp://example.com', 'social_media_url' => 'bad',
+        ]))->assertUnprocessable()->assertJsonValidationErrors([
+            'omzet_period', 'city', 'address', 'owner_name', 'whatsapp_number', 'business_email',
+            'latitude', 'longitude', 'postal_code', 'year_founded', 'employee_count', 'nib', 'website_url', 'social_media_url',
+        ]);
+        $this->patchJson('/api/umkms/'.$legacy->id, ['latitude' => 0])->assertUnprocessable()
+            ->assertJsonValidationErrors('longitude');
+        $this->patchJson('/api/umkms/'.$legacy->id, ['latitude' => 0, 'longitude' => 110.5])->assertOk()
+            ->assertJsonPath('data.latitude', '0.0000000')->assertJsonPath('data.longitude', '110.5000000');
+        $this->patchJson('/api/umkms/'.$legacy->id, ['latitude' => null])->assertUnprocessable();
+        $this->patchJson('/api/umkms/'.$legacy->id, ['latitude' => null, 'longitude' => null])->assertOk()
+            ->assertJsonPath('data.latitude', null)->assertJsonPath('data.longitude', null);
+    }
+
+    public function test_changing_whatsapp_number_resets_previous_result(): void
+    {
+        $this->authenticate();
+        $this->fakeOpenWa(true);
+        $id = $this->postJson('/api/umkms', $this->payload())->assertCreated()->json('data.id');
+        $this->patchJson('/api/umkms/'.$id, ['whatsapp_number' => '+6281234567890'])->assertOk()
+            ->assertJsonPath('data.whatsapp_registration_status', 'registered');
+        $this->patchJson('/api/umkms/'.$id, ['whatsapp_number' => '081222333444'])->assertOk()
+            ->assertJsonPath('data.whatsapp_number', '6281222333444')
+            ->assertJsonPath('data.whatsapp_registration_status', 'unchecked')
+            ->assertJsonPath('data.whatsapp_checked_at', null);
+        Http::assertSentCount(1);
+    }
+
+    public function test_profile_metadata_is_available_in_detail_but_list_keeps_its_existing_shape(): void
+    {
+        $owner = $this->authenticate();
+        $umkm = Umkm::factory()->for($owner)->withBusinessProfile()->create([
+            'employee_count' => 0, 'nib' => '0123456789012', 'postal_code' => '01234',
+        ]);
+        $this->getJson('/api/umkms/'.$umkm->id)->assertOk()
+            ->assertJsonPath('data.omzet_period', 'monthly')
+            ->assertJsonPath('data.employee_count', 0)
+            ->assertJsonPath('data.nib', '0123456789012')
+            ->assertJsonPath('data.postal_code', '01234')
+            ->assertJsonPath('data.business_email', $umkm->business_email);
+        $this->getJson('/api/umkms')->assertOk()->assertJsonMissingPath('data.0.business_email')
+            ->assertJsonPath('data.0.id', $umkm->id);
     }
 
     public function test_update_can_keep_own_name_but_cannot_take_another_record_name(): void
@@ -169,7 +293,8 @@ class UmkmApiTest extends TestCase
         $umkm = Umkm::factory()->for($owner)->create();
 
         $this->postJson('/api/umkms', [])->assertUnprocessable()
-            ->assertJsonValidationErrors(['name', 'province', 'sector_id', 'omzet']);
+            ->assertJsonValidationErrors(['name', 'province', 'sector_id', 'omzet', 'omzet_period',
+                'city', 'address', 'latitude', 'longitude', 'owner_name', 'whatsapp_number', 'business_email']);
         $this->postJson('/api/umkms', $this->payload([
             'name' => str_repeat('a', 121), 'province' => 'Asing', 'sector_id' => 99999,
             'omzet' => 9007199254740992, 'user_id' => 99999,
@@ -219,6 +344,29 @@ class UmkmApiTest extends TestCase
         return array_replace([
             'name' => 'Toko Uji', 'province' => 'DKI Jakarta',
             'sector_id' => Sector::query()->firstOrFail()->id, 'omzet' => 0,
+            'omzet_period' => 'monthly', 'city' => 'Jakarta', 'address' => 'Jalan Uji 10',
+            'owner_name' => 'Pemilik Uji', 'whatsapp_number' => '081234567890',
+            'business_email' => 'usaha@example.com',
+            'latitude' => 0, 'longitude' => 106.825,
         ], $changes);
+    }
+
+    private function fakeOpenWa(bool|string $result): void
+    {
+        config(['services.openwa' => [
+            'enabled' => true, 'base_url' => 'https://openwa.test/api',
+            'session_id' => 'test-session', 'api_key' => 'test-only-openwa-key', 'timeout' => 3,
+        ]]);
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://openwa.test/api/*' => match ($result) {
+                'timeout' => Http::failedConnection('Synthetic timeout test-only-openwa-key'),
+                '503' => Http::response(['message' => 'test-only-openwa-key'], 503),
+                'invalid' => Http::response(['exists' => 'false', 'message' => 'test-only-openwa-key']),
+                'wrong-number' => Http::response(['number' => '628999999999', 'exists' => false]),
+                'disconnected' => Http::response(['exists' => false, 'success' => false, 'error' => 'Session disconnected']),
+                default => Http::response(['number' => '6281234567890', 'exists' => $result]),
+            },
+        ]);
     }
 }

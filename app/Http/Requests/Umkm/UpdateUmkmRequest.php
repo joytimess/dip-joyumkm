@@ -37,6 +37,11 @@ class UpdateUmkmRequest extends StoreUmkmRequest
                 array_unshift($rules[$field], 'sometimes');
             }
         }
+        foreach (['omzet_period', 'city', 'address', 'owner_name', 'whatsapp_number', 'business_email'] as $field) {
+            array_unshift($rules[$field], 'sometimes');
+        }
+        $rules['latitude'] = ['present_with:longitude', 'required_with:longitude', 'nullable', 'numeric', 'between:-90,90'];
+        $rules['longitude'] = ['present_with:latitude', 'required_with:latitude', 'nullable', 'numeric', 'between:-180,180'];
 
         $rules['record_id'] = ['required', 'integer', 'min:1'];
 
@@ -47,7 +52,7 @@ class UpdateUmkmRequest extends StoreUmkmRequest
     {
         return [
             function (Validator $validator): void {
-                if ($this->only(['name', 'province', 'sector_id', 'omzet']) === []) {
+                if ($this->only(array_diff(array_keys($validator->getRules()), ['record_id', 'user_id'])) === []) {
                     $validator->errors()->add('body', 'Kirim setidaknya satu field UMKM yang dapat diubah.');
                 }
             },

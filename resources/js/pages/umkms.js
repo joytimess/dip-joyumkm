@@ -1,8 +1,9 @@
 import { createSelectControl } from '../select-control';
-import { pageApi, ApiError } from '../api';
+import { pageApi } from '../api';
 import { createSummary } from '../summary';
+import { bindUmkmForm } from '../umkm-form';
 import { withListContext } from '../umkm-navigation';
-import { element, icon, formatNumber, formatScore, bindDialog, openDialog, clearErrors, renderErrors, setBusy, showError, toast } from '../ui';
+import { element, icon, formatNumber, formatScore, bindDialog, openDialog, setBusy, showError, toast } from '../ui';
 
 export async function init(signal) {
     const api = pageApi(signal);
@@ -22,16 +23,12 @@ export async function init(signal) {
     const optionsState = document.getElementById('options-state');
     const filterSkeleton = optionsState.firstElementChild.cloneNode(true);
     const compact = matchMedia('(max-width: 1050px)');
-    const modal = document.getElementById('umkm-modal');
-    const form = document.getElementById('umkm-form');
-    const saveButton = document.getElementById('save-umkm');
     const deleteModal = document.getElementById('delete-umkm-modal');
     const deleteButton = document.getElementById('confirm-delete-umkm');
     const addButton = document.getElementById('add-umkm');
-    const omzetInput = form.elements.omzet;
     const filterNames = ['sector_id', 'province', 'category', 'status'];
     const filterSelects = [...filterFields.querySelectorAll('select[name]')].map((select) => createSelectControl(select, signal));
-    const otherSelects = [sortSelect, perPage, form.elements.province, form.elements.sector_id].map((select) => createSelectControl(select, signal));
+    const otherSelects = [sortSelect, perPage].map((select) => createSelectControl(select, signal));
     const allowedParams = ['search', ...filterNames, 'sort', 'direction', 'page', 'per_page'];
     const choosingSixFactor = new URLSearchParams(location.search).get('mode') === 'six-factor';
     let params = readParams();
@@ -40,16 +37,15 @@ export async function init(signal) {
     let displayedQuery;
     let listController;
     let listSequence = 0;
-    let editController;
-    let editId = null;
     let deletingId = null;
-    let omzetValue = null;
-    let saving = false;
-    let initialValues;
-    const formValues = () => JSON.stringify([...new FormData(form)]);
-    const hasUnsavedEdits = () => modal.open && initialValues !== formValues();
-    bindDialog(modal);
     bindDialog(deleteModal);
+    const { openEdit } = bindUmkmForm({
+        api, signal, addButton,
+        onSaved: async () => {
+            await loadList();
+            if (!signal.aborted) window.dispatchEvent(new Event('joyumkm:umkm-mutated'));
+        },
+    });
 
     function readParams() {
         const query = new URLSearchParams(window.location.search);
@@ -68,7 +64,7 @@ export async function init(signal) {
         const sort = params.get('sort') || 'score';
         const direction = params.get('direction') || 'desc';
         sortSelect.value = `${sort}:${direction}`;
-        otherSelects.slice(0, 2).forEach(({ sync }) => sync());
+        otherSelects.forEach(({ sync }) => sync());
         document.querySelectorAll('[data-sort]').forEach((header) => {
             const active = header.dataset.sort === sort;
             header.setAttribute('aria-sort', active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
@@ -343,51 +339,6 @@ export async function init(signal) {
         }));
     }
 
-    function openAdd() {
-        editController?.abort();
-        editId = null;
-        form.reset();
-        otherSelects.slice(2).forEach(({ sync }) => sync());
-        omzetValue = null;
-        clearErrors(form);
-        document.getElementById('umkm-modal-title').textContent = 'Tambah Data UMKM';
-        initialValues = formValues();
-        openDialog(modal, addButton);
-        form.elements.name.focus();
-    }
-
-    async function openEdit(id, opener) {
-        if (!options) { toast('Pilihan sektor dan provinsi belum dimuat. Coba lagi.', 'error'); return; }
-        editController?.abort();
-        editController = new AbortController();
-        const controller = editController;
-        opener.disabled = true;
-        opener.setAttribute('aria-busy', 'true');
-        try {
-            const { data: umkm } = await api(`/umkms/${id}`, { signal: controller.signal });
-            if (controller !== editController) return;
-            form.reset();
-            clearErrors(form);
-            editId = umkm.id;
-            document.getElementById('umkm-modal-title').textContent = 'Ubah Data UMKM';
-            form.elements.name.value = umkm.name;
-            form.elements.province.value = umkm.province;
-            form.elements.sector_id.value = String(umkm.sector.id);
-            otherSelects.slice(2).forEach(({ sync }) => sync());
-            omzetValue = umkm.omzet;
-            omzetInput.value = formatNumber(omzetValue);
-            initialValues = formValues();
-            openDialog(modal, opener);
-            form.elements.name.focus();
-        } catch (error) {
-            if (!signal.aborted && error.name !== 'AbortError') toast(error.message, 'error');
-        } finally {
-            opener.disabled = false;
-            opener.removeAttribute('aria-busy');
-            if (!modal.open && document.activeElement === document.body) opener.focus();
-        }
-    }
-
     function openDelete(umkm, opener) {
         deletingId = umkm.id;
         document.getElementById('delete-umkm-name').textContent = umkm.name;
@@ -395,42 +346,6 @@ export async function init(signal) {
         openDialog(deleteModal, opener);
     }
 
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        if (saving) return;
-        clearErrors(form);
-        const errors = {};
-        if (!form.elements.name.value.trim()) errors.name = ['Masukkan nama UMKM.'];
-        if (!form.elements.province.value) errors.province = ['Pilih provinsi.'];
-        if (!form.elements.sector_id.value) errors.sector_id = ['Pilih sektor usaha.'];
-        if (omzetValue === null || !Number.isSafeInteger(omzetValue) || omzetValue < 0) {
-            errors.omzet = [omzetValue === null
-                ? 'Masukkan omzet UMKM.'
-                : 'Nominal omzet terlalu besar. Masukkan nilai maksimal Rp9.007.199.254.740.991.'];
-        }
-        if (Object.keys(errors).length) {
-            renderErrors(form, new ApiError('Periksa kembali data Anda.', 422, errors));
-            return;
-        }
-        saving = true;
-        const currentId = editId;
-        setBusy(saveButton, true);
-        try {
-            await api(currentId === null ? '/umkms' : `/umkms/${currentId}`, { method: currentId === null ? 'POST' : 'PATCH', body: { name: form.elements.name.value, province: form.elements.province.value, sector_id: form.elements.sector_id.value, omzet: omzetValue } });
-            modal.close();
-            toast(currentId === null ? 'Data UMKM berhasil ditambahkan.' : 'Data UMKM berhasil diperbarui.');
-            await loadList();
-            if (signal.aborted) return;
-            window.dispatchEvent(new Event('joyumkm:umkm-mutated'));
-        } catch (error) { if (!signal.aborted && error.name !== 'AbortError') renderErrors(form, error); }
-        finally { saving = false; setBusy(saveButton, false); }
-    });
-    omzetInput.addEventListener('input', () => {
-        const digits = omzetInput.value.replace(/\D/g, '');
-        omzetValue = digits === '' ? null : Number(digits);
-        if (digits === '') omzetInput.value = '';
-        else if (Number.isSafeInteger(omzetValue)) omzetInput.value = formatNumber(omzetValue);
-    });
     deleteButton.addEventListener('click', async () => {
         if (deleteButton.disabled || deletingId === null) return;
         setBusy(deleteButton, true, 'Menghapus…');
@@ -473,15 +388,8 @@ export async function init(signal) {
         updateParams({ sort, direction });
     }));
     perPage.addEventListener('change', () => updateParams({ per_page: perPage.value }));
-    addButton.addEventListener('click', openAdd);
     document.addEventListener('joyumkm:before-route-change', (event) => {
-        if (saving || (deleteModal.open && deleteButton.disabled)) { event.preventDefault(); return; }
-        if (!hasUnsavedEdits()) return;
-        event.preventDefault();
-        event.detail.confirmation = { title: 'Buang perubahan?', message: 'Perubahan belum disimpan. Buang perubahan dan lanjutkan?', confirmLabel: 'Buang perubahan', tone: 'danger' };
-    }, { signal });
-    window.addEventListener('beforeunload', (event) => {
-        if (hasUnsavedEdits()) event.preventDefault();
+        if (deleteModal.open && deleteButton.disabled) event.preventDefault();
     }, { signal });
     syncControls();
     await Promise.all([loadOptions(), loadList()]);

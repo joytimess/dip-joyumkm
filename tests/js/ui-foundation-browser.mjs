@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import { businessProfile } from './umkm-fixture.mjs';
 
 assert.equal(process.env.JOYUMKM_BROWSER_DB, 'joyumkm_testing');
 const { chromium } = createRequire(import.meta.url)(process.env.JOYUMKM_PLAYWRIGHT || 'playwright-core');
@@ -44,7 +45,7 @@ try {
     const options = await request('/umkms/options');
     const questionnaire = await request('/questionnaire');
     for (const name of ['Usaha QA Sukamaju', longName]) {
-        const business = await request('/umkms', 'POST', { name, sector_id: options.sectors[0].id, province: 'DKI Jakarta', omzet: 1000000 });
+        const business = await request('/umkms', 'POST', { name, sector_id: options.sectors[0].id, province: 'DKI Jakarta', omzet: 1000000, ...businessProfile });
         businesses.push(business);
         await request('/umkms/' + business.id + '/evaluations', 'POST', {
             status: 'final',
@@ -158,7 +159,7 @@ try {
         assert.equal(await trigger.evaluate((node) => document.activeElement === node), true);
         await page.locator('#add-umkm').click();
         await shot('umkm-form-focus', '#umkm-name');
-        await page.locator('#save-umkm').click();
+        await page.locator(baseline ? '#save-umkm' : '#umkm-step-next').click();
         await page.locator('#umkm-omzet[aria-invalid="true"]').waitFor();
         await shot('umkm-form-invalid', '#umkm-error-omzet');
         await page.keyboard.press('Escape');

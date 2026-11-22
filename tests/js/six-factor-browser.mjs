@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { businessProfile } from './umkm-fixture.mjs';
 import { setTimeout as pause } from 'node:timers/promises';
 
 // Run against the loopback Laravel server connected to joyumkm_testing.
@@ -51,7 +52,7 @@ const { data: options } = await request('/umkms/options', { token: owner.token }
 async function createUmkm(account, suffix) {
     const { data } = await request('/umkms', {
         token: account.token, method: 'POST', status: 201,
-        body: { name: 'Usaha P2 ' + run + ' ' + suffix, province: 'DKI Jakarta', sector_id: options.sectors[0].id, omzet: 12000000 },
+        body: { name: 'Usaha P2 ' + run + ' ' + suffix, province: 'DKI Jakarta', sector_id: options.sectors[0].id, omzet: 12000000, ...businessProfile },
     });
     return data;
 }

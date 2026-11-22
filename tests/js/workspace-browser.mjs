@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, rmdir, unlink, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { businessProfile } from './umkm-fixture.mjs';
 
 assert.equal(process.env.JOYUMKM_BROWSER_DB, 'joyumkm_testing');
 const { chromium } = createRequire(import.meta.url)(process.env.JOYUMKM_PLAYWRIGHT || 'playwright-core');
@@ -66,6 +67,7 @@ try {
     const { data: options } = await (await request('/umkms/options', { headers })).json();
     const { data: business } = await (await request('/umkms', { headers, method: 'POST', data: {
         name: 'Usaha UI0 QA', sector_id: options.sectors[0].id, province: 'DKI Jakarta', omzet: 1000000,
+        ...businessProfile,
     } })).json();
     const waitForBusiness = (tab = page) => tab.getByRole('link', { name: business.name, exact: true }).waitFor();
     await page.reload();
@@ -212,6 +214,7 @@ try {
     assert.equal(await page.locator('#umkm-name').inputValue(), 'Perubahan UMKM belum tersimpan');
     assert.equal(await page.locator('#umkm-modal').isVisible(), true);
     await page.locator('#umkm-modal').getByRole('button', { name: 'Batal' }).click();
+    await page.getByRole('button', { name: 'Buang perubahan', exact: true }).click();
     check('403 stays local, table retry succeeds and Back preserves UMKM dialog edits');
 
     await page.route('**/factor-profile', async (route) => {
