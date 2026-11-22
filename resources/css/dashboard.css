@@ -1328,7 +1328,8 @@ body[data-protected] {
     @media (max-width: 780px) {
         & .six-factor-layout { grid-template-columns: minmax(0, 1fr); }
         & .home-welcome { align-items: flex-start; }
-        & .analytics-grid, & .umkm-detail-grid { grid-template-columns: minmax(0, 1fr); }
+        & .analytics-grid { grid-template-columns: minmax(0, 1fr); }
+        & .detail-grid, & .detail-assessment-grid { grid-template-columns: minmax(0, 1fr); }
         & .chart-table-hint { display: block; }
         & .question-block { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
         & .rating-options { padding-inline-start: 0; flex-wrap: wrap; }
