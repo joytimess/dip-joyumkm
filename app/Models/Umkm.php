@@ -13,7 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['name', 'province', 'sector_id', 'omzet'])]
+#[Fillable([
+    'name', 'province', 'sector_id', 'omzet', 'omzet_period', 'year_founded', 'employee_count', 'nib', 'description',
+    'city', 'address', 'district', 'subdistrict', 'postal_code', 'latitude', 'longitude',
+    'owner_name', 'whatsapp_number', 'business_email', 'pic_name', 'website_url', 'social_media_url',
+])]
 class Umkm extends Model
 {
     /** @use HasFactory<UmkmFactory> */
@@ -59,6 +63,10 @@ class Umkm extends Model
 
     protected function casts(): array
     {
-        return ['user_id' => 'integer', 'sector_id' => 'integer', 'omzet' => 'integer'];
+        return [
+            'user_id' => 'integer', 'sector_id' => 'integer', 'omzet' => 'integer',
+            'year_founded' => 'integer', 'employee_count' => 'integer',
+            'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'wa_checked_at' => 'datetime',
+        ];
     }
 }

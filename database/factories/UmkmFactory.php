@@ -25,4 +25,16 @@ class UmkmFactory extends Factory
             'omzet' => fake()->numberBetween(0, 100000000),
         ];
     }
+
+    public function withBusinessProfile(): static
+    {
+        return $this->state(fn (): array => [
+            'omzet_period' => 'monthly',
+            'city' => 'Jakarta',
+            'address' => fake()->streetAddress(),
+            'owner_name' => fake()->name(),
+            'whatsapp_number' => '6281234567890',
+            'business_email' => fake()->safeEmail(),
+        ]);
+    }
 }
