@@ -43,6 +43,17 @@ return [
         'timeout' => env('OPENWA_TIMEOUT_SECONDS', 3),
     ],
 
+    'hermes_webhook' => [
+        'enabled' => env('HERMES_WEBHOOK_ENABLED', false),
+        'url' => env('HERMES_WEBHOOK_URL'),
+        'allowed_host' => env('HERMES_WEBHOOK_ALLOWED_HOST'),
+        'secret' => env('HERMES_WEBHOOK_SECRET'),
+        'timeout' => (int) env('HERMES_WEBHOOK_TIMEOUT_SECONDS', 5),
+        'max_attempts' => (int) env('HERMES_WEBHOOK_MAX_ATTEMPTS', 5),
+        'backoff_base' => (int) env('HERMES_WEBHOOK_BACKOFF_BASE_SECONDS', 30),
+        'backoff_cap' => (int) env('HERMES_WEBHOOK_BACKOFF_CAP_SECONDS', 900),
+    ],
+
     'geocoding' => [
         'url' => env('GEOCODING_URL'),
         'allowed_hosts' => array_map(

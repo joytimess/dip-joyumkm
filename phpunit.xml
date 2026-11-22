@@ -33,5 +33,6 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="OPENWA_ENABLED" value="false" force="true"/>
+        <env name="HERMES_WEBHOOK_ENABLED" value="false" force="true"/>
     </php>
 </phpunit>
