@@ -213,7 +213,7 @@ try {
     await page.waitForURL('**/umkms');
     assert.equal(await page.locator('#umkm-name').inputValue(), 'Perubahan UMKM belum tersimpan');
     assert.equal(await page.locator('#umkm-modal').isVisible(), true);
-    await page.locator('#umkm-modal').getByRole('button', { name: 'Batal' }).click();
+    await page.locator('#umkm-modal').getByRole('button', { name: 'Tutup formulir' }).click();
     await page.getByRole('button', { name: 'Buang perubahan', exact: true }).click();
     check('403 stays local, table retry succeeds and Back preserves UMKM dialog edits');
 

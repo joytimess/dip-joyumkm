@@ -476,7 +476,7 @@ async function exerciseWizard(page, wizard, width) {
         assert.equal(await wizard.locator('.leaflet-marker-icon').count(), 0);
         assert.equal(await wizard.locator('.leaflet-control-zoom').count(), 1);
         assert.equal(await wizard.locator('#umkm-latitude').inputValue(), '');
-        await wizard.getByRole('button', { name: 'Batal', exact: true }).click();
+        await wizard.getByRole('button', { name: 'Tutup formulir' }).click();
         await page.getByRole('button', { name: 'Buang perubahan', exact: true }).click();
         await wizard.waitFor({ state: 'hidden' });
     }
