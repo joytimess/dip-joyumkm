@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EvaluationController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\SixFactorEvaluationController;
 use App\Http\Controllers\Api\UmkmController;
@@ -23,6 +24,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/dashboard/three-dimension-detail', [DashboardController::class, 'threeDimensionDetail']);
     Route::get('/dashboard/six-factor-summary', [DashboardController::class, 'sixFactorSummary']);
     Route::get('/questionnaire', [QuestionnaireController::class, 'show']);
+    Route::prefix('locations')->middleware('throttle:joyumkm-geocoding')->group(function (): void {
+        Route::post('/search', [LocationController::class, 'search']);
+        Route::post('/reverse', [LocationController::class, 'reverse']);
+    });
     Route::get('/umkms/{id}/evaluations/latest', [EvaluationController::class, 'latest'])->whereNumber('id');
     Route::post('/umkms/{id}/evaluations', [EvaluationController::class, 'store'])->whereNumber('id');
     Route::prefix('/umkms/{id}/six-factor-evaluations')
