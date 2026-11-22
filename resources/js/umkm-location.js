@@ -14,7 +14,17 @@ const markerIcon = L.icon({
     iconSize: [25, 41], iconAnchor: [12, 41], shadowSize: [41, 41], shadowAnchor: [12, 41],
 });
 
-export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
+export function renderLocationPreview(canvas, { latitude, longitude, tileUrl }) {
+    const map = L.map(canvas, {
+        zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false,
+        doubleClickZoom: false, touchZoom: false, boxZoom: false, keyboard: false, zoomAnimation: false,
+    }).setView([latitude, longitude], 16);
+    L.tileLayer(tileUrl, { maxZoom: 19, referrerPolicy: 'strict-origin-when-cross-origin' }).addTo(map);
+    L.marker([latitude, longitude], { icon: markerIcon, interactive: false, keyboard: false, alt: 'Titik usaha tersimpan' }).addTo(map);
+    return () => map.remove();
+}
+
+export function bindUmkmLocation({ form, api, signal, syncProvince, onPick, preserveAddress = false }) {
     const panel = form.querySelector('#umkm-location');
     const canvas = panel.querySelector('#umkm-map');
     const searchInput = panel.querySelector('input');
@@ -55,11 +65,7 @@ export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
         ].filter(Boolean));
     }
 
-    async function choosePoint(point, label = '') {
-        if (panel.hidden) return;
-        const { lat, lng } = point.wrap();
-        form.elements.latitude.value = lat.toFixed(7);
-        form.elements.longitude.value = lng.toFixed(7);
+    function placeMarker(lat, lng) {
         if (!marker) {
             marker = L.marker([lat, lng], {
                 draggable: true, icon: markerIcon, alt: 'Titik usaha terpilih',
@@ -68,13 +74,23 @@ export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
         } else {
             marker.setLatLng([lat, lng]);
         }
+    }
+
+    async function choosePoint(point, label = '') {
+        if (panel.hidden) return;
+        const { lat, lng } = point.wrap();
+        form.elements.latitude.value = lat.toFixed(7);
+        form.elements.longitude.value = lng.toFixed(7);
+        placeMarker(lat, lng);
         if (label) map.setView([lat, lng], Math.max(16, map.getZoom()), { animate: false });
 
         reverseController?.abort();
         const controller = new AbortController();
         reverseController = controller;
-        for (const field of addressFields) {
-            if (!edited.has(field)) form.elements[field].value = '';
+        if (!preserveAddress) {
+            for (const field of addressFields) {
+                if (!edited.has(field)) form.elements[field].value = '';
+            }
         }
         syncProvince();
         onPick();
@@ -92,7 +108,9 @@ export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
         if (controller.signal.aborted || signal.aborted) return;
 
         for (const field of addressFields) {
-            if (!edited.has(field) && typeof address?.[field] === 'string') form.elements[field].value = address[field];
+            const value = address?.[field];
+            if (edited.has(field) || typeof value !== 'string') continue;
+            if (!preserveAddress || value !== '') form.elements[field].value = value;
         }
         syncProvince();
         showPinStatus(
@@ -103,7 +121,8 @@ export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
 
     function show() {
         requestAnimationFrame(() => {
-            if (panel.hidden || !form.closest('dialog').open || signal.aborted) return;
+            const dialog = form.closest('dialog');
+            if (panel.hidden || (dialog && !dialog.open) || signal.aborted) return;
             if (map) {
                 map.invalidateSize({ pan: false });
                 return;
@@ -127,6 +146,13 @@ export function bindUmkmLocation({ form, api, signal, syncProvince, onPick }) {
                 if (!tilesReady) showTileStatus(tileFallback, false, true);
             });
             tiles.addTo(map);
+            if (form.elements.latitude.value && form.elements.longitude.value) {
+                const lat = Number(form.elements.latitude.value);
+                const lng = Number(form.elements.longitude.value);
+                placeMarker(lat, lng);
+                map.setView([lat, lng], 16, { animate: false });
+                showPinStatus('', '');
+            }
         });
     }
 

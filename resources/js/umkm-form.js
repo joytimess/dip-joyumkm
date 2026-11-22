@@ -1,10 +1,9 @@
 import { ApiError } from './api';
 import { createSelectControl } from './select-control';
 import { bindDialog, clearErrors, confirmAction, formatNumber, openDialog, renderErrors, setBusy, toast } from './ui';
-import { localWhatsappDigits, whatsappPayload } from './whatsapp-number';
+import { bindWhatsappInput, whatsappNumberError, whatsappPayload } from './whatsapp-number';
 
 const stepTitles = ['Informasi Usaha', 'Lokasi Usaha', 'Kontak Usaha'];
-const whatsappError = 'Masukkan nomor HP yang valid, misalnya 81234567890.';
 const whatsappMessages = {
     pending: 'Memeriksa nomor WhatsApp…',
     registered: 'Terdaftar di WhatsApp.',
@@ -18,10 +17,10 @@ const discardConfirmation = {
     tone: 'danger',
 };
 
-function fieldError(field, value) {
+export function fieldError(field, value) {
     const label = field.closest('.field').querySelector('label').textContent;
     if (field.required && !value) return `${label} wajib diisi.`;
-    if (field.name === 'whatsapp_number' && (field.validity.customError || !whatsappPayload(value))) return whatsappError;
+    if (field.name === 'whatsapp_number' && (field.validity.customError || !whatsappPayload(value))) return whatsappNumberError;
     if (field.validity.badInput || field.validity.stepMismatch
         || (value && ['year_founded', 'employee_count'].includes(field.name) && !/^[0-9]+$/.test(value))) {
         return `${label} harus berupa ${field.step === 'any' ? 'angka' : 'bilangan bulat'}.`;
@@ -254,26 +253,7 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
         clearErrors(form);
         showStep(step - 1, true);
     });
-    whatsappInput.addEventListener('input', () => {
-        const raw = whatsappInput.value;
-        const normalized = localWhatsappDigits(raw);
-        const value = normalized ?? localWhatsappDigits(raw.replace(/\D/g, ''));
-        if (value !== raw) {
-            const fromEnd = raw.slice(whatsappInput.selectionStart ?? raw.length).replace(/\D/g, '').length;
-            const caret = Math.max(0, value.length - fromEnd);
-            whatsappInput.value = value;
-            whatsappInput.setSelectionRange(caret, caret);
-        }
-        whatsappInput.setCustomValidity(normalized === null ? whatsappError : '');
-        resetWhatsapp();
-    });
-    whatsappInput.addEventListener('paste', (event) => {
-        const pasted = event.clipboardData?.getData('text');
-        if (!pasted) return;
-        event.preventDefault();
-        whatsappInput.setRangeText(localWhatsappDigits(pasted) ?? pasted, whatsappInput.selectionStart, whatsappInput.selectionEnd, 'end');
-        whatsappInput.dispatchEvent(new Event('input', { bubbles: true }));
-    });
+    bindWhatsappInput(whatsappInput, resetWhatsapp);
     whatsappInput.addEventListener('blur', previewWhatsapp);
     form.addEventListener('input', clearEditedField);
     form.addEventListener('change', clearEditedField);
