@@ -13,6 +13,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class UmkmService
 {
@@ -113,6 +114,28 @@ class UmkmService
             $umkm->save();
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['name' => ['Nama UMKM sudah digunakan.']]);
+        }
+
+        return $this->owned($user, $id);
+    }
+
+    /**
+     * Periksa ulang WhatsApp untuk nomor yang tersimpan dan simpan hasilnya hanya jika nomor tersebut belum berubah.
+     */
+    public function recheckWhatsapp(User $user, int $id, string $number): Umkm
+    {
+        $umkm = $this->owned($user, $id);
+        if ($umkm->whatsapp_number !== $number) {
+            throw new ConflictHttpException('Nomor WhatsApp telah berubah. Muat ulang data UMKM sebelum memeriksa ulang.');
+        }
+
+        $status = $this->openWa->check($number);
+        $saved = $user->umkms()->whereKey($id)->where('whatsapp_number', $number)->update([
+            'wa_registration_status' => $status,
+            'wa_checked_at' => $status === OpenWaNumberCheckService::UNCHECKED ? null : now(),
+        ]);
+        if ($saved === 0) {
+            throw new ConflictHttpException('Nomor WhatsApp telah berubah. Muat ulang data UMKM sebelum memeriksa ulang.');
         }
 
         return $this->owned($user, $id);

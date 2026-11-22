@@ -68,6 +68,15 @@ class UmkmController extends Controller
         ]]);
     }
 
+    public function recheckWhatsapp(WhatsappCheckRequest $request): UmkmResource
+    {
+        return new UmkmResource($this->umkmService->recheckWhatsapp(
+            $request->user(),
+            (int) $request->route('id'),
+            (string) $request->validated('whatsapp_number'),
+        ));
+    }
+
     public function show(ShowUmkmRequest $request): UmkmResource
     {
         return new UmkmResource($this->umkmService->owned(

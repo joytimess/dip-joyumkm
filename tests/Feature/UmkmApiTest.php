@@ -168,6 +168,38 @@ class UmkmApiTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_whatsapp_recheck_persists_result_only_for_the_current_number(): void
+    {
+        $owner = $this->authenticate();
+        $this->fakeOpenWa(true);
+        $umkm = Umkm::factory()->for($owner)->create(['whatsapp_number' => '6281234567890']);
+
+        $this->postJson('/api/umkms/'.$umkm->id.'/whatsapp-check', ['whatsapp_number' => '081234567890'])
+            ->assertOk()->assertJsonPath('data.whatsapp_registration_status', 'registered')
+            ->assertDontSee('test-only-openwa-key');
+        $this->assertDatabaseHas('umkms', ['id' => $umkm->id, 'wa_registration_status' => 'registered']);
+
+        $this->postJson('/api/umkms/'.$umkm->id.'/whatsapp-check', ['whatsapp_number' => '081222333444'])
+            ->assertConflict();
+        $this->fakeOpenWa('timeout');
+        $this->postJson('/api/umkms/'.$umkm->id.'/whatsapp-check', ['whatsapp_number' => '081234567890'])
+            ->assertOk()->assertJsonPath('data.whatsapp_registration_status', 'unchecked')
+            ->assertJsonPath('data.whatsapp_checked_at', null);
+    }
+
+    public function test_whatsapp_recheck_is_limited_to_owner_and_never_checks_foreign_records(): void
+    {
+        $this->authenticate();
+        $this->fakeOpenWa(true);
+        $foreign = Umkm::factory()->for(User::factory())->create(['whatsapp_number' => '6281234567890']);
+
+        $this->postJson('/api/umkms/'.$foreign->id.'/whatsapp-check', ['whatsapp_number' => '081234567890'])
+            ->assertNotFound();
+        Http::assertNothingSent();
+        $this->postJson('/api/umkms/'.$foreign->id.'/whatsapp-check', ['whatsapp_number' => 'bad'])
+            ->assertUnprocessable()->assertJsonValidationErrors('whatsapp_number');
+    }
+
     public function test_profile_metadata_is_available_in_detail_but_list_keeps_its_existing_shape(): void
     {
         $owner = $this->authenticate();

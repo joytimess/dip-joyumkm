@@ -40,6 +40,7 @@ Field bertingkat pada errors adalah key literal, misalnya `answers.0.value`. Fin
 | GET | `/umkms/summary` | Tanpa input | 200 UmkmSummaryResource |
 | GET | `/umkms/{id}` | ID path numerik | 200 UmkmResource |
 | PUT, PATCH | `/umkms/{id}` | ID path dan body UMKM | 200 UmkmResource |
+| POST | `/umkms/{id}/whatsapp-check` | ID path dan `whatsapp_number` yang harus sama dengan nomor tersimpan | 200 UmkmResource dengan hasil OpenWA untuk nomor tersebut; 409 bila nomor sudah berubah |
 | DELETE | `/umkms/{id}` | ID path | 200 MessageResource |
 | GET | `/questionnaire` | Tanpa input | 200 QuestionnaireResource |
 | GET | `/umkms/{id}/evaluations/latest` | ID path | 200 EvaluationResource atau data null |
