@@ -43,6 +43,7 @@ abstract class ApiRequest extends FormRequest
             'province' => 'Provinsi',
             'sector_id' => 'Sektor',
             'omzet' => 'Omzet',
+            'whatsapp_number' => 'Nomor WhatsApp',
             'search' => 'Pencarian',
             'category' => 'Kategori',
             'status' => 'Status',

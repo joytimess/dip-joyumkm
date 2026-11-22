@@ -16,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class UmkmService
 {
+    public function __construct(private readonly OpenWaNumberCheckService $openWa) {}
+
     public function queryWithLatest(User $user): Builder
     {
         return $user->umkms()->getQuery()
@@ -87,8 +89,13 @@ class UmkmService
 
     public function store(User $user, array $data): Umkm
     {
+        $status = $this->openWa->check($data['whatsapp_number']);
+        $umkm = $user->umkms()->make($data)->forceFill([
+            'wa_registration_status' => $status,
+            'wa_checked_at' => $status === OpenWaNumberCheckService::UNCHECKED ? null : now(),
+        ]);
         try {
-            $umkm = $user->umkms()->create($data);
+            $umkm->save();
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['name' => ['Nama UMKM sudah digunakan.']]);
         }
@@ -98,9 +105,12 @@ class UmkmService
 
     public function update(User $user, int $id, array $data): Umkm
     {
-        $umkm = $this->owned($user, $id);
+        $umkm = $this->owned($user, $id)->fill($data);
+        if ($umkm->isDirty('whatsapp_number')) {
+            $umkm->forceFill(['wa_registration_status' => OpenWaNumberCheckService::UNCHECKED, 'wa_checked_at' => null]);
+        }
         try {
-            $umkm->update($data);
+            $umkm->save();
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['name' => ['Nama UMKM sudah digunakan.']]);
         }

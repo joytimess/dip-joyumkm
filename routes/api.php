@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         });
     Route::get('/umkms/options', [UmkmController::class, 'options']);
     Route::get('/umkms/summary', [UmkmController::class, 'summary']);
+    Route::post('/umkms/whatsapp-check', [UmkmController::class, 'whatsappCheck'])
+        ->middleware('throttle:joyumkm-whatsapp-check');
     Route::get('/umkms', [UmkmController::class, 'index']);
     Route::post('/umkms', [UmkmController::class, 'store']);
     Route::get('/umkms/{id}', [UmkmController::class, 'show'])->whereNumber('id');

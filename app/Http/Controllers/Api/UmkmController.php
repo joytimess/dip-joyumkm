@@ -10,11 +10,13 @@ use App\Http\Requests\Umkm\ListUmkmRequest;
 use App\Http\Requests\Umkm\ShowUmkmRequest;
 use App\Http\Requests\Umkm\StoreUmkmRequest;
 use App\Http\Requests\Umkm\UpdateUmkmRequest;
+use App\Http\Requests\Umkm\WhatsappCheckRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\UmkmCollection;
 use App\Http\Resources\UmkmOptionsResource;
 use App\Http\Resources\UmkmResource;
 use App\Http\Resources\UmkmSummaryResource;
+use App\Services\OpenWaNumberCheckService;
 use App\Services\UmkmService;
 use App\Services\UmkmSummaryService;
 use Illuminate\Database\QueryException;
@@ -48,6 +50,22 @@ class UmkmController extends Controller
     public function options(): UmkmOptionsResource
     {
         return new UmkmOptionsResource($this->umkmService->options());
+    }
+
+    public function whatsappCheck(WhatsappCheckRequest $request, OpenWaNumberCheckService $openWa): JsonResponse
+    {
+        $number = $request->validated('whatsapp_number');
+        $status = $openWa->check($number);
+
+        return response()->json(['data' => [
+            'normalized_number' => $number,
+            'status' => $status,
+            'message' => match ($status) {
+                OpenWaNumberCheckService::REGISTERED => 'Nomor terdaftar di WhatsApp.',
+                OpenWaNumberCheckService::UNREGISTERED => 'Nomor tidak terdaftar di WhatsApp. Data tetap dapat disimpan.',
+                default => 'Pemeriksaan WhatsApp belum berhasil. Data tetap dapat disimpan.',
+            },
+        ]]);
     }
 
     public function show(ShowUmkmRequest $request): UmkmResource
