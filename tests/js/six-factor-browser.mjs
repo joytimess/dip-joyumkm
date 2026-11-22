@@ -116,13 +116,15 @@ try {
     await page.goto(origin + '/umkms');
     await page.getByRole('link', { name: own.name, exact: true }).click();
     await visible(page.getByRole('heading', { name: own.name }));
-    await page.locator('#main-content').getByRole('link', { name: 'Penilaian Enam Faktor', exact: true }).click();
+    await page.getByRole('tab', { name: 'Penilaian' }).click();
+    await page.locator('#main-content').getByRole('link', { name: /^(Mulai Penilaian|Lanjutkan Draft|Lihat Hasil)$/ }).click();
     await ready();
     assert.equal(new URL(page.url()).pathname, prefix);
     assert.equal(await page.locator('#detail-title').textContent(), own.name);
     await page.locator('.workspace-breadcrumb [data-context-umkm]').click();
     await visible(page.getByRole('heading', { name: own.name }));
-    await page.locator('#main-content').getByRole('link', { name: 'Penilaian Enam Faktor', exact: true }).click();
+    await page.getByRole('tab', { name: 'Penilaian' }).click();
+    await page.locator('#main-content').getByRole('link', { name: /^(Mulai Penilaian|Lanjutkan Draft|Lihat Hasil)$/ }).click();
     await ready();
     pass('AC-P2-01 navigasi V1 dan identitas UMKM');
 
@@ -551,6 +553,7 @@ try {
     await outsiders.close();
 
     await page.goto(origin + '/umkms/' + own.id);
+    await page.getByRole('tab', { name: 'Penilaian' }).click();
     await page.getByRole('link', { name: 'Isi Kuesioner', exact: true }).click();
     await enabled('#preview-draft');
     await page.locator('#preview-draft').click();

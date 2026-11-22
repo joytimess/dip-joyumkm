@@ -139,8 +139,9 @@ try {
             await capture(name, '#umkm-detail-content');
             if (!baseline) {
                 assert.equal(await page.locator('.workspace-breadcrumb a').getAttribute('href').then((url) => new URL(url).searchParams.get('search')), 'Sukamaju');
-                assert.match(await page.locator('#umkm-detail-content').innerText(), /Kuesioner Tiga Dimensi/);
-                assert.match(await page.locator('#detail-assessment-score').innerText(), business === scored ? /100,0\/100/ : /Skor belum tersedia/);
+                await page.getByRole('tab', { name: 'Penilaian' }).click();
+                assert.match(await page.locator('#panel-penilaian').innerText(), /Kuesioner Tiga Dimensi/);
+                assert.match(await page.locator('#assessment-3d-score').innerText(), business === scored ? /100,0\/100/ : /Skor belum tersedia/);
             }
         }
         await open('/form-data');

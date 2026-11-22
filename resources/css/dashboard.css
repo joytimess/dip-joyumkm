@@ -192,12 +192,15 @@ body[data-protected] {
         color: var(--surface);
     }
     & .nav-link.is-active, & .nav-link.is-active:hover:not(:disabled) {
-        background: var(--brand-primary);
-        color: var(--surface);
+        background: var(--surface);
+        color: #1e1e1e;
         font-weight: 600;
     }
     & :is(.sidebar, .navigation-drawer) :focus-visible {
         outline-color: var(--focus-inverse);
+    }
+    & .nav-link.is-active:focus-visible {
+        outline-color: var(--brand-primary);
     }
     & .nav-link .icon { width: 18px; height: 18px; flex: none; }
     & .sidebar-bottom {
@@ -1097,20 +1100,41 @@ body[data-protected] {
     & .comparison-detail .chart-table .comparison-baseline { background: var(--surface-hover); font-weight: 600; }
     & .comparison-detail .chart-detail .pill { white-space: normal; text-align: left; }
     & .analytics-grid { margin-block-start: var(--space-5); }
-    & .analytics-grid > *, & .umkm-detail-grid > * { min-width: 0; }
+    & .analytics-grid > * { min-width: 0; }
     & .analytics-grid .section-desc { overflow-wrap: anywhere; }
     & .comparison-selected li { max-width: 100%; overflow-wrap: anywhere; }
     & .comparison-selected button { display: grid; place-items: center; min-width: var(--control-height); min-height: var(--control-height); }
 
-    & .umkm-detail-grid { align-items: start; }
-    & .detail-method { display: grid; justify-items: start; gap: var(--space-3); padding-block: var(--space-4); }
-    & .detail-method + .detail-method { border-top: 1px solid var(--border); padding-block-end: 0; }
-    & .detail-method h3, & .detail-assessment h3 { margin: 0 0 var(--space-1); }
-    & .detail-facts { display: grid; gap: var(--space-2); margin-block: var(--space-3); }
-    & .detail-facts div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); }
-    & .detail-facts dt { color: var(--text-muted); }
-    & .detail-facts dd { margin: 0; }
-    & .detail-assessment { border-top: 1px solid var(--border); padding-block-start: var(--space-3); }
+    & .detail-hero { display: grid; gap: var(--space-1); }
+    & .detail-hero h2 { margin: 0; font-size: 1.5rem; font-weight: 700; overflow-wrap: anywhere; }
+    & .detail-tabs { display: flex; gap: var(--space-1); margin-block: var(--space-4); overflow-x: auto; overflow-y: hidden; border-bottom: 1px solid var(--border); scrollbar-width: thin; }
+    & .detail-tab { flex: none; min-height: var(--control-height); padding-inline: var(--space-3); border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-muted); font: inherit; font-size: var(--font-control); font-weight: 600; white-space: nowrap; cursor: pointer; }
+    & .detail-tab:hover { color: var(--text-primary); }
+    & .detail-tab[aria-selected="true"] { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+    & .detail-tab:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+    & .detail-panel { display: grid; gap: var(--space-4); min-width: 0; }
+    & .detail-panel-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+    & .detail-panel-head .section-title { margin: 0 0 var(--space-1); }
+    & .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-5); margin: 0; }
+    & .detail-grid > div { min-width: 0; }
+    & .detail-grid dt { color: var(--text-muted); font-size: var(--font-caption); }
+    & .detail-grid dd { margin: var(--space-1) 0 0; overflow-wrap: anywhere; font-weight: 500; }
+    & .detail-grid-wide { grid-column: 1 / -1; }
+    & .pre-line { white-space: pre-line; }
+    & .detail-location-empty { margin: 0; }
+    & .detail-location-facts { margin-block-start: var(--space-4); }
+    & .detail-form { display: grid; gap: var(--space-3); min-width: 0; }
+    & .detail-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    & .detail-form .form-field { margin-bottom: 0; }
+    & .detail-form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); padding-block-start: var(--space-3); border-top: 1px solid var(--border); }
+    & .detail-assessment-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+    & .detail-assessment-card { display: grid; align-content: start; gap: var(--space-3); min-width: 0; }
+    & .detail-assessment-card h3 { margin: 0; }
+    & .detail-assessment-facts { display: grid; gap: var(--space-2); margin: 0; }
+    & .detail-assessment-facts div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); }
+    & .detail-assessment-facts dt { color: var(--text-muted); }
+    & .detail-assessment-facts dd { margin: 0; font-weight: 500; }
+    & .detail-assessment-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
     & .data-panel .data-table :is(th, td), & .table-footer p { font-size: var(--font-caption); }
     & #delete-umkm-modal .tiny { font-size: var(--font-caption); }
 
