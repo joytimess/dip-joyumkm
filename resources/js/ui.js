@@ -68,8 +68,12 @@ export function renderErrors(form, error) {
         if (output) output.textContent = Array.isArray(messages) ? messages.join(' ') : String(messages);
         if (field instanceof HTMLElement) {
             field.setAttribute('aria-invalid', 'true');
-            if (output?.id) field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), output.id].filter(Boolean).join(' '));
-            firstField ??= field;
+            if (output?.id) {
+                const descriptions = new Set((field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                descriptions.add(output.id);
+                field.setAttribute('aria-describedby', [...descriptions].join(' '));
+            }
+            if (!field.closest('[hidden]')) firstField ??= document.getElementById(`${field.id}-trigger`) ?? field;
         }
     }
     const message = form.querySelector('.form-message');
@@ -97,12 +101,12 @@ export function openDialog(dialog, opener = document.activeElement) {
     dialog.querySelector('[autofocus], input, select, button')?.focus();
 }
 
-export function bindDialog(dialog) {
-    dialog.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+export function bindDialog(dialog, requestClose = () => dialog.close()) {
+    dialog.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => requestClose()));
     dialog.addEventListener('click', (event) => {
         if (event.target !== dialog) return;
         const bounds = dialog.getBoundingClientRect();
-        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) requestClose();
     });
     dialog.addEventListener('close', () => dialog._opener?.focus());
 }

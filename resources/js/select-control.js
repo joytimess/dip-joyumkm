@@ -38,7 +38,7 @@ export function createSelectControl(select, signal) {
         panel.style.width = `${bounds.width}px`;
         panel.style.maxHeight = `${Math.max(0, window.innerHeight - bounds.bottom - 16)}px`;
     };
-    dialog?.addEventListener('scroll', positionPanel, { signal });
+    dialog?.addEventListener('scroll', positionPanel, { capture: true, signal });
     dialog?.addEventListener('close', close, { signal });
     window.addEventListener('resize', positionPanel, { signal });
     const sync = () => {

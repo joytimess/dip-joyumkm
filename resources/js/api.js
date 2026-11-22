@@ -38,7 +38,7 @@ export function redirectToLogin() {
     }
 }
 
-export async function api(path, { method = 'GET', body, signal, authenticated = true, redirectOnUnauthorized = true } = {}) {
+export async function api(path, { method = 'GET', body, signal, authenticated = true, redirectOnUnauthorized = true, expectedStatus } = {}) {
     signal?.throwIfAborted();
     const token = authenticated ? getToken() : null;
     const headers = { Accept: 'application/json' };
@@ -72,6 +72,9 @@ export async function api(path, { method = 'GET', body, signal, authenticated = 
             : response.status >= 500 ? 'Terjadi gangguan pada server. Silakan coba lagi.'
                 : payload.message || 'Permintaan gagal. Silakan coba lagi.';
         throw new ApiError(message, response.status, payload.errors || {});
+    }
+    if (expectedStatus !== undefined && response.status !== expectedStatus) {
+        throw new ApiError('Respons server tidak sesuai. Periksa daftar UMKM sebelum mencoba lagi.', response.status);
     }
     return payload;
 }
