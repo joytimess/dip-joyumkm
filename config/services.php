@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    'openwa' => [
+        'enabled' => env('OPENWA_ENABLED', false),
+        'base_url' => env('OPENWA_BASE_URL'),
+        'session_id' => env('OPENWA_SESSION_ID'),
+        'api_key' => env('OPENWA_API_KEY'),
+        'timeout' => env('OPENWA_TIMEOUT_SECONDS', 3),
+    ],
+
+    'geocoding' => [
+        'url' => env('GEOCODING_URL'),
+        'allowed_hosts' => array_map(
+            fn (string $host): string => strtolower(rtrim(trim($host), '.')),
+            explode(',', (string) env('GEOCODING_ALLOWED_HOSTS', '')),
+        ),
+        'user_agent' => env('GEOCODING_USER_AGENT'),
+        'timeout' => env('GEOCODING_TIMEOUT_SECONDS', 4),
+        'cache_store' => env('GEOCODING_CACHE_STORE', 'database'),
+        'tile_url' => env('OSM_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+    ],
+
 ];
