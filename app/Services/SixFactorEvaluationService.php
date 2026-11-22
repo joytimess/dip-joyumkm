@@ -20,6 +20,7 @@ class SixFactorEvaluationService
     public function __construct(
         private readonly UmkmService $umkmService,
         private readonly DatabaseManager $database,
+        private readonly HermesWebhookOutbox $webhookOutbox,
     ) {}
 
     public function activeDraft(User $user, int $umkmId): ?SixFactorEvaluation
@@ -146,7 +147,12 @@ class SixFactorEvaluationService
                     : 'Evaluasi sudah dibatalkan dan tidak dapat diubah.');
             }
 
-            return $this->persist($evaluation->forceFill($attributes($evaluation)));
+            $finalized = $this->persist($evaluation->forceFill($attributes($evaluation)));
+            if ($finalized->status === SixFactorEvaluation::FINAL) {
+                $this->webhookOutbox->recordFinalization($finalized);
+            }
+
+            return $finalized;
         });
     }
 

@@ -83,6 +83,10 @@ class SixFactorEvaluationConcurrencyTest extends TestCase
         $this->assertSame(['message' => $message], $second['body']);
         $this->assertDatabaseCount('six_factor_evaluations', 1);
         $this->assertDatabaseHas('six_factor_evaluations', ['id' => $draft->id, 'status' => $status]);
+        $this->assertDatabaseCount('webhook_outbox', $status === 'final' ? 1 : 0);
+        if ($status === 'final') {
+            $this->assertDatabaseHas('webhook_outbox', ['aggregate_id' => $draft->id, 'event_type' => 'evaluation.finalized']);
+        }
     }
 
     #[TestWith([true])]
@@ -176,6 +180,7 @@ class SixFactorEvaluationConcurrencyTest extends TestCase
             'DB_CONNECTION' => 'mysql',
             'DB_DATABASE' => 'joyumkm_testing',
             'DB_URL' => '',
+            'HERMES_WEBHOOK_ENABLED' => 'false',
             'JOYUMKM_P1_TEST_METHOD' => $request[0],
             'JOYUMKM_P1_TEST_PATH' => $request[1],
             'JOYUMKM_P1_TEST_BODY' => $request[2],

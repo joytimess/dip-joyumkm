@@ -18,7 +18,7 @@ class UmkmProfileMigrationTest extends TestCase
     public function test_upgrade_and_rollback_preserve_legacy_business_and_evaluations(): void
     {
         $migrationPath = 'database/migrations/2026_11_22_064805_add_business_profile_to_umkms_table.php';
-        $this->artisan('migrate:rollback', ['--path' => $migrationPath, '--step' => 1])->assertSuccessful();
+        $this->artisan('migrate:rollback', ['--path' => $migrationPath])->assertSuccessful();
 
         $legacy = Umkm::factory()->create(['omzet' => 12_000_000]);
         $evaluation = $legacy->evaluations()->create(['status' => 'final', 'average_score' => 80, 'category' => 'BAIK']);
@@ -37,7 +37,7 @@ class UmkmProfileMigrationTest extends TestCase
             $this->assertTrue($upgraded->latestSixFactorFinal->is($sixFactor));
             $this->assertSame($sixFactor->total_score, $upgraded->latestSixFactorFinal->total_score);
 
-            $this->artisan('migrate:rollback', ['--path' => $migrationPath, '--step' => 1])->assertSuccessful();
+            $this->artisan('migrate:rollback', ['--path' => $migrationPath])->assertSuccessful();
             $this->assertFalse(Schema::hasColumn('umkms', 'omzet_period'));
             $this->assertSame($original, $legacy->fresh()->getRawOriginal());
             $this->assertModelExists($evaluation);
