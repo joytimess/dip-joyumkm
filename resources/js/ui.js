@@ -29,6 +29,21 @@ export const formatNumber = (value) => new Intl.NumberFormat('id-ID').format(val
 export const formatScore = (value) => value === null || value === undefined ? '—' : new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 export const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 
+/** Hanya menyisakan digit lalu memberi pemisah ribuan; huruf dan simbol langsung dibuang. */
+export function formatRupiahInput(value) {
+    const digits = value.replace(/\D/g, '');
+    if (digits === '') return '';
+    const number = Number(digits);
+    return Number.isSafeInteger(number) ? formatNumber(number) : digits;
+}
+
+/** Mengembalikan null untuk kosong, NaN untuk format tidak valid, dan angka untuk nilai rupiah. */
+export function parseRupiah(value) {
+    const raw = value.trim();
+    if (raw === '') return null;
+    return /^[0-9]+(?:\.[0-9]+)*$/.test(raw) ? Number(raw.replaceAll('.', '')) : NaN;
+}
+
 export function toast(message, type = 'success') {
     const region = document.getElementById('toast-region');
     if (!region) return;

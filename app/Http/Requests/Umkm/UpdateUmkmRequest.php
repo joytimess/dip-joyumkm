@@ -37,9 +37,12 @@ class UpdateUmkmRequest extends StoreUmkmRequest
                 array_unshift($rules[$field], 'sometimes');
             }
         }
-        foreach (['omzet_period', 'city', 'address', 'owner_name', 'whatsapp_number', 'business_email'] as $field) {
+        foreach (['city', 'address', 'owner_name', 'whatsapp_number', 'business_email'] as $field) {
             array_unshift($rules[$field], 'sometimes');
         }
+        // Data UMKM lama boleh belum memiliki periode omzet dan modal usaha; keduanya wajib saat create.
+        $rules['omzet_period'] = ['sometimes', 'nullable', Rule::in(['monthly', 'yearly'])];
+        $rules['business_capital'] = ['sometimes', 'nullable', 'integer', 'min:0', 'max:9007199254740991'];
         $rules['latitude'] = ['present_with:longitude', 'required_with:longitude', 'nullable', 'numeric', 'between:-90,90'];
         $rules['longitude'] = ['present_with:latitude', 'required_with:latitude', 'nullable', 'numeric', 'between:-180,180'];
 

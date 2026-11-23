@@ -27,7 +27,7 @@ class UmkmResource extends JsonResource
             'evaluation_id' => $this->evaluation_id === null ? null : (int) $this->evaluation_id,
             $this->mergeWhen($request->route('id') !== null || $request->isMethod('POST'), fn (): array => [
                 ...$this->resource->only([
-                    'omzet_period', 'year_founded', 'employee_count', 'nib', 'description',
+                    'omzet_period', 'business_capital', 'year_founded', 'employee_count', 'nib', 'description',
                     'city', 'address', 'district', 'subdistrict', 'postal_code', 'latitude', 'longitude',
                     'owner_name', 'whatsapp_number', 'business_email', 'pic_name', 'website_url', 'social_media_url',
                 ]),

@@ -217,6 +217,15 @@
         color: var(--text-muted);
         font-size: var(--font-caption);
     }
+    .form-group-title {
+        grid-column: 1 / -1;
+        margin: var(--space-2) 0 0;
+        padding-bottom: var(--space-2);
+        border-bottom: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: var(--font-caption);
+        font-weight: 600;
+    }
     @media (max-width: 640px) {
         .umkm-modal[data-wizard] .dialog-footer .button { padding-inline: var(--space-3); }
     }

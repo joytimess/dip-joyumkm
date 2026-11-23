@@ -30,6 +30,7 @@ class UmkmFactory extends Factory
     {
         return $this->state(fn (): array => [
             'omzet_period' => 'monthly',
+            'business_capital' => 50000000,
             'city' => 'Jakarta',
             'address' => fake()->streetAddress(),
             'owner_name' => fake()->name(),

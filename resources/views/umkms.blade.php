@@ -194,6 +194,7 @@
             <h3 class="section-title" id="umkm-step-title" tabindex="-1" hidden></h3>
             <p class="umkm-required-note" hidden>Kolom bertanda * wajib diisi.</p>
             <fieldset class="modal-grid" aria-labelledby="umkm-modal-title">
+                <h4 class="form-group-title full" data-step="0" data-edit-field>Identitas Usaha</h4>
                 <div class="field form-field full" data-step="0" data-edit-field>
                     <label for="umkm-name">Nama UMKM</label>
                     <input id="umkm-name" name="name" class="control" maxlength="120" required autofocus>
@@ -212,15 +213,32 @@
                     <select id="umkm-sector" name="sector_id" class="control" required><option value="">Pilih sektor</option></select>
                     <p class="field-error" data-error="sector_id" id="umkm-error-sector_id"></p>
                 </div>
+                <div class="field form-field full" data-step="0" data-edit-field>
+                    <label for="umkm-nib">Nomor Induk Berusaha (NIB)</label>
+                    <input id="umkm-nib" name="nib" class="control" inputmode="numeric" pattern="[0-9]{13}" maxlength="13">
+                    <p class="field-error" data-error="nib" id="umkm-error-nib"></p>
+                </div>
+                <div class="field form-field full" data-step="0" data-edit-field>
+                    <label for="umkm-description">Deskripsi</label>
+                    <textarea id="umkm-description" name="description" class="control" rows="3" maxlength="2000"></textarea>
+                    <p class="field-error" data-error="description" id="umkm-error-description"></p>
+                </div>
+                <h4 class="form-group-title full" data-step="0" data-edit-field>Profil Ekonomi &amp; Operasional</h4>
+                <div class="field form-field" data-step="0" data-edit-field>
+                    <label for="umkm-business-capital">Modal Usaha (Rp)</label>
+                    <input id="umkm-business-capital" name="business_capital" class="control" type="text" inputmode="numeric" placeholder="Contoh: 50.000.000" aria-required="true" aria-describedby="umkm-business-capital-help">
+                    <small id="umkm-business-capital-help" class="muted tiny">Tidak termasuk tanah dan bangunan tempat usaha</small>
+                    <p class="field-error" data-error="business_capital" id="umkm-error-business_capital"></p>
+                </div>
                 <div class="field form-field" data-step="0" data-edit-field>
                     <label for="umkm-omzet">Omzet (Rp)</label>
                     <input id="umkm-omzet" name="omzet" class="control" type="text" inputmode="numeric" required placeholder="Contoh: 15.000.000" aria-describedby="umkm-omzet-help">
                     <small id="umkm-omzet-help" class="muted tiny">Masukkan nominal dalam rupiah.</small>
                     <p class="field-error" data-error="omzet" id="umkm-error-omzet"></p>
                 </div>
-                <div class="field form-field" data-step="0">
-                    <label for="umkm-omzet-period">Periode omzet</label>
-                    <select id="umkm-omzet-period" name="omzet_period" class="control" required aria-describedby="umkm-omzet-period-help">
+                <div class="field form-field" data-step="0" data-edit-field>
+                    <label for="umkm-omzet-period">Periode Omzet</label>
+                    <select id="umkm-omzet-period" name="omzet_period" class="control" aria-required="true" aria-describedby="umkm-omzet-period-help">
                         <option value="">Pilih periode</option>
                         <option value="monthly">Bulanan</option>
                         <option value="yearly">Tahunan</option>
@@ -228,25 +246,15 @@
                     <small id="umkm-omzet-period-help" class="muted">Periode untuk nominal omzet.</small>
                     <p class="field-error" data-error="omzet_period" id="umkm-error-omzet_period"></p>
                 </div>
-                <div class="field form-field" data-step="0">
-                    <label for="umkm-year-founded">Tahun berdiri</label>
+                <div class="field form-field" data-step="0" data-edit-field>
+                    <label for="umkm-year-founded">Tahun Mulai Usaha</label>
                     <input id="umkm-year-founded" name="year_founded" class="control" type="number" inputmode="numeric" min="1800" max="{{ now()->year }}">
                     <p class="field-error" data-error="year_founded" id="umkm-error-year_founded"></p>
                 </div>
-                <div class="field form-field" data-step="0">
-                    <label for="umkm-employee-count">Jumlah karyawan</label>
+                <div class="field form-field" data-step="0" data-edit-field>
+                    <label for="umkm-employee-count">Jumlah Tenaga Kerja</label>
                     <input id="umkm-employee-count" name="employee_count" class="control" type="number" inputmode="numeric" min="0" max="4294967295">
                     <p class="field-error" data-error="employee_count" id="umkm-error-employee_count"></p>
-                </div>
-                <div class="field form-field full" data-step="0">
-                    <label for="umkm-nib">Nomor Induk Berusaha (NIB)</label>
-                    <input id="umkm-nib" name="nib" class="control" inputmode="numeric" pattern="[0-9]{13}" maxlength="13">
-                    <p class="field-error" data-error="nib" id="umkm-error-nib"></p>
-                </div>
-                <div class="field form-field full" data-step="0">
-                    <label for="umkm-description">Deskripsi</label>
-                    <textarea id="umkm-description" name="description" class="control" rows="3" maxlength="2000"></textarea>
-                    <p class="field-error" data-error="description" id="umkm-error-description"></p>
                 </div>
                 <div class="field form-field" data-step="1">
                     <label for="umkm-city">Kabupaten/kota</label>

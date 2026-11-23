@@ -1,6 +1,6 @@
 import { ApiError } from './api';
 import { createSelectControl } from './select-control';
-import { bindDialog, clearErrors, confirmAction, formatNumber, openDialog, renderErrors, setBusy, toast } from './ui';
+import { bindDialog, clearErrors, confirmAction, formatNumber, formatRupiahInput, openDialog, parseRupiah, renderErrors, setBusy, toast } from './ui';
 import { bindWhatsappInput, whatsappNumberError, whatsappPayload } from './whatsapp-number';
 
 const stepTitles = ['Informasi Usaha', 'Lokasi Usaha', 'Kontak Usaha'];
@@ -53,6 +53,8 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
     const nextButton = document.getElementById('umkm-step-next');
     const closeButtons = [...modal.querySelectorAll('[data-close-dialog]')];
     const omzetInput = form.elements.omzet;
+    const businessCapitalInput = form.elements.business_capital;
+    const omzetPeriodInput = form.elements.omzet_period;
     const whatsappInput = form.elements.whatsapp_number;
     const whatsappStatus = document.getElementById('umkm-whatsapp-status');
     const selects = [form.elements.province, form.elements.sector_id, form.elements.omzet_period]
@@ -63,6 +65,7 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
     let whatsappController;
     let checkedNumber;
     let omzetValue = null;
+    let businessCapitalValue = null;
     let saving = false;
     let confirming = false;
     let initialValues;
@@ -91,6 +94,8 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
         nextButton.hidden = !creating || step === 2;
         saveButton.hidden = creating && step !== 2;
         saveButton.textContent = creating ? 'Simpan' : 'Simpan Data';
+        businessCapitalInput.setAttribute('aria-required', String(creating));
+        omzetPeriodInput.setAttribute('aria-required', String(creating));
         selects.forEach(({ close }) => close());
         modal.querySelector('.dialog-body').scrollTop = 0;
         if (focus) stepTitle.focus();
@@ -161,11 +166,17 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
         location?.reset();
         editId = umkm?.id ?? null;
         omzetValue = umkm?.omzet ?? null;
+        businessCapitalValue = umkm?.business_capital ?? null;
         if (umkm) {
             form.elements.name.value = umkm.name;
             form.elements.province.value = umkm.province;
             form.elements.sector_id.value = String(umkm.sector.id);
             omzetInput.value = formatNumber(omzetValue);
+            // Nilai yang belum diisi tetap kosong agar tidak terkirim sebagai 0 atau menimpa data lama.
+            omzetPeriodInput.value = umkm.omzet_period ?? '';
+            businessCapitalInput.value = businessCapitalValue === null ? '' : formatNumber(businessCapitalValue);
+            form.elements.year_founded.value = umkm.year_founded ?? '';
+            form.elements.employee_count.value = umkm.employee_count ?? '';
         }
         selects.forEach(({ sync }) => sync());
         initialValues = formValues();
@@ -258,10 +269,12 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
     form.addEventListener('input', clearEditedField);
     form.addEventListener('change', clearEditedField);
     omzetInput.addEventListener('input', () => {
-        const raw = omzetInput.value.trim();
-        omzetValue = raw === '' ? null : (/^[0-9]+(?:\.[0-9]+)*$/.test(raw) ? Number(raw.replaceAll('.', '')) : NaN);
-        if (omzetValue === null) omzetInput.value = '';
-        else if (Number.isSafeInteger(omzetValue)) omzetInput.value = formatNumber(omzetValue);
+        omzetInput.value = formatRupiahInput(omzetInput.value);
+        omzetValue = parseRupiah(omzetInput.value);
+    });
+    businessCapitalInput.addEventListener('input', () => {
+        businessCapitalInput.value = formatRupiahInput(businessCapitalInput.value);
+        businessCapitalValue = parseRupiah(businessCapitalInput.value);
     });
 
     form.addEventListener('submit', async (event) => {
@@ -279,6 +292,17 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
             errors.omzet = [omzetValue === null
                 ? 'Masukkan omzet UMKM.'
                 : 'Masukkan omzet dalam bilangan bulat positif atau nol, maksimal Rp9.007.199.254.740.991.'];
+        }
+        // Periode dan modal usaha wajib saat membuat UMKM baru; data lama boleh kosong saat diubah.
+        if (creating && !omzetPeriodInput.closest('[data-step]').hidden && !omzetPeriodInput.value) {
+            errors.omzet_period = ['Periode Omzet wajib diisi.'];
+        }
+        if (!businessCapitalInput.closest('[data-step]').hidden) {
+            if (businessCapitalValue === null && creating) {
+                errors.business_capital = ['Modal Usaha (Rp) wajib diisi.'];
+            } else if (businessCapitalValue !== null && !Number.isSafeInteger(businessCapitalValue)) {
+                errors.business_capital = ['Masukkan modal usaha dalam bilangan bulat positif atau nol, maksimal Rp9.007.199.254.740.991.'];
+            }
         }
         if (creating && step === 1) {
             const { latitude, longitude } = form.elements;
@@ -303,6 +327,7 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
             }
         }
         body.omzet = omzetValue;
+        body.business_capital = businessCapitalValue;
         if (creating) body.whatsapp_number = whatsappPayload(whatsappInput.value);
         setSaving(true);
         let failure;

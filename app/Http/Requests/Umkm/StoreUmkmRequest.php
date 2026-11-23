@@ -31,6 +31,7 @@ class StoreUmkmRequest extends ApiRequest
             'sector_id' => ['required', 'integer', 'exists:sectors,id'],
             'omzet' => ['required', 'integer', 'min:0', 'max:9007199254740991'],
             'omzet_period' => ['required', Rule::in(['monthly', 'yearly'])],
+            'business_capital' => ['required', 'integer', 'min:0', 'max:9007199254740991'],
             'year_founded' => ['nullable', 'integer', 'min:1800', 'max:'.now()->year],
             'employee_count' => ['nullable', 'integer', 'min:0', 'max:4294967295'],
             'nib' => ['nullable', 'string', 'regex:/\A[0-9]{13}\z/'],
@@ -70,8 +71,9 @@ class StoreUmkmRequest extends ApiRequest
     {
         return [
             ...parent::attributes(),
-            'omzet_period' => 'Periode omzet', 'year_founded' => 'Tahun berdiri',
-            'employee_count' => 'Jumlah karyawan', 'nib' => 'NIB', 'description' => 'Deskripsi',
+            'omzet_period' => 'Periode omzet', 'business_capital' => 'Modal usaha',
+            'year_founded' => 'Tahun mulai usaha', 'employee_count' => 'Jumlah tenaga kerja',
+            'nib' => 'NIB', 'description' => 'Deskripsi',
             'city' => 'Kabupaten/kota', 'address' => 'Alamat lengkap', 'district' => 'Kecamatan',
             'subdistrict' => 'Kelurahan/desa', 'postal_code' => 'Kode pos',
             'latitude' => 'Latitude', 'longitude' => 'Longitude', 'owner_name' => 'Nama pemilik',

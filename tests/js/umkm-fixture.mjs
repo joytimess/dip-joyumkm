@@ -1,5 +1,6 @@
 export const businessProfile = {
     omzet_period: 'monthly',
+    business_capital: 50000000,
     city: 'Jakarta',
     address: 'Jalan Uji 10',
     owner_name: 'Pemilik Uji',

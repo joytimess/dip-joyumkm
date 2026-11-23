@@ -213,6 +213,7 @@ async function exerciseLiveTiles(page, wizard) {
     await wizard.locator('#umkm-sector-trigger').click();
     await wizard.locator('#umkm-sector-panel li button').nth(1).click();
     await wizard.locator('#umkm-omzet').fill('12000000');
+    await wizard.locator('#umkm-business-capital').fill('50000000');
     await wizard.locator('#umkm-omzet-period-trigger').click();
     await wizard.locator('#umkm-omzet-period-panel').getByRole('button', { name: 'Bulanan', exact: true }).click();
     await wizard.locator('#umkm-step-next').click();
@@ -470,6 +471,7 @@ async function exerciseWizard(page, wizard, width) {
         await name.fill('Uji ulang peta');
         await choose('umkm-sector');
         await wizard.locator('#umkm-omzet').fill('100000');
+        await wizard.locator('#umkm-business-capital').fill('0');
         await choose('umkm-omzet-period', 'Bulanan');
         await next.click();
         await wizard.locator('[data-location-center]:enabled').waitFor();

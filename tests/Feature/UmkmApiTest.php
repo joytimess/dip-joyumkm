@@ -154,6 +154,30 @@ class UmkmApiTest extends TestCase
             ->assertJsonPath('data.latitude', null)->assertJsonPath('data.longitude', null);
     }
 
+    public function test_business_capital_is_required_on_create_and_optional_for_legacy_updates(): void
+    {
+        $owner = $this->authenticate();
+        foreach ([null, -1, '1500.5', 'abc'] as $invalid) {
+            $this->postJson('/api/umkms', $this->payload(['business_capital' => $invalid]))
+                ->assertUnprocessable()->assertJsonValidationErrors('business_capital');
+        }
+        $this->assertDatabaseCount('umkms', 0);
+
+        $id = $this->postJson('/api/umkms', $this->payload(['name' => 'Modal Nol', 'business_capital' => 0]))
+            ->assertCreated()->assertJsonPath('data.business_capital', 0)->json('data.id');
+        $this->getJson('/api/umkms/'.$id)->assertOk()->assertJsonPath('data.business_capital', 0);
+
+        $legacy = Umkm::factory()->for($owner)->create(['business_capital' => null, 'omzet_period' => null]);
+        $this->getJson('/api/umkms/'.$legacy->id)->assertOk()->assertJsonPath('data.business_capital', null);
+        $this->patchJson('/api/umkms/'.$legacy->id, ['business_capital' => null, 'omzet_period' => ''])->assertOk()
+            ->assertJsonPath('data.business_capital', null)->assertJsonPath('data.omzet_period', null);
+        $this->patchJson('/api/umkms/'.$legacy->id, ['business_capital' => 'abc'])
+            ->assertUnprocessable()->assertJsonValidationErrors('business_capital');
+        $this->patchJson('/api/umkms/'.$legacy->id, ['business_capital' => 25000000, 'omzet_period' => 'yearly'])->assertOk()
+            ->assertJsonPath('data.business_capital', 25000000)->assertJsonPath('data.omzet_period', 'yearly');
+        $this->assertDatabaseHas('umkms', ['id' => $legacy->id, 'business_capital' => 25000000, 'omzet_period' => 'yearly']);
+    }
+
     public function test_changing_whatsapp_number_resets_previous_result(): void
     {
         $this->authenticate();
@@ -376,7 +400,7 @@ class UmkmApiTest extends TestCase
         return array_replace([
             'name' => 'Toko Uji', 'province' => 'DKI Jakarta',
             'sector_id' => Sector::query()->firstOrFail()->id, 'omzet' => 0,
-            'omzet_period' => 'monthly', 'city' => 'Jakarta', 'address' => 'Jalan Uji 10',
+            'omzet_period' => 'monthly', 'business_capital' => 0, 'city' => 'Jakarta', 'address' => 'Jalan Uji 10',
             'owner_name' => 'Pemilik Uji', 'whatsapp_number' => '081234567890',
             'business_email' => 'usaha@example.com',
             'latitude' => 0, 'longitude' => 106.825,
