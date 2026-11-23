@@ -3,10 +3,11 @@ import { createSelectControl } from '../select-control';
 import { createInlineEditor, discardConfirmation } from '../umkm-detail-editor';
 import { withListContext } from '../umkm-navigation';
 import { bindWhatsappInput, whatsappPayload } from '../whatsapp-number';
-import { clearErrors, element, formatNumber, formatScore, setBusy, showError, toast } from '../ui';
+import { clearErrors, element, formatNumber, formatRupiahInput, formatScore, parseRupiah, setBusy, showError, toast } from '../ui';
 
 const missing = 'Belum diisi';
-const periodLabels = { monthly: 'per bulan', yearly: 'per tahun' };
+const omzetLabels = { monthly: 'Omzet Bulanan', yearly: 'Omzet Tahunan' };
+const unknownPeriodNote = 'Periode belum diketahui';
 const assessmentLabels = { draft: 'Draft tersimpan', final: 'Final', none: 'Belum ada kuesioner tersimpan' };
 const whatsappLabels = {
     registered: 'Terdaftar di WhatsApp.',
@@ -15,6 +16,7 @@ const whatsappLabels = {
 };
 const changedWhatsappLabel = 'Nomor berubah. Belum diperiksa sampai data disimpan.';
 const omzetRangeError = 'Masukkan omzet dalam bilangan bulat positif atau nol, maksimal Rp9.007.199.254.740.991.';
+const businessCapitalRangeError = 'Masukkan modal usaha dalam bilangan bulat positif atau nol, maksimal Rp9.007.199.254.740.991.';
 
 const textOrMissing = (value) => (value === null || value === undefined || value === '' ? missing : String(value));
 const nullableText = (value) => {
@@ -22,13 +24,6 @@ const nullableText = (value) => {
     return trimmed === '' ? null : trimmed;
 };
 const nullableInteger = (value) => (value.trim() === '' ? null : Number(value));
-
-/** Mengembalikan null untuk kosong, NaN untuk format tidak valid, dan angka untuk nilai rupiah. */
-function parseOmzet(value) {
-    const raw = value.trim();
-    if (raw === '') return null;
-    return /^[0-9]+(?:\.[0-9]+)*$/.test(raw) ? Number(raw.replaceAll('.', '')) : NaN;
-}
 
 function setFields(scope, values) {
     for (const [key, value] of Object.entries(values)) {
@@ -163,6 +158,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
             prefill: (form) => {
                 form.elements.name.value = current.name;
                 form.elements.omzet.value = formatNumber(current.omzet);
+                form.elements.business_capital.value = current.business_capital === null ? '' : formatNumber(current.business_capital);
                 form.elements.omzet_period.value = current.omzet_period ?? '';
                 form.elements.year_founded.value = current.year_founded ?? '';
                 form.elements.employee_count.value = current.employee_count ?? '';
@@ -173,15 +169,22 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
                 controls.period.sync();
             },
             validate: (form) => {
-                const omzet = parseOmzet(form.elements.omzet.value);
-                if (omzet === null) return { omzet: ['Masukkan omzet UMKM.'] };
-                if (!Number.isSafeInteger(omzet)) return { omzet: [omzetRangeError] };
-                return {};
+                const errors = {};
+                const omzet = parseRupiah(form.elements.omzet.value);
+                if (omzet === null) errors.omzet = ['Masukkan omzet UMKM.'];
+                else if (!Number.isSafeInteger(omzet)) errors.omzet = [omzetRangeError];
+                // Modal usaha boleh dikosongkan untuk data lama; kosong berarti belum diisi, bukan 0.
+                const businessCapital = parseRupiah(form.elements.business_capital.value);
+                if (businessCapital !== null && !Number.isSafeInteger(businessCapital)) {
+                    errors.business_capital = [businessCapitalRangeError];
+                }
+                return errors;
             },
             toPayload: (form) => ({
                 name: form.elements.name.value.trim(),
                 sector_id: Number(form.elements.sector_id.value),
-                omzet: parseOmzet(form.elements.omzet.value),
+                omzet: parseRupiah(form.elements.omzet.value),
+                business_capital: parseRupiah(form.elements.business_capital.value),
                 omzet_period: form.elements.omzet_period.value,
                 year_founded: nullableInteger(form.elements.year_founded.value),
                 employee_count: nullableInteger(form.elements.employee_count.value),
@@ -319,15 +322,21 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
     }
 
     function renderProfile() {
+        const periodKnown = Object.hasOwn(omzetLabels, current.omzet_period);
+        views.profil.querySelector('[data-omzet-label]').textContent = periodKnown ? omzetLabels[current.omzet_period] : 'Omzet';
         setFields(views.profil, {
             name: textOrMissing(current.name),
             sector: textOrMissing(current.sector.name),
-            omzet: `Rp ${formatNumber(current.omzet)}${current.omzet_period ? ' ' + periodLabels[current.omzet_period] : ''}`,
-            year_founded: textOrMissing(current.year_founded),
-            employee_count: current.employee_count === null ? missing : formatNumber(current.employee_count),
             nib: textOrMissing(current.nib),
             description: textOrMissing(current.description),
+            business_capital: current.business_capital === null ? missing : `Rp ${formatNumber(current.business_capital)}`,
+            omzet: `Rp ${formatNumber(current.omzet)}`,
+            year_founded: textOrMissing(current.year_founded),
+            employee_count: current.employee_count === null ? missing : `${formatNumber(current.employee_count)} orang`,
         });
+        if (!periodKnown) {
+            views.profil.querySelector('[data-field="omzet"]').append(element('span', { class: 'muted', text: ` · ${unknownPeriodNote}` }));
+        }
     }
 
     function renderLocation() {
@@ -502,12 +511,12 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
         }, { signal });
     }
 
-    function bindOmzet() {
-        forms.profil.elements.omzet.addEventListener('input', (event) => {
-            const parsed = parseOmzet(event.target.value);
-            if (parsed === null) event.target.value = '';
-            else if (Number.isSafeInteger(parsed)) event.target.value = formatNumber(parsed);
-        }, { signal });
+    function bindRupiahInputs() {
+        for (const name of ['omzet', 'business_capital']) {
+            forms.profil.elements[name].addEventListener('input', (event) => {
+                event.target.value = formatRupiahInput(event.target.value);
+            }, { signal });
+        }
     }
 
     return {
@@ -515,7 +524,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
             bindTabs();
             bindGuards();
             bindWhatsapp();
-            bindOmzet();
+            bindRupiahInputs();
             renderAll();
             showTab('profil');
         },
