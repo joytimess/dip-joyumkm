@@ -19,7 +19,7 @@ final class HermesWebhookReceiver
         return $eventId !== ''
             && ($event['event_id'] ?? null) === $eventId
             && ($event['event_type'] ?? null) === 'evaluation.finalized'
-            && ($event['event_version'] ?? null) === 1
+            && in_array($event['event_version'] ?? null, [1, 2], true)
             && hash_equals(hash_hmac('sha256', $timestamp.'.'.$body, self::SECRET), $signature);
     }
 }

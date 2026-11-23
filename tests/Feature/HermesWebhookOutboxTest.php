@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\DeliverHermesWebhook;
+use App\Models\Evaluation;
 use App\Models\SixFactorEvaluation;
 use App\Models\Umkm;
 use App\Models\WebhookOutbox;
 use App\Services\HermesWebhookOutbox;
 use App\Services\HermesWebhookSender;
+use Carbon\CarbonInterface;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -57,24 +59,176 @@ class HermesWebhookOutboxTest extends TestCase
         $this->assertSame('pending', $event->status);
         $this->assertSame('evaluation.finalized', $event->event_type);
         $this->assertSame($id, $event->aggregate_id);
-        $this->assertSame(1, $event->event_version);
+        $this->assertSame(2, $event->event_version);
         $this->assertEquals([
             'event_id' => $event->event_id,
             'event_type' => 'evaluation.finalized',
-            'event_version' => 1,
+            'event_version' => 2,
             'source' => 'joyumkm',
             'occurred_at' => now()->utc()->format('Y-m-d\TH:i:s\Z'),
             'data' => [
-                'evaluation_id' => $id,
                 'umkm_id' => $umkm->id,
-                'status' => 'final',
-                'scores' => array_fill_keys(SixFactorEvaluation::FACTORS, 4),
-                'total_score' => 24,
-                'category' => 'Sehat',
+                'business_context' => [
+                    'name' => $umkm->name,
+                    'sector' => 'Jasa',
+                    'location' => null,
+                    'started_year' => null,
+                    'employee_count' => null,
+                    'business_capital' => null,
+                    'revenue' => ['amount' => $umkm->omzet, 'period' => null],
+                ],
+                'six_factor' => [
+                    'evaluation_id' => $id,
+                    'status' => 'final',
+                    'total_score' => 24,
+                    'category' => 'Sehat',
+                    'scores' => array_fill_keys(SixFactorEvaluation::FACTORS, 4),
+                ],
+                'three_dimension' => null,
             ],
         ], json_decode($event->payload, true, flags: JSON_THROW_ON_ERROR));
         $this->assertDatabaseEmpty('jobs');
         Http::assertNothingSent();
+    }
+
+    public function test_payload_snapshots_the_latest_eligible_three_dimension_assessment(): void
+    {
+        $this->freezeSecond();
+        $draft = $this->completeDraft();
+        $other = Umkm::factory()->create();
+        $this->threeDimension($draft->umkm_id, now()->subDays(3), ['ins_score' => 10, 'ect_score' => 10, 'ops_score' => 10]);
+        $this->threeDimension($draft->umkm_id, now()->subDay(), ['ins_score' => 70, 'ect_score' => 80, 'ops_score' => 90]);
+        $expected = $this->threeDimension($draft->umkm_id, now()->subDay(), [
+            'ins_score' => 71.5, 'ect_score' => 81.25, 'ops_score' => 91, 'average_score' => 81.3, 'category' => 'BAIK',
+        ]);
+        $this->threeDimension($draft->umkm_id, now()->subHour(), ['status' => 'draft']);
+        $this->threeDimension($draft->umkm_id, now()->addDay(), ['ins_score' => 99, 'ect_score' => 99, 'ops_score' => 99]);
+        $this->threeDimension($other->id, now()->subHour(), ['ins_score' => 55, 'ect_score' => 55, 'ops_score' => 55]);
+        $before = Evaluation::query()->orderBy('id')->get()->toArray();
+
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $this->assertSame($before, Evaluation::query()->orderBy('id')->get()->toArray());
+        $data = $this->soleEventPayload()['data'];
+        $this->assertEqualsCanonicalizing(['umkm_id', 'business_context', 'six_factor', 'three_dimension'], array_keys($data));
+        $this->assertSame(18, $data['six_factor']['total_score']);
+        $this->assertEquals([
+            'evaluation_id' => $expected->id,
+            'status' => 'final',
+            'assessed_at' => now()->subDay()->utc()->format('Y-m-d\TH:i:s\Z'),
+            'average_score' => 81.3,
+            'category' => 'BAIK',
+            'is_complete' => true,
+            'scores' => ['ins' => 71.5, 'ect' => 81.25, 'ops' => 91.0],
+        ], $data['three_dimension']);
+    }
+
+    public function test_payload_has_null_three_dimension_without_eligible_assessment(): void
+    {
+        $this->freezeSecond();
+        $draft = $this->completeDraft();
+        $this->threeDimension($draft->umkm_id, now()->subHour(), ['status' => 'draft']);
+        $this->threeDimension($draft->umkm_id, now()->addHour(), ['ins_score' => 90, 'ect_score' => 90, 'ops_score' => 90]);
+        $this->threeDimension(Umkm::factory()->create()->id, now()->subHour(), ['ins_score' => 90, 'ect_score' => 90, 'ops_score' => 90]);
+
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $this->assertDatabaseCount('webhook_outbox', 1);
+        $data = $this->soleEventPayload()['data'];
+        $this->assertArrayHasKey('three_dimension', $data);
+        $this->assertNull($data['three_dimension']);
+    }
+
+    public function test_partial_or_legacy_three_dimension_assessment_is_not_presented_as_complete(): void
+    {
+        $this->freezeSecond();
+        $draft = $this->completeDraft();
+        $source = $this->threeDimension($draft->umkm_id, null, ['ins_score' => null, 'ect_score' => 60, 'ops_score' => 70], now()->subHours(2));
+
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $snapshot = $this->soleEventPayload()['data']['three_dimension'];
+        $this->assertSame($source->id, $snapshot['evaluation_id']);
+        $this->assertSame(now()->subHours(2)->utc()->format('Y-m-d\TH:i:s\Z'), $snapshot['assessed_at']);
+        $this->assertFalse($snapshot['is_complete']);
+        $this->assertEquals(['ins' => null, 'ect' => 60.0, 'ops' => 70.0], $snapshot['scores']);
+    }
+
+    public function test_queued_event_is_not_changed_by_later_three_dimension_changes(): void
+    {
+        $this->freezeSecond();
+        $draft = $this->completeDraft();
+        $this->threeDimension($draft->umkm_id, now()->subHour(), ['ins_score' => 40, 'ect_score' => 40, 'ops_score' => 40]);
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+        $payload = DB::table('webhook_outbox')->value('payload');
+
+        $this->threeDimension($draft->umkm_id, now(), ['ins_score' => 95, 'ect_score' => 95, 'ops_score' => 95]);
+        Evaluation::query()->update(['ins_score' => 1]);
+
+        $this->assertSame($payload, DB::table('webhook_outbox')->value('payload'));
+    }
+
+    public function test_business_context_snapshots_safe_profile_fields_and_maps_yearly_revenue_to_annual(): void
+    {
+        $draft = $this->completeDraft();
+        $draft->umkm->forceFill([
+            'name' => 'Kopi Contoh', 'city' => 'Jakarta', 'year_founded' => 2021, 'employee_count' => 5,
+            'business_capital' => 50000000, 'omzet' => 15000000, 'omzet_period' => 'yearly',
+            'owner_name' => 'Pemilik Rahasia', 'whatsapp_number' => '6281234567890', 'business_email' => 'rahasia@example.test',
+            'address' => 'Jalan Rahasia 1', 'latitude' => -6.2000000, 'longitude' => 106.8000000,
+            'nib' => '0123456789012', 'pic_name' => 'PIC Rahasia', 'postal_code' => '12345',
+        ])->save();
+
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $payload = DB::table('webhook_outbox')->value('payload');
+        $this->assertEquals([
+            'name' => 'Kopi Contoh',
+            'sector' => $draft->umkm->sector->name,
+            'location' => 'Jakarta',
+            'started_year' => 2021,
+            'employee_count' => 5,
+            'business_capital' => 50000000,
+            'revenue' => ['amount' => 15000000, 'period' => 'annual'],
+        ], $this->soleEventPayload()['data']['business_context']);
+        foreach (['Pemilik Rahasia', '6281234567890', 'rahasia@example.test', 'Jalan Rahasia 1', 'PIC Rahasia', '0123456789012', '12345', '-6.2'] as $secret) {
+            $this->assertStringNotContainsString($secret, $payload);
+        }
+    }
+
+    public function test_business_context_keeps_zero_distinct_from_unknown_values_and_unknown_period_as_null(): void
+    {
+        $draft = $this->completeDraft();
+        $draft->umkm->forceFill([
+            'city' => null, 'year_founded' => null, 'employee_count' => null, 'business_capital' => 0,
+            'omzet' => 0, 'omzet_period' => null,
+        ])->save();
+
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $this->assertEquals([
+            'name' => $draft->umkm->name,
+            'sector' => $draft->umkm->sector->name,
+            'location' => null,
+            'started_year' => null,
+            'employee_count' => null,
+            'business_capital' => 0,
+            'revenue' => ['amount' => 0, 'period' => null],
+        ], $this->soleEventPayload()['data']['business_context']);
+    }
+
+    public function test_business_context_stays_frozen_after_later_profile_changes(): void
+    {
+        $draft = $this->completeDraft();
+        $draft->umkm->forceFill(['business_capital' => 1000000])->save();
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+        $payload = DB::table('webhook_outbox')->value('payload');
+
+        Umkm::query()->whereKey($draft->umkm_id)->update([
+            'business_capital' => 2000000, 'city' => 'Bandung', 'omzet_period' => 'monthly', 'employee_count' => 9,
+        ]);
+
+        $this->assertSame($payload, DB::table('webhook_outbox')->value('payload'));
     }
 
     public function test_unique_constraint_failure_rolls_back_the_evaluation_update(): void
@@ -501,6 +655,29 @@ class HermesWebhookOutboxTest extends TestCase
     {
         $this->artisan('queue:work', ['connection' => 'database', '--queue' => DeliverHermesWebhook::QUEUE, '--once' => true])
             ->assertSuccessful();
+    }
+
+    /** @return array<string, mixed> */
+    private function soleEventPayload(): array
+    {
+        return json_decode(DB::table('webhook_outbox')->sole()->payload, true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function threeDimension(int $umkmId, ?CarbonInterface $submittedAt, array $attributes = [], ?CarbonInterface $createdAt = null): Evaluation
+    {
+        $evaluation = (new Evaluation)->forceFill([
+            'umkm_id' => $umkmId,
+            'status' => 'final',
+            'ins_score' => 50, 'ect_score' => 50, 'ops_score' => 50, 'average_score' => 50, 'category' => 'CUKUP',
+            'submitted_at' => $submittedAt,
+            'created_at' => $createdAt ?? $submittedAt ?? now(),
+            'updated_at' => $createdAt ?? $submittedAt ?? now(),
+            ...$attributes,
+        ]);
+        $evaluation->save();
+
+        return $evaluation;
     }
 
     private function completeDraft(): SixFactorEvaluation

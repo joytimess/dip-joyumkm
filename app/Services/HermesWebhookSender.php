@@ -75,7 +75,11 @@ class HermesWebhookSender
                 ])
                 ->withBody($body, 'application/json')
                 ->post((string) config('services.hermes_webhook.url'));
-        } catch (ConnectionException) {
+        } catch (ConnectionException $e) {
+            logger()->warning('Hermes webhook connection failure', [
+                'event_id' => $event->event_id,
+                'exception' => $e->getMessage(),
+            ]);
             return [
                 'http_status' => null,
                 'error' => 'network_error',

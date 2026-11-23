@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Jobs\DeliverHermesWebhook;
+use App\Models\Evaluation;
 use App\Models\SixFactorEvaluation;
+use App\Models\Umkm;
 use App\Models\WebhookOutbox;
 use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Illuminate\Database\QueryException;
@@ -19,6 +21,8 @@ class HermesWebhookOutbox
 {
     private const LEASE_SECONDS = 45;
 
+    private const EVENT_VERSION = 2;
+
     public function __construct(
         private readonly HermesWebhookSender $sender,
         private readonly QueueFactory $queue,
@@ -29,22 +33,27 @@ class HermesWebhookOutbox
         $metadata = [
             'event_id' => (string) Str::uuid(),
             'event_type' => 'evaluation.finalized',
-            'event_version' => 1,
+            'event_version' => self::EVENT_VERSION,
         ];
+        $occurredAt = $evaluation->finalized_at->copy()->utc();
         $event = (new WebhookOutbox)->setConnection($evaluation->getConnectionName())->forceFill([
             ...$metadata,
             'aggregate_id' => $evaluation->id,
             'payload' => [
                 ...$metadata,
                 'source' => 'joyumkm',
-                'occurred_at' => $evaluation->finalized_at->utc()->format('Y-m-d\TH:i:s\Z'),
+                'occurred_at' => $occurredAt->format('Y-m-d\TH:i:s\Z'),
                 'data' => [
-                    'evaluation_id' => $evaluation->id,
                     'umkm_id' => $evaluation->umkm_id,
-                    'status' => $evaluation->status,
-                    'scores' => $evaluation->only(SixFactorEvaluation::FACTORS),
-                    'total_score' => $evaluation->total_score,
-                    'category' => $evaluation->category,
+                    'business_context' => $this->businessContextSnapshot($evaluation),
+                    'six_factor' => [
+                        'evaluation_id' => $evaluation->id,
+                        'status' => $evaluation->status,
+                        'total_score' => $evaluation->total_score,
+                        'category' => $evaluation->category,
+                        'scores' => $evaluation->only(SixFactorEvaluation::FACTORS),
+                    ],
+                    'three_dimension' => $this->threeDimensionSnapshot($evaluation),
                 ],
             ],
             'next_attempt_at' => now(),
@@ -62,6 +71,74 @@ class HermesWebhookOutbox
         }
 
         $event->getConnection()->afterCommit(fn () => $this->dispatch($event->id));
+    }
+
+    /**
+     * Konteks usaha saat finalisasi. Kontak pemilik, alamat, koordinat, dan NIB sengaja tidak dikirim.
+     * Omzet periode yang tidak diketahui dikirim sebagai null; periode tahunan dinyatakan sebagai "annual".
+     *
+     * @return array{name: string, sector: ?string, location: ?string, started_year: ?int, employee_count: ?int, business_capital: ?int, revenue: array{amount: int, period: ?string}}|null
+     */
+    private function businessContextSnapshot(SixFactorEvaluation $evaluation): ?array
+    {
+        $umkm = Umkm::on($evaluation->getConnectionName())
+            ->with('sector:id,name')
+            ->whereKey($evaluation->umkm_id)
+            ->first(['id', 'name', 'sector_id', 'city', 'year_founded', 'employee_count', 'business_capital', 'omzet', 'omzet_period']);
+        if ($umkm === null) {
+            return null;
+        }
+
+        return [
+            'name' => $umkm->name,
+            'sector' => $umkm->sector?->name,
+            'location' => $umkm->city,
+            'started_year' => $umkm->year_founded,
+            'employee_count' => $umkm->employee_count,
+            'business_capital' => $umkm->business_capital,
+            'revenue' => [
+                'amount' => $umkm->omzet,
+                'period' => match ($umkm->omzet_period) {
+                    'monthly' => 'monthly',
+                    'yearly' => 'annual',
+                    default => null,
+                },
+            ],
+        ];
+    }
+
+    /**
+     * Snapshot V1 final terbaru milik UMKM yang sama pada atau sebelum waktu finalisasi V2.
+     * Waktu penilaian V1 adalah submitted_at (cadangan created_at), lalu ID sebagai pemutus seri.
+     * Skor 0-100 apa adanya; null berarti dimensi tidak punya pertanyaan aktif.
+     *
+     * @return array{evaluation_id: int, status: string, assessed_at: string, average_score: ?float, category: ?string, is_complete: bool, scores: array{ins: ?float, ect: ?float, ops: ?float}}|null
+     */
+    private function threeDimensionSnapshot(SixFactorEvaluation $evaluation): ?array
+    {
+        $assessedAt = 'COALESCE(submitted_at, created_at)';
+        $source = Evaluation::on($evaluation->getConnectionName())
+            ->where('umkm_id', $evaluation->umkm_id)
+            ->where('status', 'final')
+            ->whereRaw($assessedAt.' <= ?', [$evaluation->finalized_at])
+            ->orderByRaw($assessedAt.' DESC')
+            ->orderByDesc('id')
+            ->first(['id', 'ins_score', 'ect_score', 'ops_score', 'average_score', 'category', 'submitted_at', 'created_at']);
+        if ($source === null) {
+            return null;
+        }
+
+        $scores = ['ins' => $source->ins_score, 'ect' => $source->ect_score, 'ops' => $source->ops_score];
+
+        return [
+            'evaluation_id' => $source->id,
+            'status' => 'final',
+            'assessed_at' => ($source->submitted_at ?? $source->created_at)->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
+            'average_score' => $source->average_score,
+            'category' => $source->category,
+            'is_complete' => ! in_array(null, $scores, true),
+            'scores' => $scores,
+        ];
     }
 
     /** @return array{queued: int, failed: int} */
