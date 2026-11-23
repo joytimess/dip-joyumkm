@@ -54,10 +54,13 @@ class SixFactorEvaluationDatabaseTest extends TestCase
     public function test_migration_preserves_v1_schema_and_data_and_only_rolls_back_when_empty(): void
     {
         $migration = require database_path('migrations/2026_11_20_084534_create_six_factor_evaluations_table.php');
+        // Tabel laporan Intelligence memiliki FK ke tabel ini sehingga harus dilepas lebih dulu, seperti urutan rollback sebenarnya.
+        $dependent = require database_path('migrations/2026_11_23_050328_create_intelligence_reports_table.php');
         $umkm = Umkm::factory()->create();
         $umkm->user->createToken('fixture');
         $legacy = $umkm->evaluations()->create(['status' => 'final', 'average_score' => 78, 'submitted_at' => now()]);
         $legacy->answers()->create(['question_id' => Question::query()->firstOrFail()->id, 'value' => 3]);
+        $dependent->down();
         $migration->down();
 
         try {
@@ -86,6 +89,9 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         } finally {
             if (! Schema::hasTable(self::TABLE)) {
                 $migration->up();
+            }
+            if (! Schema::hasTable('intelligence_reports')) {
+                $dependent->up();
             }
         }
     }
