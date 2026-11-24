@@ -151,6 +151,16 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
         return saved;
     }
 
+    const contactEmail = forms.kontak.elements.business_email;
+    const contactConsent = forms.kontak.elements.notification_consent;
+    const emailChangeNotice = document.getElementById('umkm-notification-change');
+    let contactAtEdit;
+    contactEmail.addEventListener('input', () => {
+        const emailChanged = contactEmail.value.trim() !== (contactAtEdit.business_email ?? '').trim();
+        contactConsent.checked = !emailChanged && contactAtEdit.notification_consent_active;
+        emailChangeNotice.hidden = !emailChanged || !contactAtEdit.notification_consent_active;
+    }, { signal });
+
     const editors = {
         profil: createInlineEditor({
             form: forms.profil,
@@ -251,26 +261,49 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
             view: views.kontak,
             editButton: editButton('kontak'),
             signal,
+            validateUnchanged: false,
             prefill: (form) => {
+                contactAtEdit = current;
                 form.elements.owner_name.value = current.owner_name ?? '';
                 form.elements.business_email.value = current.business_email ?? '';
+                contactConsent.checked = current.notification_consent_active;
+                emailChangeNotice.hidden = true;
                 form.elements.whatsapp_number.value = (current.whatsapp_number ?? '').replace(/^62/, '');
                 form.elements.pic_name.value = current.pic_name ?? '';
                 form.elements.website_url.value = current.website_url ?? '';
                 form.elements.social_media_url.value = current.social_media_url ?? '';
                 renderWhatsappFormStatus();
             },
-            toPayload: (form) => ({
-                owner_name: form.elements.owner_name.value.trim(),
-                business_email: form.elements.business_email.value.trim(),
-                whatsapp_number: whatsappPayload(form.elements.whatsapp_number.value),
-                pic_name: nullableText(form.elements.pic_name.value),
-                website_url: nullableText(form.elements.website_url.value),
-                social_media_url: nullableText(form.elements.social_media_url.value),
-            }),
-            submit: saveContact,
+            validate: () => {
+                const emailChanged = contactEmail.value.trim() !== (contactAtEdit.business_email ?? '').trim();
+                const grants = contactConsent.checked && (emailChanged || !contactAtEdit.notification_consent_active);
+                const emailValid = emailChanged ? contactEmail.validity.valid : contactAtEdit.business_email_valid;
+                return grants && !emailValid ? { notification_consent: ['Masukkan email usaha yang valid.'] } : {};
+            },
+            toPayload: (form) => {
+                const fields = {
+                    owner_name: nullableText(form.elements.owner_name.value),
+                    business_email: nullableText(contactEmail.value),
+                    whatsapp_number: whatsappPayload(form.elements.whatsapp_number.value) || null,
+                    pic_name: nullableText(form.elements.pic_name.value),
+                    website_url: nullableText(form.elements.website_url.value),
+                    social_media_url: nullableText(form.elements.social_media_url.value),
+                };
+                const body = Object.fromEntries(Object.entries(fields).filter(([key, value]) =>
+                    value !== (contactAtEdit[key] || null)));
+                if (contactConsent.checked && (!contactAtEdit.notification_consent_active || 'business_email' in body)) {
+                    body.notification_consent = 'grant';
+                    body.expected_business_email = contactAtEdit.business_email;
+                    body.consented_business_email = fields.business_email;
+                } else if (!contactConsent.checked && contactAtEdit.notification_consent_active && !('business_email' in body)) {
+                    body.notification_consent = 'revoke';
+                }
+                return body;
+            },
+            submit: (body) => Object.keys(body).length ? saveContact(body) : null,
             onEnd: () => renderWhatsappFormStatus(),
             onSaved: (saved) => {
+                if (!saved) return;
                 applyUmkm(saved);
                 toast('Data kontak berhasil diperbarui.');
             },
@@ -434,6 +467,11 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
         renderProfile();
         renderLocation();
         renderContact();
+        const consentStatus = current.notification_consent_active ? 'Persetujuan aktif' : 'Belum menyetujui';
+        const emailStatus = current.business_email ? 'Email usaha tidak valid.' : 'Email usaha belum tersedia.';
+        document.getElementById('detail-notification-consent').textContent = current.business_email_valid
+            ? consentStatus
+            : `${consentStatus}. ${emailStatus}`;
         renderAssessment3d();
         void refreshLocationPreview();
     }

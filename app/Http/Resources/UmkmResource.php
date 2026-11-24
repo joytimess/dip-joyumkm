@@ -33,6 +33,8 @@ class UmkmResource extends JsonResource
                 ]),
                 'whatsapp_registration_status' => $this->wa_registration_status ?? OpenWaNumberCheckService::UNCHECKED,
                 'whatsapp_checked_at' => $this->wa_checked_at?->toISOString(),
+                'notification_consent_active' => $this->resource->hasNotificationConsent(),
+                'business_email_valid' => filter_var(trim((string) $this->business_email), FILTER_VALIDATE_EMAIL) !== false,
             ]),
         ];
     }

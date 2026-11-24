@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -106,12 +108,42 @@ class UmkmService
 
     public function update(User $user, int $id, array $data): Umkm
     {
-        $umkm = $this->owned($user, $id)->fill($data);
-        if ($umkm->isDirty('whatsapp_number')) {
-            $umkm->forceFill(['wa_registration_status' => OpenWaNumberCheckService::UNCHECKED, 'wa_checked_at' => null]);
-        }
         try {
-            $umkm->save();
+            DB::transaction(function () use ($user, $id, $data): void {
+                $umkm = $user->umkms()->whereKey($id)->lockForUpdate()->firstOrFail();
+                $intent = $data['notification_consent'] ?? null;
+                if ($intent === 'grant' && trim((string) $umkm->business_email) !== trim((string) $data['expected_business_email'])) {
+                    throw new ConflictHttpException('Email usaha telah berubah. Muat ulang data UMKM sebelum memberikan persetujuan.');
+                }
+
+                $umkm->fill(Arr::except($data, [
+                    'notification_consent', 'expected_business_email', 'consented_business_email',
+                ]));
+                if ($umkm->isDirty('whatsapp_number')) {
+                    $umkm->forceFill(['wa_registration_status' => OpenWaNumberCheckService::UNCHECKED, 'wa_checked_at' => null]);
+                }
+                if ($intent === 'revoke') {
+                    $umkm->forceFill([
+                        'notification_consent_at' => null,
+                        'notification_consent_version' => null,
+                        'notification_consent_by_user_id' => null,
+                    ]);
+                }
+                if ($intent === 'grant' && (trim((string) $umkm->business_email) !== $data['consented_business_email']
+                    || ! filter_var(trim((string) $umkm->business_email), FILTER_VALIDATE_EMAIL))) {
+                    throw ValidationException::withMessages(['notification_consent' => ['Setujui alamat email usaha yang valid dan akan disimpan.']]);
+                }
+                $umkm->save();
+
+                // Simpan grant setelah hook perubahan email mencabut consent lama, dalam transaksi yang sama.
+                if ($intent === 'grant') {
+                    $umkm->forceFill([
+                        'notification_consent_at' => now()->utc(),
+                        'notification_consent_version' => 'v1',
+                        'notification_consent_by_user_id' => $user->id,
+                    ])->save();
+                }
+            });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages(['name' => ['Nama UMKM sudah digunakan.']]);
         }

@@ -76,6 +76,12 @@ class Umkm extends Model
         });
     }
 
+    public function hasNotificationConsent(): bool
+    {
+        return $this->notification_consent_at !== null
+            && trim((string) $this->notification_consent_version) !== '';
+    }
+
     protected function casts(): array
     {
         return [

@@ -47,6 +47,9 @@ class UpdateUmkmRequest extends StoreUmkmRequest
         $rules['longitude'] = ['present_with:latitude', 'required_with:latitude', 'nullable', 'numeric', 'between:-180,180'];
 
         $rules['record_id'] = ['required', 'integer', 'min:1'];
+        $rules['notification_consent'] = ['sometimes', Rule::in(['grant', 'revoke'])];
+        $rules['expected_business_email'] = ['present_if:notification_consent,grant', 'nullable', 'string', 'max:254'];
+        $rules['consented_business_email'] = ['required_if:notification_consent,grant', 'nullable', 'string', 'email', 'max:254'];
 
         return $rules;
     }
@@ -55,7 +58,9 @@ class UpdateUmkmRequest extends StoreUmkmRequest
     {
         return [
             function (Validator $validator): void {
-                if ($this->only(array_diff(array_keys($validator->getRules()), ['record_id', 'user_id'])) === []) {
+                if ($this->only(array_diff(array_keys($validator->getRules()), [
+                    'record_id', 'user_id', 'expected_business_email', 'consented_business_email',
+                ])) === []) {
                     $validator->errors()->add('body', 'Kirim setidaknya satu field UMKM yang dapat diubah.');
                 }
             },

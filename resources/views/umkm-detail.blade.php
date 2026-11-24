@@ -223,6 +223,11 @@
                 <div><dt>Nama PIC</dt><dd data-field="pic_name"></dd></div>
                 <div><dt>Website</dt><dd data-field="website_url"></dd></div>
                 <div><dt>Media sosial</dt><dd data-field="social_media_url"></dd></div>
+                <div class="detail-grid-wide">
+                    <dt>Pengaturan Pengiriman Laporan</dt>
+                    <dd id="detail-notification-consent"></dd>
+                    <p class="section-desc">Pengiriman otomatis belum diaktifkan.</p>
+                </div>
             </dl>
             <form id="form-kontak" class="detail-form" data-editor="kontak" hidden novalidate>
                 <div class="form-message" role="alert" tabindex="-1" hidden></div>
@@ -260,6 +265,17 @@
                             <p class="field-error" data-error="{{ $field }}" id="umkm-error-{{ $field }}"></p>
                         </div>
                     @endforeach
+                    <div class="field form-field full">
+                        <h3 class="section-title">Pengaturan Pengiriman Laporan</h3>
+                        <label for="umkm-notification-consent">
+                            <input id="umkm-notification-consent" type="checkbox" name="notification_consent"
+                                aria-describedby="umkm-notification-help umkm-notification-change">
+                            Saya memiliki persetujuan penerima dan menyetujui pengiriman laporan evaluasi dan perkembangan UMKM melalui alamat email ini.
+                        </label>
+                        <small id="umkm-notification-help" class="muted">Pengiriman otomatis belum diaktifkan. Setelah aktif, laporan dikirim setelah penilaian Enam Faktor difinalisasi dan laporan Intelligence selesai diproses. Kosongkan centang dan simpan untuk mencabut persetujuan.</small>
+                        <small id="umkm-notification-change" class="muted" role="status" hidden>Persetujuan lama akan dicabut saat alamat baru disimpan. Centang kembali jika Anda menyetujui alamat baru.</small>
+                        <p class="field-error" data-error="notification_consent" id="umkm-error-notification_consent"></p>
+                    </div>
                 </fieldset>
                 <div class="detail-form-actions">
                     <button type="button" class="button button-outline" data-cancel>Batal</button>

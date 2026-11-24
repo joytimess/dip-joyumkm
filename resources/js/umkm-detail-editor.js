@@ -15,6 +15,7 @@ export const discardConfirmation = {
  */
 export function createInlineEditor({
     form, view, editButton, signal, prefill, validate = () => ({}), toPayload, submit, onStart = () => {}, onEnd = () => {}, onSaved,
+    validateUnchanged = true,
 }) {
     const fieldset = form.querySelector('fieldset');
     const saveButton = form.querySelector('[data-save]');
@@ -23,10 +24,10 @@ export function createInlineEditor({
     let active = false;
     let saving = false;
     let confirming = false;
-    let snapshot = '';
+    let snapshot = [];
 
-    const formValues = () => JSON.stringify(fields.map((field) => field.value));
-    const isDirty = () => active && snapshot !== formValues();
+    const fieldValue = (field) => field.type === 'checkbox' ? field.checked : field.value;
+    const isDirty = () => active && fields.some((field, index) => snapshot[index] !== fieldValue(field));
 
     function setActive(on) {
         active = on;
@@ -52,7 +53,7 @@ export function createInlineEditor({
         if (active || saving) return;
         clearErrors(form);
         prefill(form);
-        snapshot = formValues();
+        snapshot = fields.map(fieldValue);
         setActive(true);
         onStart();
         form.querySelector('input:not([readonly]), textarea')?.focus();
@@ -77,7 +78,8 @@ export function createInlineEditor({
         if (saving || !active) return;
         clearErrors(form);
         const errors = { ...validate(form) };
-        for (const field of fields) {
+        for (const [index, field] of fields.entries()) {
+            if (field.type === 'checkbox' || (!validateUnchanged && snapshot[index] === fieldValue(field))) continue;
             if (errors[field.name]) continue;
             const message = fieldError(field, field.value.trim());
             if (message) errors[field.name] = [message];
