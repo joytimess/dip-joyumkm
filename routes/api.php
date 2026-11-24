@@ -5,13 +5,22 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EvaluationController;
+use App\Http\Controllers\Api\IntelligenceArtifactController;
+use App\Http\Controllers\Api\IntelligenceArtifactDownloadController;
 use App\Http\Controllers\Api\IntelligenceCallbackController;
+use App\Http\Controllers\Api\IntelligenceDeliveryStatusController;
+use App\Http\Controllers\Api\IntelligenceRecipientController;
 use App\Http\Controllers\Api\IntelligenceReportController;
+use App\Http\Controllers\Api\IntelligenceSnapshotController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\SixFactorEvaluationController;
 use App\Http\Controllers\Api\UmkmController;
+use App\Http\Middleware\VerifyIntelligenceArtifactSignature;
 use App\Http\Middleware\VerifyIntelligenceCallbackSignature;
+use App\Http\Middleware\VerifyIntelligenceDeliverySignature;
+use App\Http\Middleware\VerifyIntelligenceRecipientSignature;
+use App\Http\Middleware\VerifyIntelligenceSnapshotSignature;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:joyumkm-register');
@@ -20,6 +29,27 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Callback server-ke-server dari Hermes: tanpa Sanctum, dilindungi HMAC khusus callback.
 Route::post('/internal/intelligence/callback', [IntelligenceCallbackController::class, 'store'])
     ->middleware(VerifyIntelligenceCallbackSignature::class);
+
+Route::post('/internal/intelligence/deliveries', [IntelligenceDeliveryStatusController::class, 'store'])
+    ->middleware(['throttle:60,1,delivery-status', VerifyIntelligenceDeliverySignature::class]);
+Route::options('/internal/intelligence/deliveries', fn () => abort(405, '', ['Allow' => 'POST']));
+
+Route::get('/internal/intelligence/recipients/{eventId}', [IntelligenceRecipientController::class, 'show'])
+    ->where('eventId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+    ->middleware(['throttle:joyumkm-intelligence-recipient', VerifyIntelligenceRecipientSignature::class]);
+Route::options('/internal/intelligence/recipients/{eventId}', fn () => abort(405, '', ['Allow' => 'GET']));
+
+// Pull snapshot historis P3-01: GET read-only, ditandatangani secret snapshot terpisah, terikat pada satu event.
+Route::get('/internal/intelligence/events/{eventId}/snapshot', [IntelligenceSnapshotController::class, 'show'])
+    ->where('eventId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+    ->middleware(VerifyIntelligenceSnapshotSignature::class);
+
+// Unggah artefak P4-01: PUT biner, HMAC khusus artefak terikat method/path/event/kind/digest. Tanpa Sanctum.
+Route::put('/internal/intelligence/artifacts/{eventId}/{kind}', [IntelligenceArtifactController::class, 'update'])
+    ->where('eventId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+    ->where('kind', 'pdf|xlsx')
+    ->middleware(['throttle:joyumkm-intelligence-artifact', VerifyIntelligenceArtifactSignature::class])
+    ->name('internal.intelligence.artifacts.upload');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -56,6 +86,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/', 'index');
             Route::get('/{reportId}', 'show');
         });
+    Route::get('/umkms/{id}/intelligence-reports/{reportId}/artifacts', [IntelligenceArtifactDownloadController::class, 'index'])
+        ->whereNumber('id')->whereNumber('reportId');
+    Route::get('/umkms/{id}/intelligence-reports/{reportId}/artifacts/{kind}', [IntelligenceArtifactDownloadController::class, 'show'])
+        ->whereNumber('id')->whereNumber('reportId')->where('kind', 'pdf|xlsx')->name('intelligence.artifacts.download');
     Route::get('/umkms/options', [UmkmController::class, 'options']);
     Route::get('/umkms/summary', [UmkmController::class, 'summary']);
     Route::post('/umkms/whatsapp-check', [UmkmController::class, 'whatsappCheck'])

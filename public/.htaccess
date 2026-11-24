@@ -1,3 +1,7 @@
+<If "%{REQUEST_URI} =~ m#^/api/internal/intelligence/deliveries(?:/|$)#">
+    LimitRequestBody 16384
+</If>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -15,6 +19,8 @@
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} !^/api/internal/intelligence/recipients(?:/|$) [NC]
+    RewriteCond %{REQUEST_URI} !^/api/internal/intelligence/deliveries(?:/|$) [NC]
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 

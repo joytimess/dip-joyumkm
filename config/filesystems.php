@@ -47,6 +47,15 @@ return [
             'report' => false,
         ],
 
+        // Penyimpanan privat artefak Intelligence: tanpa URL, tanpa symlink publik, di luar storage/app/public.
+        'intelligence' => [
+            'driver' => 'local',
+            'root' => env('INTELLIGENCE_ARTIFACT_ROOT', storage_path('app/private/intelligence')),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

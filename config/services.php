@@ -60,6 +60,34 @@ return [
         'max_body_bytes' => 2 * 1024 * 1024,
     ],
 
+    // Pull snapshot historis (GET, read-only) dari Hermes. Secret HARUS berbeda dari callback dan webhook.
+    'hermes_intelligence_snapshot' => [
+        'secret' => env('HERMES_INTELLIGENCE_SNAPSHOT_SECRET'),
+        'tolerance_seconds' => (int) env('HERMES_INTELLIGENCE_SNAPSHOT_TOLERANCE_SECONDS', 300),
+    ],
+
+    // Unggah artefak PDF/XLSX (PUT biner). Secret HARUS berbeda dari callback, webhook, dan snapshot; minimal 32 karakter.
+    'hermes_intelligence_artifact' => [
+        'python' => env('INTELLIGENCE_PDF_PYTHON', PHP_OS_FAMILY === 'Windows' ? 'python.exe' : 'python3'),
+        'qpdf' => env('INTELLIGENCE_PDF_QPDF', PHP_OS_FAMILY === 'Windows' ? 'qpdf.exe' : 'qpdf'),
+        'secret' => env('HERMES_INTELLIGENCE_ARTIFACT_SECRET'),
+        'tolerance_seconds' => (int) env('HERMES_INTELLIGENCE_ARTIFACT_TOLERANCE_SECONDS', 300),
+    ],
+
+    'hermes_intelligence_delivery_status' => [
+        'secret' => env('HERMES_INTELLIGENCE_DELIVERY_STATUS_SECRET'),
+        'tolerance_seconds' => env('HERMES_INTELLIGENCE_DELIVERY_STATUS_TOLERANCE_SECONDS', 300),
+        'message_domain' => env('INTELLIGENCE_DELIVERY_STATUS_MESSAGE_DOMAIN'),
+    ],
+
+    'hermes_intelligence_recipient' => [
+        'secret' => env('HERMES_INTELLIGENCE_RECIPIENT_SECRET'),
+        'tolerance_seconds' => env('HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS', 300),
+        'ttl_seconds' => env('INTELLIGENCE_RECIPIENT_TTL_SECONDS', 60),
+        'test_mode' => env('INTELLIGENCE_EMAIL_TEST_MODE', true),
+        'test_allowlist' => env('INTELLIGENCE_EMAIL_TEST_ALLOWLIST', ''),
+    ],
+
     'intelligence' => [
         // Kunci HMAC untuk identitas penerima (fingerprint). Minimal 32 karakter; jangan dibagikan ke Hermes.
         'recipient_pepper' => env('INTELLIGENCE_RECIPIENT_PEPPER'),

@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $signedDelivery = fn (Request $request): bool => $request->is('api/internal/intelligence/deliveries');
+        $middleware->trimStrings(except: [$signedDelivery]);
+        $middleware->convertEmptyStringsToNull(except: [$signedDelivery]);
         $middleware->prepend(PreserveSixFactorHttpMethod::class);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/login');
     })
@@ -29,6 +32,42 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request): bool => $request->is('api/*') || $request->expectsJson(),
         );
         $exceptions->render(function (Throwable $exception, Request $request): ?JsonResponse {
+            if ($request->is('api/internal/intelligence/deliveries')) {
+                $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 503;
+                $code = match ($status) {
+                    400 => 'invalid_request',
+                    401 => 'unauthorized',
+                    405 => 'method_not_allowed',
+                    413 => 'payload_too_large',
+                    415 => 'unsupported_media_type',
+                    429 => 'rate_limited',
+                    default => 'delivery_unavailable',
+                };
+
+                return response()->json(['code' => $code], $status, [
+                    ...($exception instanceof HttpExceptionInterface ? $exception->getHeaders() : []),
+                    'Cache-Control' => 'no-store',
+                ]);
+            }
+
+            if ($request->is('api/internal/intelligence/recipients', 'api/internal/intelligence/recipients/*')) {
+                $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 503;
+                $code = match ($status) {
+                    400 => 'invalid_request',
+                    401 => 'unauthorized',
+                    404 => 'event_not_found',
+                    405 => 'method_not_allowed',
+                    409 => 'event_identity_conflict',
+                    429 => 'rate_limited',
+                    default => 'recipient_unavailable',
+                };
+
+                return response()->json(['code' => $code], $status, [
+                    ...($exception instanceof HttpExceptionInterface ? $exception->getHeaders() : []),
+                    'Cache-Control' => 'no-store',
+                ]);
+            }
+
             if (! $request->is('api/*')) {
                 return null;
             }

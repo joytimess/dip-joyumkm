@@ -28,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('joyumkm-register', fn (Request $request): Limit => Limit::perMinute(5)
             ->by((string) $request->ip()));
+        RateLimiter::for('joyumkm-intelligence-artifact', fn (Request $request): Limit => Limit::perMinute(120)
+            ->by((string) $request->ip()));
+        RateLimiter::for('joyumkm-intelligence-recipient', fn (Request $request): Limit => Limit::perMinute(60)
+            ->by((string) $request->ip()));
         RateLimiter::for('joyumkm-whatsapp-check', fn (Request $request): Limit => Limit::perMinute(10)
             ->by((string) $request->user()->id));
         RateLimiter::for('joyumkm-geocoding', fn (Request $request): Limit => Limit::perMinute(15)
