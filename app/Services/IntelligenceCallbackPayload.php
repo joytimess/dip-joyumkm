@@ -58,6 +58,18 @@ final class IntelligenceCallbackPayload
         return strtolower((string) $this->data['event_id']);
     }
 
+    /**
+     * Manifest artefak yang diharapkan (PDF + XLSX); null untuk callback legacy tanpa kunci `artifacts`.
+     *
+     * @return list<array{kind: string, mime: string, size_bytes: int, sha256: string}>|null
+     */
+    public function manifest(): ?array
+    {
+        return array_key_exists('artifacts', $this->data) && $this->data['artifacts'] !== null
+            ? IntelligenceArtifactContract::normalizeManifest($this->data['artifacts'])
+            : null;
+    }
+
     public function generatedAt(): CarbonImmutable
     {
         return CarbonImmutable::parse((string) $this->data['generated_at'])->utc()->startOfSecond();

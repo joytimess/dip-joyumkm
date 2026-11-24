@@ -6,9 +6,11 @@ namespace App\Http\Requests\Intelligence;
 
 use App\Http\Requests\ApiRequest;
 use App\Models\IntelligenceReport;
+use App\Services\IntelligenceArtifactContract;
 use App\Services\IntelligenceCallbackPayload;
 use Closure;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class IntelligenceCallbackRequest extends ApiRequest
 {
@@ -53,6 +55,21 @@ class IntelligenceCallbackRequest extends ApiRequest
             'model' => ['required', 'string', 'max:96', 'regex:/^[A-Za-z0-9][A-Za-z0-9._:+\-\[\]]*$/'],
             'generated_at' => ['required', 'string', 'regex:'.self::TIMESTAMP, 'date'],
 
+            'artifacts' => [
+                'sometimes', 'nullable',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    try {
+                        $manifest = IntelligenceArtifactContract::normalizeManifest($value);
+                    } catch (ValidationException) {
+                        $fail('Manifest artefak tidak valid.');
+
+                        return;
+                    }
+                    if ($value !== null && array_column($manifest, 'kind') !== array_keys(IntelligenceArtifactContract::KINDS)) {
+                        $fail('Manifest artefak wajib memuat tepat satu PDF dan satu XLSX.');
+                    }
+                },
+            ],
             'report' => ['required', $this->objectRule()],
             'report.executive_summary' => ['required', 'string', 'min:1', 'max:20000'],
             'report.business_profile' => ['required', $this->objectRule()],

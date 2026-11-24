@@ -9,6 +9,8 @@ use App\Models\SixFactorEvaluation;
 use App\Models\Umkm;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Builder;
+use RuntimeException;
 
 /**
  * Rekap bulanan per UMKM berbasis periode WIB.
@@ -16,6 +18,7 @@ use DateTimeInterface;
  * Enam Faktor memakai Final terbaru per bulan menurut finalized_at, lalu id terbesar.
  * Tiga Dimensi (V1) memakai COALESCE(submitted_at, created_at) tanpa kolom baru.
  * Bulan tanpa Final dikembalikan sebagai data_gap, bukan dihitung dari bulan lain.
+ * Rekap as-of satu Final (asOfEvaluation) membatasi data pada cutoff event sumber.
  */
 class SixFactorMonthlyRecapService
 {
@@ -42,12 +45,7 @@ class SixFactorMonthlyRecapService
      */
     public function history(Umkm $umkm, CarbonImmutable $asOf, int $months): array
     {
-        $periods = [];
-        $cursor = CarbonImmutable::parse($this->periodOf($asOf).'-01', SixFactorEvaluation::PERIOD_TIMEZONE);
-        for ($index = 0; $index < $months; $index++) {
-            $periods[] = $cursor->format('Y-m');
-            $cursor = $cursor->subMonth();
-        }
+        $periods = $this->periodsEndingAt($asOf, $months);
 
         $recap = $this->recap($umkm, $periods);
 
@@ -55,13 +53,49 @@ class SixFactorMonthlyRecapService
     }
 
     /**
+     * Riwayat as-of satu Final (anchor event). Bulan berjalan WIB diturunkan dari finalized_at anchor.
+     * Hanya Final dengan (finalized_at, id) <= anchor dan penilaian V1 dengan waktu <= finalized_at anchor
+     * yang dipakai, sehingga tidak ada data setelah cutoff event sumber.
+     *
+     * @return list<array<string, mixed>> Bulan terbaru lebih dulu; indeks 0 adalah bulan berjalan.
+     */
+    public function asOfEvaluation(Umkm $umkm, SixFactorEvaluation $anchor, int $months): array
+    {
+        if ($anchor->status !== SixFactorEvaluation::FINAL || $anchor->finalized_at === null) {
+            throw new RuntimeException('Cutoff hanya dapat diturunkan dari penilaian Enam Faktor yang Final.');
+        }
+
+        $cutoffAt = CarbonImmutable::instance($anchor->finalized_at)->utc();
+        $periods = $this->periodsEndingAt($cutoffAt, $months);
+
+        $recap = $this->recap($umkm, $periods, $cutoffAt, $anchor->id);
+
+        return array_map(static fn (string $period): array => $recap[$period], $periods);
+    }
+
+    /**
+     * @return list<string> Format YYYY-MM, bulan terbaru lebih dulu.
+     */
+    private function periodsEndingAt(CarbonImmutable $asOf, int $months): array
+    {
+        $periods = [];
+        $cursor = CarbonImmutable::parse($this->periodOf($asOf).'-01', SixFactorEvaluation::PERIOD_TIMEZONE);
+        for ($index = 0; $index < $months; $index++) {
+            $periods[] = $cursor->format('Y-m');
+            $cursor = $cursor->subMonth();
+        }
+
+        return $periods;
+    }
+
+    /**
      * @param  list<string>  $periods  Format YYYY-MM.
      * @return array<string, array<string, mixed>>
      */
-    private function recap(Umkm $umkm, array $periods): array
+    private function recap(Umkm $umkm, array $periods, ?CarbonImmutable $cutoffAt = null, int $cutoffEvaluationId = 0): array
     {
-        $sixFactor = $this->latestSixFactorFinals($umkm, $periods);
-        $threeDimension = $this->latestThreeDimensionFinals($umkm, $periods);
+        $sixFactor = $this->latestSixFactorFinals($umkm, $periods, $cutoffAt, $cutoffEvaluationId);
+        $threeDimension = $this->latestThreeDimensionFinals($umkm, $periods, $cutoffAt);
 
         $recap = [];
         foreach ($periods as $period) {
@@ -79,13 +113,18 @@ class SixFactorMonthlyRecapService
      * @param  list<string>  $periods
      * @return array<string, SixFactorEvaluation>
      */
-    private function latestSixFactorFinals(Umkm $umkm, array $periods): array
+    private function latestSixFactorFinals(Umkm $umkm, array $periods, ?CarbonImmutable $cutoffAt, int $cutoffEvaluationId): array
     {
         $latest = [];
         $finals = SixFactorEvaluation::query()
             ->where('umkm_id', $umkm->id)
             ->where('status', SixFactorEvaluation::FINAL)
             ->whereIn('period_month', $periods)
+            ->when($cutoffAt !== null, fn (Builder $query) => $query->where(fn (Builder $bound) => $bound
+                ->where('finalized_at', '<', $this->sqlUtc($cutoffAt))
+                ->orWhere(fn (Builder $tie) => $tie
+                    ->where('finalized_at', '=', $this->sqlUtc($cutoffAt))
+                    ->where('id', '<=', $cutoffEvaluationId))))
             ->orderByDesc('finalized_at')
             ->orderByDesc('id')
             ->get();
@@ -101,7 +140,7 @@ class SixFactorMonthlyRecapService
      * @param  list<string>  $periods
      * @return array<string, object>
      */
-    private function latestThreeDimensionFinals(Umkm $umkm, array $periods): array
+    private function latestThreeDimensionFinals(Umkm $umkm, array $periods, ?CarbonImmutable $cutoffAt): array
     {
         sort($periods);
         $start = CarbonImmutable::parse($periods[0].'-01', SixFactorEvaluation::PERIOD_TIMEZONE)->utc();
@@ -114,6 +153,7 @@ class SixFactorMonthlyRecapService
                 $start->format('Y-m-d H:i:s'),
                 $end->format('Y-m-d H:i:s'),
             ])
+            ->when($cutoffAt !== null, fn (Builder $query) => $query->whereRaw(self::ASSESSED_AT.' <= ?', [$this->sqlUtc($cutoffAt)]))
             ->orderByRaw(self::ASSESSED_AT.' DESC')
             ->orderByDesc('id')
             ->get(['id', 'ins_score', 'ect_score', 'ops_score', 'average_score', 'category', 'submitted_at', 'created_at'])
@@ -181,5 +221,10 @@ class SixFactorMonthlyRecapService
     private function utcIso(DateTimeInterface $instant): string
     {
         return CarbonImmutable::instance($instant)->utc()->format('Y-m-d\TH:i:s\Z');
+    }
+
+    private function sqlUtc(CarbonImmutable $instant): string
+    {
+        return $instant->utc()->format('Y-m-d H:i:s');
     }
 }

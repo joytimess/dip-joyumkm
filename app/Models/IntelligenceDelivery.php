@@ -53,6 +53,7 @@ class IntelligenceDelivery extends Model
         return [
             'attempt_no' => 'integer',
             'sent_at' => 'datetime',
+            'email_snapshot' => 'array',
         ];
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\IntelligenceArtifactManifest;
 use App\Models\IntelligenceReport;
 use App\Models\SixFactorEvaluation;
 use App\Models\User;
@@ -25,12 +26,14 @@ class IntelligenceReportService
 
     public const CONFLICT = 'conflict';
 
+    public const ARTIFACT_CONFLICT = 'artifact_conflict';
+
     private const EVENT_TYPE = 'evaluation.finalized';
 
     /**
      * Simpan laporan callback satu kali. Laporan yang sudah ada tidak pernah diubah.
      *
-     * @return array{outcome: string, report: IntelligenceReport}
+     * @return array{outcome: string, report: IntelligenceReport, manifest: IntelligenceArtifactManifest|null}
      */
     public function store(IntelligenceCallbackPayload $payload): array
     {
@@ -43,7 +46,7 @@ class IntelligenceReportService
     }
 
     /**
-     * @return array{outcome: string, report: IntelligenceReport}
+     * @return array{outcome: string, report: IntelligenceReport, manifest: IntelligenceArtifactManifest|null}
      */
     private function storeWithinTransaction(IntelligenceCallbackPayload $payload): array
     {
@@ -56,8 +59,10 @@ class IntelligenceReportService
             $report = $this->newReport($payload, $hash);
             try {
                 $report->save();
+                $manifest = $this->bindManifest($report, $payload->manifest());
+                $report->refresh();
 
-                return ['outcome' => self::STORED, 'report' => $report];
+                return ['outcome' => self::STORED, 'report' => $report, 'manifest' => $manifest];
             } catch (UniqueConstraintViolationException) {
                 // Callback paralel menang lebih dulu; baca ulang dengan locking read agar commit-nya terlihat.
                 $existing = IntelligenceReport::query()
@@ -69,11 +74,40 @@ class IntelligenceReportService
             }
         }
 
-        return [
-            'outcome' => $existing->event_id === $eventId && hash_equals($existing->report_hash, $hash)
-                ? self::DUPLICATE : self::CONFLICT,
-            'report' => $existing,
-        ];
+        $manifest = IntelligenceArtifactManifest::query()->where('report_id', $existing->id)->sharedLock()->first();
+        if ($existing->event_id !== $eventId || ! hash_equals($existing->report_hash, $hash)) {
+            return ['outcome' => self::CONFLICT, 'report' => $existing, 'manifest' => $manifest];
+        }
+
+        // Manifest yang sudah terikat immutable; laporan lama tanpa manifest tidak di-upgrade otomatis.
+        $incoming = $payload->manifest();
+        if ($manifest !== null && $incoming !== null
+            && ! hash_equals($manifest->transport_artifact_set_hash, IntelligenceArtifactContract::setHash($incoming))) {
+            return ['outcome' => self::ARTIFACT_CONFLICT, 'report' => $existing, 'manifest' => $manifest];
+        }
+
+        return ['outcome' => self::DUPLICATE, 'report' => $existing, 'manifest' => $manifest];
+    }
+
+    /**
+     * @param  list<array{kind: string, mime: string, size_bytes: int, sha256: string}>|null  $entries
+     */
+    private function bindManifest(IntelligenceReport $report, ?array $entries): ?IntelligenceArtifactManifest
+    {
+        if ($entries === null) {
+            return null;
+        }
+
+        $manifest = (new IntelligenceArtifactManifest)->forceFill([
+            'report_id' => $report->id,
+            'event_id' => $report->event_id,
+            'artifacts' => $entries,
+            'transport_artifact_set_hash' => IntelligenceArtifactContract::setHash($entries),
+            'created_at' => now()->startOfSecond(),
+        ]);
+        $manifest->save();
+
+        return $manifest;
     }
 
     /**
