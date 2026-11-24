@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\SixFactorEvaluationFactory;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,6 +34,28 @@ class SixFactorEvaluation extends Model
         'stabilitas',
         'kinerja',
     ];
+
+    public const PERIOD_TIMEZONE = 'Asia/Jakarta';
+
+    /**
+     * Bulan periode (YYYY-MM) menurut WIB untuk waktu finalisasi. Waktu asli tetap UTC.
+     */
+    public static function periodMonthFor(DateTimeInterface $finalizedAt): string
+    {
+        return CarbonImmutable::instance($finalizedAt)->setTimezone(self::PERIOD_TIMEZONE)->format('Y-m');
+    }
+
+    protected static function booted(): void
+    {
+        // period_month selalu diturunkan dari finalized_at saat menyimpan, sehingga tidak bisa menyimpang.
+        static::saving(function (SixFactorEvaluation $evaluation): void {
+            if ($evaluation->status === self::FINAL && $evaluation->finalized_at !== null) {
+                $evaluation->period_month = self::periodMonthFor($evaluation->finalized_at);
+            } elseif ($evaluation->period_month !== null) {
+                $evaluation->period_month = null;
+            }
+        });
+    }
 
     public function umkm(): BelongsTo
     {
