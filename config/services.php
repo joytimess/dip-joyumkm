@@ -54,6 +54,17 @@ return [
         'backoff_cap' => (int) env('HERMES_WEBHOOK_BACKOFF_CAP_SECONDS', 900),
     ],
 
+    'hermes_intelligence_callback' => [
+        'secret' => env('HERMES_INTELLIGENCE_CALLBACK_SECRET'),
+        'tolerance_seconds' => (int) env('HERMES_INTELLIGENCE_CALLBACK_TOLERANCE_SECONDS', 300),
+        'max_body_bytes' => 2 * 1024 * 1024,
+    ],
+
+    'intelligence' => [
+        // Kunci HMAC untuk identitas penerima (fingerprint). Minimal 32 karakter; jangan dibagikan ke Hermes.
+        'recipient_pepper' => env('INTELLIGENCE_RECIPIENT_PEPPER'),
+    ],
+
     'geocoding' => [
         'url' => env('GEOCODING_URL'),
         'allowed_hosts' => array_map(
