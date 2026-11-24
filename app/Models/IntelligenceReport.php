@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 class IntelligenceReport extends Model
@@ -20,10 +21,19 @@ class IntelligenceReport extends Model
 
     public const PARTIAL = 'partial';
 
+    public const ARTIFACT_PENDING = 'pending';
+
+    public const ARTIFACT_COMPLETE = 'complete';
+
+    public const ARTIFACT_PARTIAL = 'partial';
+
+    /** Satu-satunya kolom yang boleh berubah setelah laporan tersimpan. */
+    private const MUTABLE_COLUMNS = ['artifact_status'];
+
     /** Kolom ringan untuk daftar histori; `report` sengaja tidak dimuat. */
     public const SUMMARY_COLUMNS = [
         'id', 'event_id', 'evaluation_id', 'umkm_id', 'source_event_version', 'schema_version',
-        'prompt_version', 'knowledge_version', 'methodology_status', 'provider', 'model',
+        'prompt_version', 'knowledge_version', 'methodology_status', 'artifact_status', 'provider', 'model',
         'generated_at', 'received_at',
     ];
 
@@ -40,6 +50,16 @@ class IntelligenceReport extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(WebhookOutbox::class, 'event_id', 'event_id');
+    }
+
+    public function artifacts(): HasMany
+    {
+        return $this->hasMany(IntelligenceArtifact::class, 'report_id');
+    }
+
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(IntelligenceDelivery::class, 'event_id', 'event_id');
     }
 
     /**
@@ -71,6 +91,10 @@ class IntelligenceReport extends Model
 
     protected function performUpdate(Builder $query): bool
     {
-        throw new LogicException('Laporan intelligence bersifat immutable.');
+        if (array_diff(array_keys($this->getDirty()), [...self::MUTABLE_COLUMNS, $this->getUpdatedAtColumn()]) !== []) {
+            throw new LogicException('Laporan intelligence bersifat immutable.');
+        }
+
+        return parent::performUpdate($query);
     }
 }
