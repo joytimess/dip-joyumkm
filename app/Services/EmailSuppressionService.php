@@ -33,6 +33,11 @@ class EmailSuppressionService
     {
         $fingerprint = $this->fingerprints->fingerprint($email);
 
-        return $fingerprint !== null && EmailSuppression::query()->where('email_fingerprint', $fingerprint)->exists();
+        return $fingerprint !== null && $this->containsFingerprint($fingerprint);
+    }
+
+    public function containsFingerprint(string $fingerprint): bool
+    {
+        return EmailSuppression::query()->where('email_fingerprint', $fingerprint)->exists();
     }
 }
