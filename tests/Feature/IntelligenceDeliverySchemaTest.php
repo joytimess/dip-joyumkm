@@ -31,6 +31,7 @@ class IntelligenceDeliverySchemaTest extends TestCase
         $this->assertSame([
             'id', 'event_id', 'channel', 'recipient_fingerprint', 'artifact_set_hash', 'idempotency_key', 'status',
             'attempt_no', 'provider_message_id', 'error_code', 'sent_at', 'created_at', 'updated_at',
+            'email_snapshot', 'email_snapshot_sha256', 'synced_email_event',
         ], $columns->keys()->all());
         $this->assertFalse($columns['recipient_fingerprint']['nullable'], 'Sentinel kosong wajib, bukan NULL.');
         $this->assertSame('', (string) $columns['recipient_fingerprint']['default']);
@@ -41,6 +42,7 @@ class IntelligenceDeliverySchemaTest extends TestCase
     public function test_unique_keys_are_declared_and_the_event_foreign_key_is_restricted(): void
     {
         $indexes = collect(Schema::getIndexes(self::TABLE))->keyBy('name');
+        $this->assertTrue($indexes['intelligence_delivery_synced_email_unique']['unique']);
         $this->assertTrue($indexes['intelligence_deliveries_recipient_unique']['unique']);
         $this->assertSame(['event_id', 'channel', 'recipient_fingerprint'], $indexes['intelligence_deliveries_recipient_unique']['columns']);
         $this->assertTrue($indexes['intelligence_deliveries_idempotency_unique']['unique']);

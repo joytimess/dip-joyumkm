@@ -62,7 +62,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
 
         try {
             // Turunan yang bergantung pada tabel ini (FK intelligence_reports, kolom period_month) dilepas lebih dulu.
-            foreach (['deliveries', 'artifacts', 'reportArtifactStatus', 'reports', 'periodMonth'] as $key) {
+            foreach (['artifactManifests', 'deliveries', 'artifacts', 'reportArtifactStatus', 'reports', 'periodMonth'] as $key) {
                 $chain[$key]->down();
             }
             $migration->down();
@@ -358,6 +358,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             'reportArtifactStatus' => require database_path('migrations/2026_11_23_153536_add_artifact_status_to_intelligence_reports_table.php'),
             'artifacts' => require database_path('migrations/2026_11_23_153537_create_intelligence_artifacts_table.php'),
             'deliveries' => require database_path('migrations/2026_11_23_153538_create_intelligence_deliveries_table.php'),
+            'artifactManifests' => require database_path('migrations/2026_11_24_100000_create_intelligence_artifact_manifests_table.php'),
         ];
     }
 
@@ -381,6 +382,9 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         }
         if (! Schema::hasTable('intelligence_deliveries')) {
             $chain['deliveries']->up();
+        }
+        if (! Schema::hasTable('intelligence_artifact_manifests')) {
+            $chain['artifactManifests']->up();
         }
     }
 

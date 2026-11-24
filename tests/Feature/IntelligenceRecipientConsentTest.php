@@ -33,7 +33,11 @@ class IntelligenceRecipientConsentTest extends TestCase
     {
         parent::setUp();
 
-        config(['services.intelligence.recipient_pepper' => self::PEPPER]);
+        config([
+            'services.intelligence.recipient_pepper' => self::PEPPER,
+            'services.hermes_intelligence_recipient.test_mode' => true,
+            'services.hermes_intelligence_recipient.test_allowlist' => self::EMAIL,
+        ]);
     }
 
     public function test_legacy_umkm_has_no_notification_consent_by_default(): void
