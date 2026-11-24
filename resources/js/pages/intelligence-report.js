@@ -29,6 +29,26 @@ function methodologyBadge(report) {
     return report.partial ? element('span', { class: 'pill pill-amber', text: 'Metodologi parsial' }) : null;
 }
 
+const emailLabels = {
+    waiting_package: 'Menunggu laporan',
+    processing: 'Sedang diproses',
+    sending: 'Sedang dikirim',
+    sent: 'Diterima server email',
+    failed_retryable: 'Menunggu percobaan ulang',
+    failed_permanent: 'Pengiriman gagal',
+    skipped_ineligible: 'Tidak dikirim',
+    recipient_changed: 'Alamat penerima berubah',
+    blocked: 'Pengiriman diblokir',
+    delivery_unknown: 'Hasil pengiriman belum dapat dipastikan',
+};
+
+const emailReasons = {
+    no_consent: 'Persetujuan belum tersedia.',
+    suppressed: 'Pengiriman ke alamat penerima dihentikan.',
+    not_allowlisted: 'Alamat penerima di luar daftar uji.',
+    email_unavailable: 'Email usaha tidak tersedia atau tidak valid.',
+};
+
 export function createIntelligencePanel(panel, { api, path, signal, umkmId }) {
     const find = (name) => panel.querySelector(`[data-intelligence-${name}]`);
     const latest = find('latest');
@@ -55,10 +75,56 @@ export function createIntelligencePanel(panel, { api, path, signal, umkmId }) {
         detailView?.settle();
     };
 
-    function renderReport(payload, prefix, reportId) {
+    function renderReport(payload, prefix, requestSignal, reportId) {
         const report = normalizeReport(payload, umkmId, reportId);
         const view = renderIntelligenceReport(report, prefix, historyTitle, reducedMotion);
-        return { ...view, metadata: [reportMetadata(report), view.badge].filter(Boolean) };
+        const reportPath = `${endpoint}/${payload.id}/artifacts`;
+        const delivery = element('div', { class: stack, 'aria-live': 'polite' });
+        async function loadDelivery() {
+            await loadRegion(delivery, requestSignal, 'status laporan', () => api(reportPath, { signal: requestSignal }), (data) => {
+                if (data.report_id !== payload.id || data.event_id !== payload.event_id) throw new Error('Invalid delivery identity');
+                const email = data.email_delivery;
+                const label = emailLabels[email?.status] ?? 'Belum tersedia';
+                const files = Object.entries(data.artifacts).filter(([, file]) => file.availability === 'available');
+                const storage = files.length === 2 ? 'Lengkap'
+                    : data.artifact_status === 'complete' ? 'Dokumen pernah tersimpan, sebagian atau semua file kini tidak tersedia'
+                        : Object.values(data.artifacts).some((file) => file.availability === 'unavailable') ? 'Sebagian file tidak tersedia'
+                            : files.length ? 'Sebagian dokumen tersedia' : 'Belum tersedia';
+                const accepted = email?.status === 'sent' && email.sent_at
+                    ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Jakarta' })
+                        .format(new Date(email.sent_at)) : null;
+                const feedback = element('p', { class: 'muted', role: 'status' });
+                const actions = files.map(([kind]) => button(kind === 'pdf' ? 'Unduh PDF' : 'Unduh Excel', async (event) => {
+                    const control = event.currentTarget;
+                    if (control.getAttribute('aria-disabled') === 'true') return;
+                    control.setAttribute('aria-disabled', 'true');
+                    feedback.textContent = 'Menyiapkan unduhan…';
+                    try {
+                        const blob = await api(`${reportPath}/${kind}`, { signal: requestSignal, download: true });
+                        const url = URL.createObjectURL(blob);
+                        element('a', { href: url, download: `intelligence-report-${payload.id}.${kind}` }).click();
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        feedback.textContent = 'Unduhan dimulai.';
+                    } catch (error) {
+                        if (error.name !== 'AbortError') feedback.textContent = 'Gagal mengunduh dokumen. Coba lagi.';
+                    } finally {
+                        control.removeAttribute('aria-disabled');
+                    }
+                }));
+                delivery.replaceChildren(
+                    paragraph(`Penyimpanan dokumen · ${storage}`),
+                    paragraph(`Pengiriman email · ${label}`),
+                    ...(accepted ? [element('time', { datetime: email.sent_at, class: 'muted', text: `${accepted} WIB` })] : []),
+                    ...(emailReasons[email?.reason] ? [paragraph(emailReasons[email.reason], 'muted')] : []),
+                    ...actions, actions.length ? feedback : null,
+                );
+            }, loadDelivery);
+        }
+        void loadDelivery();
+        const statusCard = element('section', { class: card, 'aria-label': 'Status laporan' }, [
+            paragraph('Analisis Intelligence · Selesai'), delivery,
+        ]);
+        return { ...view, sections: [statusCard, ...view.sections], metadata: [reportMetadata(report), view.badge].filter(Boolean) };
     }
 
     function showMetadata(view) {
@@ -116,7 +182,7 @@ export function createIntelligencePanel(panel, { api, path, signal, umkmId }) {
                 return;
             }
             if (payload.status !== 'available') throw new Error('Invalid latest state');
-            latestView = renderReport(payload.data, 'intelligence-latest');
+            latestView = renderReport(payload.data, 'intelligence-latest', requestSignal);
             showMetadata(latestView);
             latest.replaceChildren(...latestView.sections);
             history.hidden = false;
@@ -178,7 +244,7 @@ export function createIntelligencePanel(panel, { api, path, signal, umkmId }) {
         selection.hidden = false;
         panel.querySelector('#intelligence-selection-title').focus();
         await loadRegion(detail, requestSignal, 'laporan terpilih', () => api(`${endpoint}/${id}`, { signal: requestSignal }), (payload) => {
-            detailView = renderReport(payload.data, 'intelligence-selected', id);
+            detailView = renderReport(payload.data, 'intelligence-selected', requestSignal, id);
             latestView?.settle();
             latest.hidden = true;
             showMetadata(detailView);

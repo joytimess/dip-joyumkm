@@ -38,7 +38,7 @@ export function redirectToLogin() {
     }
 }
 
-export async function api(path, { method = 'GET', body, signal, authenticated = true, redirectOnUnauthorized = true, expectedStatus } = {}) {
+export async function api(path, { method = 'GET', body, signal, authenticated = true, redirectOnUnauthorized = true, expectedStatus, download = false } = {}) {
     signal?.throwIfAborted();
     const token = authenticated ? getToken() : null;
     const headers = { Accept: 'application/json' };
@@ -52,7 +52,7 @@ export async function api(path, { method = 'GET', body, signal, authenticated = 
             method, headers, body: body === undefined ? undefined : JSON.stringify(body),
             credentials: 'omit', cache: 'no-store', signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
         });
-        payload = await response.json().catch((error) => {
+        payload = download && response.ok ? await response.blob() : await response.json().catch((error) => {
             if (error.name === 'SyntaxError' && !response.ok) return {};
             throw error;
         });
