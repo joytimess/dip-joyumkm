@@ -53,17 +53,20 @@ class SixFactorEvaluationDatabaseTest extends TestCase
 
     public function test_migration_preserves_v1_schema_and_data_and_only_rolls_back_when_empty(): void
     {
-        $migration = require database_path('migrations/2026_11_20_084534_create_six_factor_evaluations_table.php');
-        // Tabel laporan Intelligence memiliki FK ke tabel ini sehingga harus dilepas lebih dulu, seperti urutan rollback sebenarnya.
-        $dependent = require database_path('migrations/2026_11_23_050328_create_intelligence_reports_table.php');
+        $chain = $this->sixFactorMigrations();
+        $migration = $chain['sixFactor'];
         $umkm = Umkm::factory()->create();
         $umkm->user->createToken('fixture');
         $legacy = $umkm->evaluations()->create(['status' => 'final', 'average_score' => 78, 'submitted_at' => now()]);
         $legacy->answers()->create(['question_id' => Question::query()->firstOrFail()->id, 'value' => 3]);
-        $dependent->down();
-        $migration->down();
 
         try {
+            // Turunan yang bergantung pada tabel ini (FK intelligence_reports, kolom period_month) dilepas lebih dulu.
+            foreach (['deliveries', 'artifacts', 'reportArtifactStatus', 'reports', 'periodMonth'] as $key) {
+                $chain[$key]->down();
+            }
+            $migration->down();
+
             $tables = $this->tableNames();
             $v1 = $this->legacyFingerprints();
 
@@ -87,12 +90,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             $this->assertDatabaseHas(self::TABLE, ['id' => $evaluation->id, 'umkm_id' => $umkm->id, 'kinerja' => 4]);
             $this->assertSame($v1, $this->legacyFingerprints());
         } finally {
-            if (! Schema::hasTable(self::TABLE)) {
-                $migration->up();
-            }
-            if (! Schema::hasTable('intelligence_reports')) {
-                $dependent->up();
-            }
+            $this->restoreSixFactorMigrations($chain);
         }
     }
 
@@ -101,8 +99,10 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         $columns = collect(Schema::getColumns(self::TABLE))->keyBy('name');
         $this->assertSame([
             'id', 'umkm_id', 'status', ...self::FACTORS, 'total_score', 'category',
-            'finalized_at', 'cancelled_at', 'created_at', 'updated_at', 'active_draft_umkm_id',
+            'finalized_at', 'period_month', 'cancelled_at', 'created_at', 'updated_at', 'active_draft_umkm_id',
         ], $columns->keys()->all());
+        $this->assertTrue($columns['period_month']['nullable']);
+        $this->assertSame('char(7)', $columns['period_month']['type']);
         $this->assertSame('draft', $columns['status']['default']);
         $this->assertFalse($columns['status']['nullable']);
         foreach (self::FACTORS as $factor) {
@@ -117,6 +117,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         $this->assertTrue($unique['unique']);
         $this->assertSame(['active_draft_umkm_id'], $unique['columns']);
         $this->assertSame(['umkm_id', 'status', 'id'], $indexes['six_factor_umkm_status_id_index']['columns']);
+        $this->assertSame(['umkm_id', 'period_month', 'finalized_at'], $indexes['six_factor_umkm_period_index']['columns']);
 
         $foreignKeys = Schema::getForeignKeys(self::TABLE);
         $this->assertCount(1, $foreignKeys);
@@ -132,6 +133,8 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             ->orderBy('CONSTRAINT_NAME')
             ->pluck('ENFORCED', 'CONSTRAINT_NAME')->all();
         $this->assertSame([
+            'six_factor_period_format_check' => 'YES',
+            'six_factor_period_status_check' => 'YES',
             'six_factor_scores_check' => 'YES',
             'six_factor_status_check' => 'YES',
         ], $checks);
@@ -158,7 +161,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
     {
         $umkm = Umkm::factory()->create();
         $finalValues = ['status' => 'final', ...array_fill_keys(self::FACTORS, 2), 'total_score' => 12,
-            'category' => 'Kurang Sehat', 'finalized_at' => now()];
+            'category' => 'Kurang Sehat', 'finalized_at' => now(), 'period_month' => '2026-11'];
         $invalidRows = [
             ['status' => 'unknown'],
             ['status' => 'DRAFT'],
@@ -171,6 +174,8 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             ['status' => 'cancelled', 'cancelled_at' => now(), 'finalized_at' => now()],
             ['status' => 'cancelled', 'cancelled_at' => now(), 'total_score' => 6],
             ['status' => 'cancelled', 'cancelled_at' => now(), 'category' => 'Sehat'],
+            ['period_month' => '2026-11'],
+            ['status' => 'cancelled', 'cancelled_at' => now(), 'period_month' => '2026-11'],
         ];
         foreach ($invalidRows as $row) {
             $this->assertMysqlRejects(3819, fn () => DB::table(self::TABLE)->insert(['umkm_id' => $umkm->id, ...$row]));
@@ -181,6 +186,8 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             ['finalized_at' => null], ['cancelled_at' => now()], ['total_score' => null],
             ['total_score' => 13], ['category' => null], ['category' => 'Cukup Sehat'],
             ['category' => 'kurang sehat'], ['category' => 'Kurang Sehat '],
+            ['period_month' => null], ['period_month' => '2026-13'], ['period_month' => '2026-1'],
+            ['period_month' => '26-11'],
         ];
         foreach (self::FACTORS as $factor) {
             $invalidFinals[] = [$factor => null];
@@ -334,6 +341,46 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             $this->fail("MySQL menerima operasi yang seharusnya ditolak dengan kode {$code}.");
         } catch (QueryException $exception) {
             $this->assertSame($code, $exception->errorInfo[1], $exception->getMessage());
+        }
+    }
+
+    /**
+     * Rantai migration Enam Faktor beserta turunannya, diurutkan dari induk ke turunan.
+     *
+     * @return array<string, object>
+     */
+    private function sixFactorMigrations(): array
+    {
+        return [
+            'sixFactor' => require database_path('migrations/2026_11_20_084534_create_six_factor_evaluations_table.php'),
+            'periodMonth' => require database_path('migrations/2026_11_23_153541_add_period_month_to_six_factor_evaluations_table.php'),
+            'reports' => require database_path('migrations/2026_11_23_050328_create_intelligence_reports_table.php'),
+            'reportArtifactStatus' => require database_path('migrations/2026_11_23_153536_add_artifact_status_to_intelligence_reports_table.php'),
+            'artifacts' => require database_path('migrations/2026_11_23_153537_create_intelligence_artifacts_table.php'),
+            'deliveries' => require database_path('migrations/2026_11_23_153538_create_intelligence_deliveries_table.php'),
+        ];
+    }
+
+    /** @param array<string, object> $chain */
+    private function restoreSixFactorMigrations(array $chain): void
+    {
+        if (! Schema::hasTable(self::TABLE)) {
+            $chain['sixFactor']->up();
+        }
+        if (! Schema::hasColumn(self::TABLE, 'period_month')) {
+            $chain['periodMonth']->up();
+        }
+        if (! Schema::hasTable('intelligence_reports')) {
+            $chain['reports']->up();
+        }
+        if (! Schema::hasColumn('intelligence_reports', 'artifact_status')) {
+            $chain['reportArtifactStatus']->up();
+        }
+        if (! Schema::hasTable('intelligence_artifacts')) {
+            $chain['artifacts']->up();
+        }
+        if (! Schema::hasTable('intelligence_deliveries')) {
+            $chain['deliveries']->up();
         }
     }
 
