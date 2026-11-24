@@ -4,6 +4,7 @@ import { createInlineEditor, discardConfirmation } from '../umkm-detail-editor';
 import { withListContext } from '../umkm-navigation';
 import { bindWhatsappInput, whatsappPayload } from '../whatsapp-number';
 import { clearErrors, element, formatNumber, formatRupiahInput, formatScore, parseRupiah, setBusy, showError, toast } from '../ui';
+import { createIntelligencePanel } from './intelligence-report';
 
 const missing = 'Belum diisi';
 const omzetLabels = { monthly: 'Omzet Bulanan', yearly: 'Omzet Tahunan' };
@@ -92,6 +93,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
     const byId = (id) => document.getElementById(id);
     const tabs = [...content.querySelectorAll('[role="tab"]')];
     const panels = Object.fromEntries(tabs.map((tab) => [tab.dataset.tab, byId('panel-' + tab.dataset.tab)]));
+    const intelligence = createIntelligencePanel(panels.intelligence, { api, path, signal, umkmId: Number(root.dataset.umkm) });
     const forms = { profil: byId('form-profil'), lokasi: byId('form-lokasi'), kontak: byId('form-kontak') };
     const views = { profil: byId('view-profil'), lokasi: byId('view-lokasi'), kontak: byId('view-kontak') };
     const editButton = (tab) => content.querySelector(`[data-edit="${tab}"]`);
@@ -437,6 +439,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
     }
 
     function showTab(name) {
+        if (activeTab === 'intelligence') intelligence.deactivate();
         activeTab = name;
         for (const tab of tabs) {
             const selected = tab.dataset.tab === name;
@@ -446,6 +449,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
         }
         if (name === 'lokasi') void refreshLocationPreview();
         if (name === 'penilaian' && !assessmentLoaded) void loadSixFactor();
+        if (name === 'intelligence') intelligence.activate(current.name);
     }
 
     async function selectTab(name) {
