@@ -61,12 +61,28 @@ class Umkm extends Model
         );
     }
 
+    /**
+     * Persetujuan notifikasi terikat ke alamat email usaha. Mengganti business_email mencabut persetujuan lama,
+     * kecuali persetujuan baru dicatat dalam penyimpanan yang sama.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Umkm $umkm): void {
+            if ($umkm->isDirty('business_email') && ! $umkm->isDirty('notification_consent_at')) {
+                $umkm->notification_consent_at = null;
+                $umkm->notification_consent_version = null;
+                $umkm->notification_consent_by_user_id = null;
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'user_id' => 'integer', 'sector_id' => 'integer', 'omzet' => 'integer', 'business_capital' => 'integer',
             'year_founded' => 'integer', 'employee_count' => 'integer',
             'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'wa_checked_at' => 'datetime',
+            'notification_consent_at' => 'datetime', 'notification_consent_by_user_id' => 'integer',
         ];
     }
 }
