@@ -83,6 +83,7 @@ class HermesWebhookOutboxTest extends TestCase
                     'total_score' => 24,
                     'category' => 'Sehat',
                     'scores' => array_fill_keys(SixFactorEvaluation::FACTORS, 4),
+                    'period_month' => SixFactorEvaluation::periodMonthFor(now()),
                 ],
                 'three_dimension' => null,
             ],
