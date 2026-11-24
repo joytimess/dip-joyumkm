@@ -5,14 +5,21 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EvaluationController;
+use App\Http\Controllers\Api\IntelligenceCallbackController;
+use App\Http\Controllers\Api\IntelligenceReportController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\SixFactorEvaluationController;
 use App\Http\Controllers\Api\UmkmController;
+use App\Http\Middleware\VerifyIntelligenceCallbackSignature;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:joyumkm-register');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:joyumkm-login');
+
+// Callback server-ke-server dari Hermes: tanpa Sanctum, dilindungi HMAC khusus callback.
+Route::post('/internal/intelligence/callback', [IntelligenceCallbackController::class, 'store'])
+    ->middleware(VerifyIntelligenceCallbackSignature::class);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -40,6 +47,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/{evaluationId}/cancel', 'cancel');
             Route::get('/', 'history');
             Route::get('/latest', 'latest');
+        });
+    Route::prefix('/umkms/{id}/intelligence-reports')
+        ->where(['id' => '[0-9]+', 'reportId' => '[0-9]+'])
+        ->controller(IntelligenceReportController::class)
+        ->group(function (): void {
+            Route::get('/latest', 'latest');
+            Route::get('/', 'index');
+            Route::get('/{reportId}', 'show');
         });
     Route::get('/umkms/options', [UmkmController::class, 'options']);
     Route::get('/umkms/summary', [UmkmController::class, 'summary']);
