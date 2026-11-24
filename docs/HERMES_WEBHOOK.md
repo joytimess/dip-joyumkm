@@ -104,6 +104,7 @@ Event `evaluation.finalized` versi 2 membawa snapshot Enam Faktor (V2) dan snaps
       "status": "final",
       "total_score": 26,
       "category": "Sangat Sehat",
+      "period_month": "2026-11",
       "scores": {
         "sumber_daya": 3, "kepemimpinan": 4, "lingkungan_kerja": 5,
         "nilai_organisasi": 4, "stabilitas": 5, "kinerja": 5
@@ -123,6 +124,7 @@ Event `evaluation.finalized` versi 2 membawa snapshot Enam Faktor (V2) dan snaps
 ```
 
 - **Lokasi field berubah dari versi 1.** `evaluation_id`, `status`, `scores`, `total_score`, dan `category` kini berada di `data.six_factor`. `data.umkm_id` tetap di root `data`. Konsumen dibedakan lewat `event_version`; versi 1 tidak di-backfill dan event versi 1 yang sudah tersimpan tidak diubah.
+- **Periode (opsional, P2).** `six_factor.period_month` berformat `YYYY-MM` dan dihitung dari `finalized_at` menurut zona WIB (`Asia/Jakarta`); kolom waktu mentah di database tetap UTC. Field ini hanya ada pada event yang dibuat setelah migrasi P2; event lama tidak di-backfill di payload. Konsumen harus memperlakukannya sebagai opsional. Hermes mengabaikan field ini saat ini karena parser hanya membaca field yang dikenal.
 - **Skala.** `six_factor.scores` bilangan bulat 1–5 dan `total_score` jumlah enam faktor. `three_dimension.scores` dan `average_score` berskala 0–100 persis seperti tersimpan di V1 (presisi dimensi 4 desimal, rata-rata 1 desimal). Nilai tidak diskalakan ulang dan tidak digabung dengan V2. Kategori V1 memakai label V1 (`SANGAT BAIK`, `BAIK`, `CUKUP`, `KURANG`, `KRITIS`); kategori V2 memakai label V2.
 - **Aturan seleksi V1.** Penilaian V1 berstatus `final` terbaru milik `umkm_id` yang sama dengan waktu penilaian (`submitted_at`, cadangan `created_at` untuk data lama) pada atau sebelum `finalized_at` V2; pemutus seri adalah `id` terbesar. Draft, penilaian setelah waktu finalisasi, dan penilaian UMKM lain tidak pernah dipilih. `assessed_at` memakai `submitted_at` (cadangan `created_at`).
 - **Data tidak ada.** Tanpa penilaian V1 yang memenuhi syarat, `data.three_dimension` bernilai `null`, bukan objek skor nol. Dimensi yang tidak memiliki pertanyaan aktif tersimpan `null` di V1; snapshot meneruskannya sebagai `null` dan menandai `is_complete: false` sehingga tidak dianggap lengkap.
