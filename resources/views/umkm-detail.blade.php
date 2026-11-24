@@ -30,6 +30,7 @@
             <button type="button" role="tab" id="tab-lokasi" class="detail-tab" data-tab="lokasi" aria-controls="panel-lokasi" aria-selected="false" tabindex="-1">Lokasi Usaha</button>
             <button type="button" role="tab" id="tab-kontak" class="detail-tab" data-tab="kontak" aria-controls="panel-kontak" aria-selected="false" tabindex="-1">Kontak Usaha</button>
             <button type="button" role="tab" id="tab-penilaian" class="detail-tab" data-tab="penilaian" aria-controls="panel-penilaian" aria-selected="false" tabindex="-1">Penilaian</button>
+            <button type="button" role="tab" id="tab-intelligence" class="detail-tab" data-tab="intelligence" aria-controls="panel-intelligence" aria-selected="false" tabindex="-1">Intelligence</button>
         </div>
 
         {{-- PROFIL --}}
@@ -300,6 +301,31 @@
                     </div>
                 </article>
             </div>
+        </section>
+        <section id="panel-intelligence" class="detail-panel" role="tabpanel" aria-labelledby="tab-intelligence" tabindex="0" hidden>
+            <header class="card card-pad panel intelligence-stack">
+                <div class="detail-panel-head">
+                    <div>
+                        <h2 id="intelligence-title" class="section-title" tabindex="-1">Intelligence Report</h2>
+                        <p class="section-desc" data-intelligence-name></p>
+                        <div class="intelligence-report-meta" data-intelligence-report-meta hidden></div>
+                    </div>
+                    <button type="button" class="button button-outline" data-intelligence-refresh>Muat ulang</button>
+                </div>
+            </header>
+            <p class="sr-only" role="status" data-intelligence-status></p>
+            <div class="intelligence-stack" data-intelligence-selection hidden>
+                <div class="card card-pad panel detail-panel-head intelligence-selection-head">
+                    <p id="intelligence-selection-title" class="section-title" tabindex="-1">Laporan terpilih</p>
+                    <button type="button" class="button button-outline" data-intelligence-back>Kembali ke laporan terbaru</button>
+                </div>
+                <div class="intelligence-stack" data-intelligence-detail></div>
+            </div>
+            <div class="intelligence-stack" data-intelligence-latest></div>
+            <section class="card card-pad panel intelligence-stack" data-intelligence-history aria-labelledby="intelligence-history-title" hidden>
+                <h3 id="intelligence-history-title" class="section-title" tabindex="-1">Riwayat Laporan</h3>
+                <div class="intelligence-stack" data-intelligence-history-content></div>
+            </section>
         </section>
     </div>
 </div>
