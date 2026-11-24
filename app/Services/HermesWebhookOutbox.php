@@ -52,6 +52,8 @@ class HermesWebhookOutbox
                         'total_score' => $evaluation->total_score,
                         'category' => $evaluation->category,
                         'scores' => $evaluation->only(SixFactorEvaluation::FACTORS),
+                        // Field opsional v2 (K7): konsumen yang tidak mengenalnya harus mengabaikannya.
+                        'period_month' => $evaluation->period_month,
                     ],
                     'three_dimension' => $this->threeDimensionSnapshot($evaluation),
                 ],
