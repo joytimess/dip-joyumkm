@@ -202,8 +202,14 @@ class IntelligenceDeliveryStatusController extends Controller
             'sent_at' => $this->time($snapshot['sent_at'])?->format('Y-m-d H:i:s'),
             'email_snapshot' => json_encode($snapshot, JSON_THROW_ON_ERROR),
             'email_snapshot_sha256' => $digest, 'updated_at' => now(),
+            'provider_message_id' => $snapshot['message_id'],
         ];
+        if ($snapshot['idempotency_key'] !== null) {
+            // Kunci kontrak SMTP (validasi di atas) disimpan begitu identitas penerima tersedia.
+            $values['idempotency_key'] = $snapshot['idempotency_key'];
+        }
         if ($row === null) {
+            // Placeholder NOT NULL untuk baris yang dibuat sebelum penerima diketahui; diganti saat kunci tersedia.
             $deliveries->insert($values + ['event_id' => $eventId, 'channel' => 'email',
                 'idempotency_key' => hash('sha256', "JMI-DELIVERY-STATUS-V1\n{$eventId}\nemail"), 'created_at' => now()]);
         } else {

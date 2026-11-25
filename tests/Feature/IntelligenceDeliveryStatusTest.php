@@ -75,6 +75,9 @@ class IntelligenceDeliveryStatusTest extends TestCase
         $this->getJson($path)->assertOk()->assertJsonPath('email_delivery', null);
         $this->postSnapshot($base)->assertCreated()->assertJsonPath('status', 'queued');
         $this->postSnapshot($sent)->assertOk()->assertJsonPath('result', 'updated')->assertJsonPath('accepted_revision', 3);
+        $stored = DB::table('intelligence_deliveries')->sole();
+        $this->assertSame($smtpKey, $stored->idempotency_key);
+        $this->assertSame("<{$smtpKey}@example.test>", $stored->provider_message_id);
         $before = (array) DB::table('intelligence_deliveries')->sole();
         $this->postSnapshot($sent)->assertOk()->assertJsonPath('result', 'duplicate')->assertJsonPath('snapshot_sha256', $before['email_snapshot_sha256']);
         $this->postSnapshot($base)->assertOk()->assertJsonPath('result', 'stale')->assertJsonPath('accepted_revision', 3);
