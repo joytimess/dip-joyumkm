@@ -46,6 +46,7 @@ class StoreUmkmRequest extends ApiRequest
             'owner_name' => ['required', 'string', 'max:120'],
             'whatsapp_number' => WhatsappCheckRequest::numberRules(),
             'business_email' => ['required', 'string', 'email', 'max:254'],
+            'notification_consent' => ['sometimes', 'boolean'],
             'pic_name' => ['nullable', 'string', 'max:120'],
             'website_url' => ['nullable', 'string', 'url:http,https', 'max:2048'],
             'social_media_url' => ['nullable', 'string', 'url:http,https', 'max:2048'],

@@ -13,6 +13,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -93,10 +94,13 @@ class UmkmService
     public function store(User $user, array $data): Umkm
     {
         $status = $this->openWa->check($data['whatsapp_number']);
-        $umkm = $user->umkms()->make($data)->forceFill([
+        $umkm = $user->umkms()->make(Arr::except($data, ['notification_consent']))->forceFill([
             'wa_registration_status' => $status,
             'wa_checked_at' => $status === OpenWaNumberCheckService::UNCHECKED ? null : now(),
         ]);
+        if ($data['notification_consent'] ?? true) {
+            $umkm->forceFill($this->notificationConsentAttributes($user));
+        }
         try {
             $umkm->save();
         } catch (UniqueConstraintViolationException) {
@@ -137,11 +141,7 @@ class UmkmService
 
                 // Simpan grant setelah hook perubahan email mencabut consent lama, dalam transaksi yang sama.
                 if ($intent === 'grant') {
-                    $umkm->forceFill([
-                        'notification_consent_at' => now()->utc(),
-                        'notification_consent_version' => 'v1',
-                        'notification_consent_by_user_id' => $user->id,
-                    ])->save();
+                    $umkm->forceFill($this->notificationConsentAttributes($user))->save();
                 }
             });
         } catch (UniqueConstraintViolationException) {
@@ -149,6 +149,16 @@ class UmkmService
         }
 
         return $this->owned($user, $id);
+    }
+
+    /** @return array{notification_consent_at: Carbon, notification_consent_version: string, notification_consent_by_user_id: int} */
+    private function notificationConsentAttributes(User $user): array
+    {
+        return [
+            'notification_consent_at' => now()->utc(),
+            'notification_consent_version' => 'v1',
+            'notification_consent_by_user_id' => $user->id,
+        ];
     }
 
     /**

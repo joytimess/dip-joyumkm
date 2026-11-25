@@ -73,7 +73,7 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
     let loadingLocation;
     const mapCanvas = form.querySelector('#umkm-map');
 
-    const formValues = () => JSON.stringify(formFields.map((field) => field.value));
+    const formValues = () => JSON.stringify(formFields.map((field) => field.type === 'checkbox' ? field.checked : field.value));
     const hasUnsavedEdits = () => modal.open && initialValues !== formValues();
 
     function showStep(index, focus = false) {
@@ -328,7 +328,10 @@ export function bindUmkmForm({ api, signal, addButton, onSaved }) {
         }
         body.omzet = omzetValue;
         body.business_capital = businessCapitalValue;
-        if (creating) body.whatsapp_number = whatsappPayload(whatsappInput.value);
+        if (creating) {
+            body.whatsapp_number = whatsappPayload(whatsappInput.value);
+            body.notification_consent = form.elements.notification_consent.checked;
+        }
         setSaving(true);
         let failure;
         try {

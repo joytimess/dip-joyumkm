@@ -49,6 +49,20 @@ class UmkmApiTest extends TestCase
         $this->assertModelMissing($answer);
     }
 
+    public function test_registration_defaults_to_email_delivery_and_respects_an_explicit_opt_out(): void
+    {
+        $owner = $this->authenticate();
+
+        $created = $this->postJson('/api/umkms', $this->payload())
+            ->assertCreated()->assertJsonPath('data.notification_consent_active', true);
+        $umkm = $owner->umkms()->findOrFail($created->json('data.id'));
+        $this->assertEquals($owner->id, $umkm->notification_consent_by_user_id);
+        $this->assertNotNull($umkm->notification_consent_at);
+
+        $this->postJson('/api/umkms', $this->payload(['name' => 'Tanpa laporan', 'notification_consent' => false]))
+            ->assertCreated()->assertJsonPath('data.notification_consent_active', false);
+    }
+
     public function test_names_are_trimmed_case_insensitive_unique_per_account_but_shared_between_accounts(): void
     {
         $owner = $this->authenticate();

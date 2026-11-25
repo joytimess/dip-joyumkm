@@ -155,9 +155,13 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
     const contactConsent = forms.kontak.elements.notification_consent;
     const emailChangeNotice = document.getElementById('umkm-notification-change');
     let contactAtEdit;
+    let contactConsentChoice;
+    contactConsent.addEventListener('change', () => {
+        contactConsentChoice = contactConsent.checked;
+    }, { signal });
     contactEmail.addEventListener('input', () => {
         const emailChanged = contactEmail.value.trim() !== (contactAtEdit.business_email ?? '').trim();
-        contactConsent.checked = !emailChanged && contactAtEdit.notification_consent_active;
+        contactConsent.checked = contactConsentChoice ?? (emailChanged || contactAtEdit.notification_consent_active);
         emailChangeNotice.hidden = !emailChanged || !contactAtEdit.notification_consent_active;
     }, { signal });
 
@@ -264,6 +268,7 @@ function createDetailPage({ root, content, api, signal, path, umkm, options }) {
             validateUnchanged: false,
             prefill: (form) => {
                 contactAtEdit = current;
+                contactConsentChoice = undefined;
                 form.elements.owner_name.value = current.owner_name ?? '';
                 form.elements.business_email.value = current.business_email ?? '';
                 contactConsent.checked = current.notification_consent_active;

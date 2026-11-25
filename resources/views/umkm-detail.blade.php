@@ -273,7 +273,7 @@
                             Saya memiliki persetujuan penerima dan menyetujui pengiriman laporan evaluasi dan perkembangan UMKM melalui alamat email ini.
                         </label>
                         <small id="umkm-notification-help" class="muted">Pengiriman otomatis belum diaktifkan. Setelah aktif, laporan dikirim setelah penilaian Enam Faktor difinalisasi dan laporan Intelligence selesai diproses. Kosongkan centang dan simpan untuk mencabut persetujuan.</small>
-                        <small id="umkm-notification-change" class="muted" role="status" hidden>Persetujuan lama akan dicabut saat alamat baru disimpan. Centang kembali jika Anda menyetujui alamat baru.</small>
+                        <small id="umkm-notification-change" class="muted" role="status" hidden>Persetujuan untuk alamat lama berakhir saat alamat baru disimpan. Pilihan di atas berlaku untuk alamat baru.</small>
                         <p class="field-error" data-error="notification_consent" id="umkm-error-notification_consent"></p>
                     </div>
                 </fieldset>

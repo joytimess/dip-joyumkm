@@ -303,6 +303,13 @@
                     <p class="field-error" data-error="business_email" id="umkm-error-business_email"></p>
                 </div>
                 <div class="field form-field full" data-step="2">
+                    <label for="umkm-notification-consent">
+                        <input id="umkm-notification-consent" type="checkbox" name="notification_consent" checked>
+                        Kirim laporan evaluasi dan perkembangan UMKM ke email usaha ini.
+                    </label>
+                    <p class="field-error" data-error="notification_consent" id="umkm-error-notification_consent"></p>
+                </div>
+                <div class="field form-field full" data-step="2">
                     <label for="umkm-whatsapp-number">Nomor WhatsApp</label>
                     <div class="umkm-phone-field">
                         <span aria-hidden="true">+62</span>

@@ -29,7 +29,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE umkms DROP CHECK umkms_notification_consent_pair_check');
+        DB::statement('ALTER TABLE umkms DROP CONSTRAINT umkms_notification_consent_pair_check');
 
         Schema::table('umkms', function (Blueprint $table): void {
             $table->dropConstrainedForeignId('notification_consent_by_user_id');
