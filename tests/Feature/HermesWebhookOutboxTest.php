@@ -602,6 +602,26 @@ class HermesWebhookOutboxTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_deliver_only_ack_marks_the_same_event_delivered_without_creating_another(): void
+    {
+        $draft = $this->completeDraft();
+        $this->configureSender();
+        Http::preventStrayRequests();
+        Http::fake([self::URL => fn (Request $request) => Http::response([
+            'status' => 'delivered', 'route' => 'joyumkm-events', 'target' => 'log',
+            'delivery_id' => $request->header('X-Request-ID')[0],
+        ], 200)]);
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+
+        $this->runWorker();
+        $event = WebhookOutbox::query()->sole();
+        $this->assertSame('delivered', $event->status);
+        $this->assertSame(200, $event->last_http_status);
+        $this->assertNull($event->last_error_code);
+        $this->assertNotNull($event->delivered_at);
+        Http::assertSentCount(1);
+    }
+
     #[TestWith([200, ['status' => 'ignored', 'reason' => 'filter'], 'ack_ignored'])]
     #[TestWith([200, ['status' => 'ignored', 'event' => 'evaluation.finalized'], 'ack_ignored'])]
     #[TestWith([202, ['status' => 'coalesced', 'route' => 'joyumkm-events', 'delivery_id' => '{id}'], 'invalid_ack'])]
@@ -614,6 +634,9 @@ class HermesWebhookOutboxTest extends TestCase
     #[TestWith([200, ['status' => 'accepted', 'route' => 'joyumkm-events', 'event' => 'evaluation.finalized', 'delivery_id' => '{id}'], 'invalid_ack'])]
     #[TestWith([200, ['status' => 'duplicate', 'delivery_id' => 'other-id'], 'invalid_ack'])]
     #[TestWith([200, ['status' => 'duplicate'], 'invalid_ack'])]
+    #[TestWith([200, ['status' => 'delivered', 'route' => 'other-route', 'delivery_id' => '{id}'], 'invalid_ack'])]
+    #[TestWith([200, ['status' => 'delivered', 'route' => 'joyumkm-events', 'delivery_id' => 'other-id'], 'invalid_ack'])]
+    #[TestWith([202, ['status' => 'delivered', 'route' => 'joyumkm-events', 'delivery_id' => '{id}'], 'invalid_ack'])]
     #[TestWith([202, ['status' => 'duplicate', 'delivery_id' => '{id}'], 'invalid_ack'])]
     #[TestWith([200, ['status' => 'unknown', 'delivery_id' => '{id}'], 'invalid_ack'])]
     #[TestWith([200, ['status' => ['duplicate'], 'delivery_id' => '{id}'], 'invalid_ack'])]

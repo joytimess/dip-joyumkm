@@ -155,7 +155,8 @@ class HermesWebhookSender
     }
 
     /**
-     * Hanya `202 accepted` dan `200 duplicate` yang cocok dengan event ini yang dianggap sukses.
+     * Hanya `202 accepted`, `200 duplicate`, dan `200 delivered` (route deliver_only, tanpa agent) yang cocok
+     * dengan event ini yang dianggap sukses.
      * ACK 2xx yang tidak sesuai kontrak tidak pernah di-retry otomatis karena Hermes mungkin sudah menerimanya.
      *
      * @return array{http_status: ?int, error: ?string, summary: ?string, retryable: bool, retry_after: int}
@@ -166,12 +167,13 @@ class HermesWebhookSender
         $ack = is_array($ack) && ! array_is_list($ack) ? $ack : [];
         $state = $ack['status'] ?? null;
         $deliveryMatches = ($ack['delivery_id'] ?? null) === $event->event_id;
+        $routeMatches = ($ack['route'] ?? null) === $this->expectedRoute();
 
-        $accepted = $status === 202 && $state === 'accepted' && $deliveryMatches
-            && ($ack['route'] ?? null) === $this->expectedRoute()
+        $accepted = $status === 202 && $state === 'accepted' && $deliveryMatches && $routeMatches
             && ($ack['event'] ?? null) === $event->event_type;
         $duplicate = $status === 200 && $state === 'duplicate' && $deliveryMatches;
-        if ($accepted || $duplicate) {
+        $delivered = $status === 200 && $state === 'delivered' && $deliveryMatches && $routeMatches;
+        if ($accepted || $duplicate || $delivered) {
             return $this->acknowledgement($status, null, null);
         }
 
