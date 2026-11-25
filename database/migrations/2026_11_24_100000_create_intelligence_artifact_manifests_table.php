@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\DatabaseEngine;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -31,10 +32,12 @@ return new class extends Migration
                 ->restrictOnDelete();
         });
 
-        DB::statement(<<<'SQL'
+        $transportHashCheck = DatabaseEngine::hexDigestCheck(DatabaseEngine::isMariaDb(DB::connection()), 'transport_artifact_set_hash', 64);
+
+        DB::statement(<<<SQL
             ALTER TABLE intelligence_artifact_manifests
                 ADD CONSTRAINT intelligence_artifact_manifests_hash_check
-                    CHECK (REGEXP_LIKE(transport_artifact_set_hash, '^[0-9a-f]{64}$', 'c'))
+                    CHECK ({$transportHashCheck})
             SQL);
 
         DB::unprepared(<<<'SQL'

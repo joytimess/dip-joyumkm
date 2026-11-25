@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\DatabaseEngine;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,14 @@ return new class extends Migration
             $table->timestamp('created_at');
         });
 
-        DB::statement(<<<'SQL'
+        $fingerprintCheck = DatabaseEngine::hexDigestCheck(DatabaseEngine::isMariaDb(DB::connection()), 'email_fingerprint', 64);
+
+        DB::statement(<<<SQL
             ALTER TABLE email_suppressions
                 ADD CONSTRAINT email_suppressions_reason_check
                     CHECK (reason IN ('bounce', 'complaint', 'unsubscribe', 'manual')),
                 ADD CONSTRAINT email_suppressions_fingerprint_check
-                    CHECK (REGEXP_LIKE(email_fingerprint, '^[0-9a-f]{64}$', 'c'))
+                    CHECK ({$fingerprintCheck})
             SQL);
     }
 

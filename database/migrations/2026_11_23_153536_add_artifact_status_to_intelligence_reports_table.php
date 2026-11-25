@@ -70,7 +70,7 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS intelligence_reports_before_delete_immutable');
         DB::unprepared('DROP TRIGGER IF EXISTS intelligence_reports_before_update_immutable');
 
-        DB::statement('ALTER TABLE intelligence_reports DROP CHECK intelligence_reports_artifact_status_check');
+        DB::statement('ALTER TABLE intelligence_reports DROP CONSTRAINT intelligence_reports_artifact_status_check');
 
         Schema::table('intelligence_reports', function (Blueprint $table): void {
             $table->dropUnique('intelligence_reports_id_event_id_unique');

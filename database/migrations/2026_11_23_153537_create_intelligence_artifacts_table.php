@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\DatabaseEngine;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,9 @@ return new class extends Migration
                 ->restrictOnDelete();
         });
 
-        DB::statement(<<<'SQL'
+        $sha256Check = DatabaseEngine::hexDigestCheck(DatabaseEngine::isMariaDb(DB::connection()), 'sha256', 64);
+
+        DB::statement(<<<SQL
             ALTER TABLE intelligence_artifacts
                 ADD CONSTRAINT intelligence_artifacts_kind_check
                     CHECK (kind IN ('pdf', 'xlsx')),
@@ -44,7 +47,7 @@ return new class extends Migration
                 ADD CONSTRAINT intelligence_artifacts_size_check
                     CHECK (size_bytes BETWEEN 1 AND 10485760),
                 ADD CONSTRAINT intelligence_artifacts_sha256_check
-                    CHECK (REGEXP_LIKE(sha256, '^[0-9a-f]{64}$', 'c')),
+                    CHECK ({$sha256Check}),
                 ADD CONSTRAINT intelligence_artifacts_path_check
                     CHECK (storage_path <> '')
             SQL);

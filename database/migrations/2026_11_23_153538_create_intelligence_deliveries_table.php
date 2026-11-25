@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Services\DatabaseEngine;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,12 @@ return new class extends Migration
             $table->foreign('event_id')->references('event_id')->on('intelligence_reports')->restrictOnDelete();
         });
 
-        DB::statement(<<<'SQL'
+        $mariaDb = DatabaseEngine::isMariaDb(DB::connection());
+        $recipientHashCheck = DatabaseEngine::hexDigestCheck($mariaDb, 'recipient_fingerprint', 64);
+        $artifactSetHashCheck = DatabaseEngine::hexDigestCheck($mariaDb, 'artifact_set_hash', 64);
+        $idempotencyKeyCheck = DatabaseEngine::hexDigestCheck($mariaDb, 'idempotency_key', 64);
+
+        DB::statement(<<<SQL
             ALTER TABLE intelligence_deliveries
                 ADD CONSTRAINT intelligence_deliveries_channel_check
                     CHECK (channel IN ('artifact', 'email')),
@@ -41,15 +47,15 @@ return new class extends Migration
                 ADD CONSTRAINT intelligence_deliveries_recipient_check
                     CHECK (
                         (channel = 'artifact' AND recipient_fingerprint = '')
-                        OR (channel = 'email' AND REGEXP_LIKE(recipient_fingerprint, '^[0-9a-f]{64}$', 'c'))
+                        OR (channel = 'email' AND {$recipientHashCheck})
                         OR (channel = 'email' AND recipient_fingerprint = '' AND status = 'skipped_ineligible')
                     ),
                 ADD CONSTRAINT intelligence_deliveries_channel_status_check
                     CHECK (channel <> 'artifact' OR status <> 'skipped_ineligible'),
                 ADD CONSTRAINT intelligence_deliveries_hash_check
                     CHECK (
-                        REGEXP_LIKE(artifact_set_hash, '^[0-9a-f]{64}$', 'c')
-                        AND REGEXP_LIKE(idempotency_key, '^[0-9a-f]{64}$', 'c')
+                        {$artifactSetHashCheck}
+                        AND {$idempotencyKeyCheck}
                     ),
                 ADD CONSTRAINT intelligence_deliveries_sent_check
                     CHECK (status <> 'sent' OR sent_at IS NOT NULL),

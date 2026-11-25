@@ -34,7 +34,7 @@ class IntelligenceDeliverySchemaTest extends TestCase
             'email_snapshot', 'email_snapshot_sha256', 'synced_email_event',
         ], $columns->keys()->all());
         $this->assertFalse($columns['recipient_fingerprint']['nullable'], 'Sentinel kosong wajib, bukan NULL.');
-        $this->assertSame('', (string) $columns['recipient_fingerprint']['default']);
+        $this->assertSame('', (string) $this->columnDefault($columns['recipient_fingerprint']['default']));
         $this->assertTrue($columns['provider_message_id']['nullable']);
         $this->assertTrue($columns['error_code']['nullable']);
     }
@@ -180,7 +180,7 @@ class IntelligenceDeliverySchemaTest extends TestCase
             $operation();
             $this->fail("MySQL menerima operasi yang seharusnya ditolak dengan kode {$code}.");
         } catch (QueryException $exception) {
-            $this->assertSame($code, $exception->errorInfo[1], $exception->getMessage());
+            $this->assertSame($this->databaseErrorCode($code), $exception->errorInfo[1], $exception->getMessage());
         }
     }
 }

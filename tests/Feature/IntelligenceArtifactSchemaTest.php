@@ -53,12 +53,7 @@ class IntelligenceArtifactSchemaTest extends TestCase
 
     public function test_check_constraints_are_enforced_by_mysql(): void
     {
-        $checks = DB::table('information_schema.table_constraints')
-            ->where('table_schema', DB::scalar('SELECT DATABASE()'))
-            ->where('table_name', self::TABLE)
-            ->where('constraint_type', 'CHECK')
-            ->orderBy('CONSTRAINT_NAME')
-            ->pluck('ENFORCED', 'CONSTRAINT_NAME')->all();
+        $checks = $this->checkConstraintEnforcement(self::TABLE);
 
         $this->assertSame([
             'intelligence_artifacts_kind_check' => 'YES',
@@ -194,7 +189,7 @@ class IntelligenceArtifactSchemaTest extends TestCase
             $operation();
             $this->fail("MySQL menerima operasi yang seharusnya ditolak dengan kode {$code}.");
         } catch (QueryException $exception) {
-            $this->assertSame($code, $exception->errorInfo[1], $exception->getMessage());
+            $this->assertSame($this->databaseErrorCode($code), $exception->errorInfo[1], $exception->getMessage());
         }
     }
 }
