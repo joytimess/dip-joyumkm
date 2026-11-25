@@ -80,6 +80,8 @@ class IntelligenceArtifactUploadAuthTest extends TestCase
 
     public function test_expired_and_future_timestamps_are_rejected(): void
     {
+        // Waktu dibekukan agar selisih tepat 301 detik tidak bergeser melewati batas detik saat middleware membaca waktu.
+        $this->freezeTime();
         $bound = $this->boundEvent();
 
         $this->upload($bound['event_id'], 'pdf', $bound['files']['pdf'], now()->getTimestamp() - 301)

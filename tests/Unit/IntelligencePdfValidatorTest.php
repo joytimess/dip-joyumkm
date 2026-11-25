@@ -24,6 +24,25 @@ class IntelligencePdfValidatorTest extends TestCase
         $this->assertSame('pdf_validation_failed', $validator->validate('pdf', $pdf));
     }
 
+    public function test_missing_python_and_unconfigured_executables_fail_closed(): void
+    {
+        $pdf = base_path('docs/evidence/p3-07/samples/complete/report.pdf');
+        $validator = new IntelligenceArtifactFormatValidator;
+        $configuredPython = config('services.hermes_intelligence_artifact.python');
+
+        config(['services.hermes_intelligence_artifact.python' => storage_path('missing-python-for-test')]);
+        $this->assertSame('pdf_validation_failed', $validator->validate('pdf', $pdf));
+
+        config(['services.hermes_intelligence_artifact.python' => '']);
+        $this->assertSame('pdf_validation_failed', $validator->validate('pdf', $pdf));
+
+        config([
+            'services.hermes_intelligence_artifact.python' => $configuredPython,
+            'services.hermes_intelligence_artifact.qpdf' => null,
+        ]);
+        $this->assertSame('pdf_validation_failed', $validator->validate('pdf', $pdf));
+    }
+
     public static function rejectedPdfs(): array
     {
         return [

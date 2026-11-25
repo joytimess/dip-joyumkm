@@ -53,17 +53,21 @@ final class IntelligenceArtifactFormatValidator
         }
 
         $absolutePath = realpath($path);
-        if ($absolutePath === false || ! function_exists('proc_open')) {
+        $python = config('services.hermes_intelligence_artifact.python');
+        $qpdf = config('services.hermes_intelligence_artifact.qpdf');
+        // Executable kosong atau tidak dikonfigurasi harus gagal tertutup, bukan memanggil proc_open dengan null.
+        if ($absolutePath === false || ! function_exists('proc_open')
+            || ! is_string($python) || trim($python) === '' || ! is_string($qpdf) || trim($qpdf) === '') {
             return 'pdf_validation_failed';
         }
 
         $null = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
         $deadline = hrtime(true) + 8_000_000_000;
         $process = @proc_open([
-            config('services.hermes_intelligence_artifact.python'),
+            $python,
             '-I',
             __DIR__.'/validate-intelligence-pdf.py',
-            config('services.hermes_intelligence_artifact.qpdf'),
+            $qpdf,
             $absolutePath,
         ], [
             ['file', $null, 'r'],

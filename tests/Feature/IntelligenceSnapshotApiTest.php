@@ -165,6 +165,8 @@ class IntelligenceSnapshotApiTest extends TestCase
 
     public function test_a_timestamp_inside_the_tolerance_window_is_accepted(): void
     {
+        // Waktu dibekukan agar selisih tepat di batas toleransi tidak bergeser menjadi 301 detik.
+        $this->freezeTime();
         $umkm = Umkm::factory()->create();
         $event = $this->eventFor($this->createFinal($umkm, '2026-11-10 08:00:00'));
 
