@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\PreserveSixFactorHttpMethod;
+use App\Http\Middleware\PreventApiResponseCaching;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -25,12 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trimStrings(except: [$signedDelivery]);
         $middleware->convertEmptyStringsToNull(except: [$signedDelivery]);
         $middleware->prepend(PreserveSixFactorHttpMethod::class);
+        $middleware->appendToGroup('api', PreventApiResponseCaching::class);
         $middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : '/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request): bool => $request->is('api/*') || $request->expectsJson(),
         );
+        $exceptions->respond(function (SymfonyResponse $response, Throwable $exception, Request $request): SymfonyResponse {
+            return $request->is('api/*') ? PreventApiResponseCaching::apply($response) : $response;
+        });
         $exceptions->render(function (Throwable $exception, Request $request): ?JsonResponse {
             if ($request->is('api/internal/intelligence/deliveries')) {
                 $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 503;
