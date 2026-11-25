@@ -48,8 +48,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE six_factor_evaluations DROP CHECK six_factor_period_status_check');
-        DB::statement('ALTER TABLE six_factor_evaluations DROP CHECK six_factor_period_format_check');
+        DB::statement('ALTER TABLE six_factor_evaluations DROP CONSTRAINT six_factor_period_status_check');
+        DB::statement('ALTER TABLE six_factor_evaluations DROP CONSTRAINT six_factor_period_format_check');
 
         Schema::table(self::TABLE, function (Blueprint $table): void {
             $table->dropIndex('six_factor_umkm_period_index');

@@ -62,7 +62,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
 
         try {
             // Turunan yang bergantung pada tabel ini (FK intelligence_reports, kolom period_month) dilepas lebih dulu.
-            foreach (['artifactManifests', 'deliveries', 'artifacts', 'reportArtifactStatus', 'reports', 'periodMonth'] as $key) {
+            foreach (['emailStatusSync', 'artifactManifests', 'deliveries', 'artifacts', 'reportArtifactStatus', 'reports', 'periodMonth'] as $key) {
                 $chain[$key]->down();
             }
             $migration->down();
@@ -103,10 +103,10 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         ], $columns->keys()->all());
         $this->assertTrue($columns['period_month']['nullable']);
         $this->assertSame('char(7)', $columns['period_month']['type']);
-        $this->assertSame('draft', $columns['status']['default']);
+        $this->assertSame('draft', $this->columnDefault($columns['status']['default']));
         $this->assertFalse($columns['status']['nullable']);
         foreach (self::FACTORS as $factor) {
-            $this->assertSame('tinyint unsigned', $columns[$factor]['type']);
+            $this->assertSame('tinyint unsigned', $this->withoutDisplayWidth($columns[$factor]['type']));
             $this->assertTrue($columns[$factor]['nullable']);
         }
         $this->assertSame('stored', $columns['active_draft_umkm_id']['generation']['type']);
@@ -126,12 +126,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         $this->assertSame(['id'], $foreignKeys[0]['foreign_columns']);
         $this->assertSame('restrict', $foreignKeys[0]['on_delete']);
 
-        $checks = DB::table('information_schema.table_constraints')
-            ->where('table_schema', 'joyumkm_testing')
-            ->where('table_name', self::TABLE)
-            ->where('constraint_type', 'CHECK')
-            ->orderBy('CONSTRAINT_NAME')
-            ->pluck('ENFORCED', 'CONSTRAINT_NAME')->all();
+        $checks = $this->checkConstraintEnforcement(self::TABLE);
         $this->assertSame([
             'six_factor_period_format_check' => 'YES',
             'six_factor_period_status_check' => 'YES',
@@ -340,7 +335,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             $operation();
             $this->fail("MySQL menerima operasi yang seharusnya ditolak dengan kode {$code}.");
         } catch (QueryException $exception) {
-            $this->assertSame($code, $exception->errorInfo[1], $exception->getMessage());
+            $this->assertSame($this->databaseErrorCode($code), $exception->errorInfo[1], $exception->getMessage());
         }
     }
 
@@ -359,6 +354,7 @@ class SixFactorEvaluationDatabaseTest extends TestCase
             'artifacts' => require database_path('migrations/2026_11_23_153537_create_intelligence_artifacts_table.php'),
             'deliveries' => require database_path('migrations/2026_11_23_153538_create_intelligence_deliveries_table.php'),
             'artifactManifests' => require database_path('migrations/2026_11_24_100000_create_intelligence_artifact_manifests_table.php'),
+            'emailStatusSync' => require database_path('migrations/2026_11_25_100000_add_email_status_sync_to_intelligence_deliveries.php'),
         ];
     }
 
@@ -382,6 +378,9 @@ class SixFactorEvaluationDatabaseTest extends TestCase
         }
         if (! Schema::hasTable('intelligence_deliveries')) {
             $chain['deliveries']->up();
+        }
+        if (! Schema::hasColumn('intelligence_deliveries', 'synced_email_event')) {
+            $chain['emailStatusSync']->up();
         }
         if (! Schema::hasTable('intelligence_artifact_manifests')) {
             $chain['artifactManifests']->up();

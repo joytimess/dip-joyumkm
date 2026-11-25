@@ -91,7 +91,7 @@ class SixFactorPeriodMigrationTest extends TestCase
             $operation();
             $this->fail("MySQL menerima operasi yang seharusnya ditolak dengan kode {$code}.");
         } catch (QueryException $exception) {
-            $this->assertSame($code, $exception->errorInfo[1], $exception->getMessage());
+            $this->assertSame($this->databaseErrorCode($code), $exception->errorInfo[1], $exception->getMessage());
         }
     }
 }
