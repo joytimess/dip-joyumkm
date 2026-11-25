@@ -33,3 +33,5 @@ Thumbs.db
 !/docs/evidence/p5-02-qa-summary.md
 !/docs/evidence/p5-06-delivery-status-contract.md
 !/docs/evidence/p5-07-qa-summary.md
+.env.bak*
+docs/presentation/*
