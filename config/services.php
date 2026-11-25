@@ -55,6 +55,12 @@ return [
         'backoff_cap' => (int) env('HERMES_WEBHOOK_BACKOFF_CAP_SECONDS', 900),
     ],
 
+    'hermes_onboarding' => [
+        'enabled' => env('HERMES_ONBOARDING_ENABLED', false),
+        'url' => env('HERMES_ONBOARDING_WEBHOOK_URL'),
+        'secret' => env('HERMES_ONBOARDING_WEBHOOK_SECRET'),
+    ],
+
     'hermes_intelligence_callback' => [
         'secret' => env('HERMES_INTELLIGENCE_CALLBACK_SECRET'),
         'tolerance_seconds' => (int) env('HERMES_INTELLIGENCE_CALLBACK_TOLERANCE_SECONDS', 300),

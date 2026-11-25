@@ -6,8 +6,12 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
@@ -19,6 +23,7 @@ class AuthApiTest extends TestCase
 
     public function test_register_returns_201_normalizes_email_and_hashes_password_and_token(): void
     {
+        config(['services.hermes_onboarding.enabled' => false]);
         $this->freezeTime();
         $response = $this->postJson('/api/auth/register', [
             'name' => ' Pendamping Baru ', 'email' => ' BARU@EXAMPLE.COM ',
@@ -33,6 +38,123 @@ class AuthApiTest extends TestCase
         $this->assertNotNull($token);
         $this->assertSame(now()->addDays(7)->toDateTimeString(), $token->expires_at->toDateTimeString());
         $this->assertSame(64, strlen($token->token));
+        $this->assertDatabaseCount('jobs', 0);
+    }
+
+    public function test_registration_queues_an_encrypted_event_and_retries_the_same_signed_payload(): void
+    {
+        $this->enableOnboarding();
+        $this->freezeTime();
+        $secret = config('services.hermes_onboarding.secret');
+        $requests = [];
+        Http::preventStrayRequests();
+        Http::fake([
+            config('services.hermes_onboarding.url') => function (Request $request) use (&$requests) {
+                $requests[] = $request;
+
+                return count($requests) === 1
+                    ? Http::failedConnection('private receiver detail')($request)
+                    : Http::response([
+                        'status' => 'duplicate',
+                        'event_id' => $request['event_id'],
+                        'run_id' => (string) Str::uuid(),
+                    ]);
+            },
+        ]);
+
+        $credentials = [
+            'name' => 'Pendamping Baru', 'email' => ' BARU@EXAMPLE.COM ',
+            'password' => 'JoyUMKM-Testing-2026', 'password_confirmation' => 'JoyUMKM-Testing-2026',
+        ];
+        $registration = $this->postJson('/api/auth/register', $credentials)->assertCreated();
+        $this->postJson('/api/auth/register', $credentials)->assertUnprocessable();
+
+        Http::assertNothingSent();
+        $eventJob = DB::table('jobs')->sole();
+        $this->assertSame('hermes-onboarding', $eventJob->queue);
+        $this->assertStringNotContainsString('baru@example.com', $eventJob->payload);
+        $this->assertDatabaseCount('webhook_outbox', 0);
+        $user = User::query()->sole();
+        $timestamp = $user->created_at->copy()->utc()->format('Y-m-d\TH:i:s\Z');
+
+        $this->runOnboardingWorker();
+        $this->assertDatabaseHas('jobs', ['queue' => 'hermes-onboarding', 'attempts' => 1]);
+        $this->assertDatabaseCount('failed_jobs', 0);
+        $this->assertDatabaseHas('users', ['id' => $user->id]);
+
+        $this->travel(16)->seconds();
+        $this->runOnboardingWorker();
+        $this->assertCount(2, $requests);
+        [$first, $second] = $requests;
+        $this->assertSame($first->body(), $second->body());
+        $this->assertTrue($second->hasHeader('X-JoyUMKM-Signature', 'sha256='.hash_hmac('sha256', $second->body(), $secret)));
+        $this->assertTrue(Str::isUuid($second['event_id']));
+        $this->assertSame([
+            'event_id' => $first['event_id'],
+            'event_type' => 'user.registered',
+            'event_version' => 1,
+            'source' => 'joyumkm',
+            'occurred_at' => $timestamp,
+            'data' => [
+                'user_id' => $registration->json('data.user.id'),
+                'name' => 'Pendamping Baru',
+                'email' => 'baru@example.com',
+                'registered_at' => $timestamp,
+            ],
+        ], $second->data());
+        $this->assertDatabaseCount('jobs', 0);
+        $this->assertDatabaseCount('failed_jobs', 0);
+    }
+
+    public function test_rolling_back_registration_also_rolls_back_the_onboarding_event(): void
+    {
+        $this->enableOnboarding();
+        Http::preventStrayRequests();
+
+        DB::beginTransaction();
+        try {
+            $this->postJson('/api/auth/register', [
+                'name' => 'Pendamping Baru', 'email' => 'rollback@example.com',
+                'password' => 'JoyUMKM-Testing-2026', 'password_confirmation' => 'JoyUMKM-Testing-2026',
+            ])->assertCreated();
+            $this->assertDatabaseHas('jobs', ['queue' => 'hermes-onboarding']);
+        } finally {
+            DB::rollBack();
+        }
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+        $this->assertDatabaseCount('jobs', 0);
+        Http::assertNothingSent();
+    }
+
+    public function test_onboarding_mismatched_ack_fails_without_retry_or_logging_the_response(): void
+    {
+        $this->enableOnboarding();
+        Http::preventStrayRequests();
+        Http::fake([
+            config('services.hermes_onboarding.url') => Http::response([
+                'status' => 'accepted',
+                'event_id' => (string) Str::uuid(),
+                'run_id' => (string) Str::uuid(),
+                'message' => 'private receiver detail',
+            ], 202),
+        ]);
+
+        $this->postJson('/api/auth/register', [
+            'name' => 'Pendamping Baru', 'email' => 'ack-check@example.com',
+            'password' => 'JoyUMKM-Testing-2026', 'password_confirmation' => 'JoyUMKM-Testing-2026',
+        ])->assertCreated();
+
+        $this->runOnboardingWorker();
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseCount('jobs', 0);
+        $failedJob = DB::table('failed_jobs')->sole();
+        $this->assertSame('hermes-onboarding', $failedJob->queue);
+        $this->assertStringContainsString('invalid acknowledgement', $failedJob->exception);
+        $this->assertStringNotContainsString('private receiver detail', $failedJob->exception);
+        $this->assertStringNotContainsString('ack-check@example.com', $failedJob->payload);
     }
 
     public function test_login_rejects_wrong_credentials_with_401_without_issuing_token(): void
@@ -142,5 +264,23 @@ class AuthApiTest extends TestCase
             'register 37 unicode characters 74 bytes' => ['/api/auth/register', str_repeat('é', 37)],
             'login 37 unicode characters 74 bytes' => ['/api/auth/login', str_repeat('é', 37)],
         ];
+    }
+
+    private function enableOnboarding(): void
+    {
+        config([
+            'services.hermes_onboarding.enabled' => true,
+            'services.hermes_onboarding.url' => 'http://127.0.0.1:8650/joyumkm-onboarding',
+            'services.hermes_onboarding.secret' => str_repeat('a', 32),
+        ]);
+    }
+
+    private function runOnboardingWorker(): void
+    {
+        $this->artisan('queue:work', [
+            'connection' => 'hermes-onboarding',
+            '--queue' => 'hermes-onboarding',
+            '--once' => true,
+        ])->assertSuccessful();
     }
 }

@@ -44,6 +44,15 @@ return [
             'after_commit' => false,
         ],
 
+        'hermes-onboarding' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'jobs',
+            'queue' => 'hermes-onboarding',
+            'retry_after' => 60,
+            'after_commit' => false,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
