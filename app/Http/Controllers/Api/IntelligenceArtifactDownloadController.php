@@ -51,7 +51,6 @@ class IntelligenceArtifactDownloadController extends Controller
                 'reason' => match ($snapshot['error_code']) {
                     'NO_CONSENT' => 'no_consent',
                     'SUPPRESSED' => 'suppressed',
-                    'NOT_ALLOWLISTED' => 'not_allowlisted',
                     'NO_BUSINESS_EMAIL', 'INVALID_EMAIL' => 'email_unavailable',
                     default => null,
                 },

@@ -25,7 +25,7 @@ Golden vector sintetis. Secret `synthetic-recipient-key-0123456789abcdef` mengha
 
 Respons 200 eligible memuat `event_id`, `umkm_id`, `eligible: true`, `recipient_email`, `recipient_fingerprint`, `consent_version`, `issued_at` dan `expires_at`. Tanggal UTC bersufiks Z dan expiry berjarak 60 detik. Fingerprint adalah HMAC P2 dengan pepper Laravel atas email setelah trim dan lowercase.
 
-Respons 200 ineligible hanya memuat `event_id`, `eligible: false` dan `reason`. Alasan berurutan adalah `evaluation_not_final`, `no_consent`, `no_business_email`, `invalid_email`, `suppressed` dan `not_allowlisted`. Semua respons memakai `Cache-Control: no-store`.
+Respons 200 ineligible hanya memuat `event_id`, `eligible: false` dan `reason`. Alasan berurutan adalah `evaluation_not_final`, `no_consent`, `no_business_email`, `invalid_email`, `suppressed`. Semua respons memakai `Cache-Control: no-store`.
 
 | HTTP | Kode | Perlakuan consumer |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Respons 200 ineligible hanya memuat `event_id`, `eligible: false` dan `reason`. 
 
 ## Konfigurasi dan pemakaian Hermes
 
-Laravel membaca `HERMES_INTELLIGENCE_RECIPIENT_SECRET`, `HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS`, `INTELLIGENCE_RECIPIENT_TTL_SECONDS`, `INTELLIGENCE_EMAIL_TEST_MODE` dan `INTELLIGENCE_EMAIL_TEST_ALLOWLIST`. Pada dev, toleransi 300 detik, TTL 60 detik dan mode uji aktif. Mode uji memerlukan allowlist valid. Pepper tetap di Laravel.
+Laravel membaca `HERMES_INTELLIGENCE_RECIPIENT_SECRET`, `HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS` dan `INTELLIGENCE_RECIPIENT_TTL_SECONDS`. Pada dev, toleransi 300 detik, TTL 60 detik. Pepper tetap di Laravel.
 
 Hermes menyimpan secret dengan nama yang sama di `/opt/data/joyumkm-intelligence/state/recipient.env` (mode 0600, owner runtime). File ini berisi `INTELLIGENCE_RECIPIENT_BASE_URL=http://host.docker.internal` dan `INTELLIGENCE_RECIPIENT_HTTP_HOST=joyumkm.test` untuk Apache lokal. Probe QA membaca file tersebut langsung. Consumer dan loader runtime recipient merupakan handoff P5-03. Gunakan HTTPS di lingkungan nonlokal, larang redirect, dan jangan catat header, body, alamat maupun secret.
 

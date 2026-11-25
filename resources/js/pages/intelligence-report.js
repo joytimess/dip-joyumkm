@@ -45,7 +45,6 @@ const emailLabels = {
 const emailReasons = {
     no_consent: 'Persetujuan belum tersedia.',
     suppressed: 'Pengiriman ke alamat penerima dihentikan.',
-    not_allowlisted: 'Alamat penerima di luar daftar uji.',
     email_unavailable: 'Email usaha tidak tersedia atau tidak valid.',
 };
 

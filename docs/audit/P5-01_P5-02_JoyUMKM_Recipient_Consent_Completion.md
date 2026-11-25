@@ -4,7 +4,7 @@ P5-01 dan P5-02 memenuhi acceptance lokal Laragon dan Hermes Docker. Signed GET 
 
 Perubahan utama ada di middleware dan controller recipient, service eligibility/suppression, alur update UMKM, resource profil, dan editor Kontak Usaha. Schema P2 tetap digunakan. Tes terarah berjalan pada MySQL uji dengan fixture sintetis.
 
-Laravel dan Hermes memakai secret recipient khusus yang cocok. Laravel menyimpan satu alamat allowlist secara privat dan mode testing aktif. ACL `.env` dibatasi ke akun runtime, SYSTEM dan Administrators. Backup konfigurasi dan ACL tersimpan di folder privat owner. Jalur HTTP lokal memakai alias Docker dan virtual host Apache Laragon. Webhook, pipeline dan delivery tetap dipause. SMTP dan pepper tetap menggunakan konfigurasi sebelumnya.
+Laravel dan Hermes memakai secret recipient khusus yang cocok. ACL `.env` dibatasi ke akun runtime, SYSTEM dan Administrators. Backup konfigurasi dan ACL tersimpan di folder privat owner. Jalur HTTP lokal memakai alias Docker dan virtual host Apache Laragon. Webhook, pipeline dan delivery tetap dipause. SMTP dan pepper tetap menggunakan konfigurasi sebelumnya.
 
 - [Implementasi recipient pull](P5-01_JoyUMKM_Recipient_Pull_API.md)
 - [Implementasi consent dan eligibility](P5-02_JoyUMKM_Consent_Eligibility.md)

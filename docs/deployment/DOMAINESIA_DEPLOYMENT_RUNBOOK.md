@@ -62,10 +62,11 @@ Jangan tulis nilai di dokumen, chat, atau repo. Nilai yang bukan secret ditandai
 - `HERMES_INTELLIGENCE_RECIPIENT_SECRET`, `HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS`
 
 **Email intelligence:**
-- `INTELLIGENCE_EMAIL_TEST_MODE` — `true` di QA, dan `INTELLIGENCE_EMAIL_TEST_ALLOWLIST` hanya berisi alamat uji
 - `INTELLIGENCE_DELIVERY_STATUS_MESSAGE_DOMAIN`
 
-**Sisi Hermes (diatur di host Hermes, bukan di repo ini):** `JMI_HOME`, `JMI_ARTIFACT_PIPELINE_ENABLED`, `JMI_ARTIFACT_DELIVERY_ENABLED`, `JMI_EMAIL_DELIVERY_ENABLED`, `JMI_EMAIL_STATUS_SYNC_ENABLED`. Untuk QA semua `false` kecuali yang diputuskan.
+Hermes mengambil email bisnis UMKM melalui signed GET untuk setiap percobaan. Evaluasi harus Final, alamat valid, consent aktif untuk alamat tersebut, dan alamat tidak masuk suppression. Penerima tidak perlu didaftarkan secara manual.
+
+**Sisi Hermes (diatur di host Hermes, bukan di repo ini):** `JMI_HOME`, `JMI_ARTIFACT_PIPELINE_ENABLED`, `JMI_ARTIFACT_DELIVERY_ENABLED`, `JMI_EMAIL_DELIVERY_ENABLED`, `JMI_EMAIL_DELIVERY_PAUSED`, `JMI_EMAIL_STATUS_SYNC_ENABLED`. Untuk QA semua `false` kecuali yang diputuskan.
 
 **Isolasi lokal vs produksi:** setiap secret, `JMI_HOME`, subscription, cron pemulihan, dan endpoint harus unik per lingkungan. Jangan menyalin `.env` lokal ke hosting.
 

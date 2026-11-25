@@ -85,8 +85,6 @@ return [
         'secret' => env('HERMES_INTELLIGENCE_RECIPIENT_SECRET'),
         'tolerance_seconds' => env('HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS', 300),
         'ttl_seconds' => env('INTELLIGENCE_RECIPIENT_TTL_SECONDS', 60),
-        'test_mode' => env('INTELLIGENCE_EMAIL_TEST_MODE', true),
-        'test_allowlist' => env('INTELLIGENCE_EMAIL_TEST_ALLOWLIST', ''),
     ],
 
     'intelligence' => [

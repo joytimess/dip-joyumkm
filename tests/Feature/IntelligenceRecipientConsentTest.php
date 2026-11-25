@@ -35,8 +35,6 @@ class IntelligenceRecipientConsentTest extends TestCase
 
         config([
             'services.intelligence.recipient_pepper' => self::PEPPER,
-            'services.hermes_intelligence_recipient.test_mode' => true,
-            'services.hermes_intelligence_recipient.test_allowlist' => self::EMAIL,
         ]);
     }
 

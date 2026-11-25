@@ -6,4 +6,4 @@ Controller mencocokkan ID, jenis, versi, sumber, serta identitas evaluasi dan UM
 
 Respons eligible hanya memuat identitas event dan UMKM, alamat, fingerprint, versi consent dan jendela penggunaan 60 detik. Respons ineligible memuat event, keputusan dan alasan. Semua respons rute memakai `Cache-Control: no-store`.
 
-Mode uji Laravel aktif dengan satu alamat yang disetujui owner dalam konfigurasi privat. Secret recipient khusus tersedia di Laravel dan Hermes. Lokasi efektif dan kontrak signer ada di [kontrak API](../evidence/p5-01-recipient-api-contract.md). Hasil HTTP dan matriks acceptance ada di [ringkasan QA](../evidence/p5-02-qa-summary.md).
+Secret recipient khusus tersedia di Laravel dan Hermes. Lokasi efektif dan kontrak signer ada di [kontrak API](../evidence/p5-01-recipient-api-contract.md). Hasil HTTP dan matriks acceptance ada di [ringkasan QA](../evidence/p5-02-qa-summary.md).

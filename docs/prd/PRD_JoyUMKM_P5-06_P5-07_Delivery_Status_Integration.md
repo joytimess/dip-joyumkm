@@ -14,7 +14,7 @@ Implementasikan P5-06 dan P5-07 secara berurutan sampai Definition of Done. Guna
 - Runtime Hermes: `hermes-agent`, `hermes_data:/joyumkm-intelligence/` → `/opt/data/joyumkm-intelligence/`; `JMI_HOME=/opt/data/joyumkm-intelligence/state`. Source Python `jmi/`, tests `tests/` di volume persisten. Jangan menjadikan scratchpad host atau folder dokumentasi Laravel sebagai runtime Hermes.
 - Pertahankan perubahan Git existing. Tidak ada commit, push, reset, clean, destructive migration, replay/backfill, atau pemrosesan backlog. Jangan mengubah data bisnis/histori untuk QA. Jangan menjalankan PHP Artisan Tinker.
 - Semua rollout tetap off: `HERMES_WEBHOOK_ENABLED=false`, `JMI_ARTIFACT_PIPELINE_ENABLED=0`, `JMI_ARTIFACT_DELIVERY_ENABLED=0`, `JMI_EMAIL_DELIVERY_ENABLED=0`, `JMI_EMAIL_DELIVERY_PAUSED=1`; pertahankan pause marker dan guard existing. Status sync juga off saat handoff. Jangan start worker/scheduler live, register cron duplikat, atau melakukan restart layanan yang bisa memicu backlog.
-- Real Gmail AUTH/send, inbox delivery, real AI, live dispatch, hosting nonlokal/nginx/PHP-FPM berada di P6 atau verifikasi deployment terkait. **Tidak ada pengiriman email nyata pada P5-06/P5-07.** Allowlist pengujian yang sudah disetujui tetap privat (`victorw7286@gmail.com`); jangan hardcode ke source, fixture publik atau evidence. Gunakan mailbox sintetis untuk QA.
+- Real Gmail AUTH/send, inbox delivery, real AI, live dispatch, hosting nonlokal/nginx/PHP-FPM berada di P6 atau verifikasi deployment terkait. **Tidak ada pengiriman email nyata pada P5-06/P5-07.** Gunakan mailbox sintetis untuk QA.
 - Reuse satu paket sintetis P3/P4 yang sah; jangan render PDF/XLSX, menarik snapshot historis, atau memanggil AI ulang. Jangan mengulang full suite historis. Jalankan targeted regression yang relevan dengan perubahan, fake clock untuk cooldown, SMTP stub/fake transport; cleanup scoped wajib termasuk saat gagal.
 - Stop setelah P5-07. Jangan mulai P6. Handoff harus membedakan PASS lokal, NOT RUN, dan risiko yang benar-benar belum ditutup.
 
@@ -25,7 +25,7 @@ Implementasikan P5-06 dan P5-07 secara berurutan sampai Definition of Done. Guna
 | P0–P2 | Audit, stabilisasi dengan pengecualian historis diterima, schema/kontrak data dan UTC dev PASS. |
 | P3 | Snapshot, canonical report, PDF, XLSX, immutable manifest, Package Ready PASS. |
 | P4 | Signed JSON callback, upload PDF/XLSX, private storage, integrity, authorized download, HTTP Laragon dan hardening PASS. |
-| P5-01/02 | 42 tes MySQL/469 assertions; 16/16 AC. Recipient GET HMAC `JMI-RECIPIENT-V1`, TTL 60s, consent grant/revoke, stale grant protection, suppression dan private allowlist PASS. |
+| P5-01/02 | 42 tes MySQL/469 assertions; 16/16 AC. Recipient GET HMAC `JMI-RECIPIENT-V1`, TTL 60s, consent grant/revoke, stale grant protection, dan suppression PASS. |
 | P5-03/04/05 | 18/18 AC, 65 tes Hermes + 7 rerun terarah pada versi akhir, QA utama 676s. Runtime volume persisten, MIME dua lampiran identik, email recovery dan independensi P4 PASS lokal. |
 
 Sumber handoff di repo:
@@ -317,7 +317,7 @@ sequenceDiagram
 Integrasikan pada Intelligence Reporting existing di Detail UMKM. Inspeksi actual route/resource/component; reuse Sanctum/ownership/role policy, report/event yang tepat, bukan status global UMKM. Tidak membuat halaman/menu baru. Proyeksi read-only melalui resource existing atau endpoint status P4 yang sesuai. Jangan expose HMAC, fingerprint, idempotency key, raw recipient, Message-ID, private path, SMTP response atau internal sync metadata. Jangan menampilkan alamat kontak sekarang sebagai penerima historis; state tidak menyimpan alamat tujuan mentah.
 
 - Tampilkan tiga status independen: Analisis Intelligence, Penyimpanan dokumen, Pengiriman email. Pertahankan P4 historical receipt vs actual file availability dan authorized download integrity.
-- Gunakan label §6.2. `sent` = **Diterima server email**, waktu acceptance WIB; bukan masuk inbox/dibaca. `delivery_unknown` = **Hasil pengiriman belum dapat dipastikan**. Safe reason lokal untuk consent, suppression, allowlist, perubahan alamat, block; tidak ada error internal mentah.
+- Gunakan label §6.2. `sent` = **Diterima server email**, waktu acceptance WIB; bukan masuk inbox/dibaca. `delivery_unknown` = **Hasil pengiriman belum dapat dipastikan**. Safe reason lokal untuk consent, suppression, perubahan alamat, block; tidak ada error internal mentah.
 - Report historis tanpa delivery row: **Belum tersedia**, bukan failed/queued/sent. Jika report belum tersedia, existing empty state. Laravel tidak dapat mengetahui outcome yang belum disinkronisasi; jangan menebak.
 - Jika fetch gagal, error/retry read-only per komponen, bukan status email failed. Skeleton lokal, tidak ada full-screen session spinner. Poppins dan brand existing (#0207CA, #0297DE, #FC734D, #101E40), desktop/mobile 390px, no overflow, accessible. Tidak ada tombol kirim ulang manual. Tidak mengubah consent UI P5-02.
 
@@ -388,7 +388,7 @@ Catat file changed, migration name/status bila ada, private backup/rollback inst
 
 ### Handoff P6 (belum dikerjakan)
 
-- Real Gmail implicit TLS 465 AUTH dan controlled send hanya ke alamat allowlist owner; inbox delivery diverifikasi terpisah dari SMTP 250.
+- Real Gmail implicit TLS 465 AUTH dan controlled send hanya ke alamat dengan consent pada event UAT yang disetujui; inbox delivery diverifikasi terpisah dari SMTP 250.
 - Real AI dan satu evaluasi Final baru yang sah, controlled flags/enrollment, live dispatch worker Laravel dan Hermes recovery; verifikasi outbox, report, manifest, file, email, callback/UI. Hindari replay/backlog; siapkan pause/rollback.
 - Hosting nonlokal/nginx/PHP-FPM memerlukan verifikasi service user, QPDF/Python, private ACL/storage, body limits sesuai P4-07.
 - Exactly-once SMTP tidak dijamin. Unknown membutuhkan operator, kehilangan seluruh durable state atau restore usang tetap risiko. No auto-resend dari sync.

@@ -4,12 +4,12 @@
 **Status:** Approved by owner — siap implementasi  
 **Scope:** Authenticated Recipient Pull API, Consent & Email Eligibility  
 **Target:** Laravel JoyUMKM (Laragon) dan konfigurasi autentikasi privat Hermes Docker  
-**Mode:** Implementasi otonom, berurutan, bounded QA  
-**Klasifikasi:** Internal proyek. Alamat allowlist pengujian dalam dokumen ini bukan data untuk dipublikasikan atau dimasukkan ke source code.
+**Mode:** Implementasi otonom, berurutan, bounded QA
+**Klasifikasi:** Internal proyek.
 
 ## 1. Executive brief
 
-P5-01 dan P5-02 menyediakan fondasi pengiriman laporan melalui Gmail oleh Hermes. Setelah paket PDF dan XLSX siap di Hermes, sistem harus dapat memperoleh alamat email usaha yang sah dari Laravel melalui signed GET. Laravel menentukan kelayakan berdasarkan identitas event, status Final penilaian Enam Faktor, email usaha, persetujuan eksplisit, suppression dan testing allowlist.
+P5-01 dan P5-02 menyediakan fondasi pengiriman laporan melalui Gmail oleh Hermes. Setelah paket PDF dan XLSX siap di Hermes, sistem harus dapat memperoleh alamat email usaha yang sah dari Laravel melalui signed GET. Laravel menentukan kelayakan berdasarkan identitas event, status Final penilaian Enam Faktor, email usaha, persetujuan eksplisit, dan suppression.
 
 Laravel **tidak mengirim email**. P5-01/P5-02 tidak melakukan koneksi SMTP, pengiriman email nyata, AI tambahan, maupun pembuatan ulang laporan. Transport SMTP, template, attachment dan otomatisasi email dibangun pada P5-03 hingga P5-05; sinkronisasi status email pada P5-06; QA final P5 pada P5-07.
 
@@ -31,7 +31,7 @@ Laravel **tidak mengirim email**. P5-01/P5-02 tidak melakukan koneksi SMTP, peng
 | K04 | Consent eksplisit per UMKM, melalui Detail/Edit UMKM existing; tidak aktif secara default. |
 | K05 | Perubahan alamat mencabut consent lama; grant baru harus eksplisit dan terikat alamat terkini. |
 | K06 | Suppression dan recipient fingerprint menggunakan fondasi P2; pepper existing tidak dirotasi. |
-| K07 | Testing mode aktif; satu-satunya target uji yang diizinkan adalah `victorw7286@gmail.com`. |
+| K07 | Testing mode aktif; satu-satunya target uji yang diizinkan adalah `owner-approved@example.test`. |
 | K08 | Recipient pull tidak bergantung pada report callback atau upload Laravel yang sudah complete. |
 | K09 | PII tidak dimasukkan ke webhook, report, manifest, job/evidence/log Hermes. |
 | K10 | Tidak ada email nyata pada P5-01/P5-02. |
@@ -46,7 +46,7 @@ Laravel **tidak mengirim email**. P5-01/P5-02 tidak melakukan koneksi SMTP, peng
 | P5-01-B | HMAC dedicated secret, TTL, response contract dan proteksi PII | Laravel + konfigurasi privat Hermes |
 | P5-02-A | Grant/revoke consent dan ownership authorization | Laravel |
 | P5-02-B | Integrasi consent pada Detail/Edit UMKM existing | Frontend JoyUMKM |
-| P5-02-C | Eligibility, suppression, testing allowlist, invariant perubahan email | Laravel |
+| P5-02-C | Eligibility, suppression, invariant perubahan email | Laravel |
 | P5-02-D | Targeted QA gabungan, signed HTTP probe, deployment konfigurasi lokal, cleanup dan handoff | Laravel + Hermes |
 
 Urutan: selesaikan kontrak dan endpoint P5-01 dengan service P2 existing; langsung lanjut P5-02 untuk melengkapi policy, consent UI/API dan integrasi eligibility. Verifikasi gabungan di akhir agar tidak mengulang setup. Jangan berhenti untuk approval rutin di antara subtask. Jika ada blocker nyata, laporkan fakta dan usaha penyelesaiannya.
@@ -90,7 +90,6 @@ flowchart TD
     H2 --> L1
     DB -.-> L3
     S[(Email suppressions)] -.-> L3
-    A[Testing allowlist] -.-> L3
     L4 --> H3
     L5 --> H4
 ```
@@ -120,13 +119,10 @@ Nama berikut adalah kontrak rancangan yang disetujui; pertahankan convention akt
 HERMES_INTELLIGENCE_RECIPIENT_SECRET=
 HERMES_INTELLIGENCE_RECIPIENT_TOLERANCE_SECONDS=300
 INTELLIGENCE_RECIPIENT_TTL_SECONDS=60
-INTELLIGENCE_EMAIL_TEST_MODE=true
-INTELLIGENCE_EMAIL_TEST_ALLOWLIST=victorw7286@gmail.com
 ```
 
 - Generate secret dengan CSPRNG minimal 32 random bytes, misalnya 64 karakter hex. Berbeda dari webhook, callback, snapshot, artifact secret dan recipient pepper. Jangan merotasi secret sebelumnya.
 - Sediakan secret yang sama pada konfigurasi privat Hermes, misalnya `JMI_HOME/recipient.env` (mode 0600, owner runtime Hermes); gunakan nama yang sesuai loader, dokumentasikan mapping. Simpan base URL Laragon aktual yang dapat dijangkau dari Docker; reuse local alias yang telah terverifikasi P4. Tidak perlu mengubah SMTP.
-- `.env.example` hanya berisi placeholder kosong untuk secret dan allowlist, test mode default true. Alamat uji nyata hanya pada konfigurasi privat, bukan source, fixture committed atau raw evidence.
 - Skema HMAC: gunakan skema signed GET snapshot existing jika dapat mengikat method, canonical path/event dan timestamp dengan aman, menggunakan dedicated secret dan domain separation. Jika tidak ada skema yang cocok, gunakan kontrak `JMI-RECIPIENT-V1` berikut sebagai default yang eksplisit (detail engineering ini melengkapi persetujuan awal):
 
 ```text
@@ -230,7 +226,6 @@ sequenceDiagram
             A->>E: Evaluate recipient
             E->>DB: Read current email, consent, suppression
             DB-->>E: Eligibility data
-            E->>E: Validate and enforce allowlist
             alt Eligible
                 E-->>A: Eligible decision and matching recipient
                 A-->>H: 200 email, fingerprint, expiry; no-store
@@ -282,7 +277,7 @@ Gunakan halaman dan komponen existing, tidak membuat halaman baru atau redesign.
 - Status: aktif/belum menyetujui, email tidak tersedia/tidak valid bila relevan; consent aktif tidak sama dengan semua eligibility gate lulus.
 - Ketika email berubah, UI reset checkbox dan beri pemberitahuan bahwa persetujuan lama dicabut setelah perubahan disimpan. User dapat memilih grant baru secara eksplisit untuk alamat baru sesuai aturan server.
 - Berikan tindakan revoke yang jelas. Reuse save/update flow, loading, validation, error dan retry existing. Status berhasil hanya setelah server mengonfirmasi.
-- Pengguna tanpa izin tidak dapat melakukan mutasi; backend tetap wajib menolak walaupun UI disembunyikan. Hindari exposing internal suppression/fingerprint/allowlist pada UI publik.
+- Pengguna tanpa izin tidak dapat melakukan mutasi; backend tetap wajib menolak walaupun UI disembunyikan. Hindari exposing internal suppression/fingerprint pada UI publik.
 
 ### 6.4 Flowchart consent
 
@@ -358,7 +353,7 @@ sequenceDiagram
 
 ### 6.6 Eligibility policy
 
-Pertahankan precedence P2; testing allowlist merupakan gate tambahan sesudah suppression. Service harus mengambil data terbaru setiap pull. Tidak melakukan lookup kontak di Hermes snapshot atau meminta AI memilih alamat.
+Periksa status Final, consent, validitas email, dan suppression secara berurutan. Service harus mengambil data terbaru setiap pull. Tidak melakukan lookup kontak di Hermes snapshot atau meminta AI memilih alamat.
 
 | Prioritas | Kondisi gagal | Reason |
 |---|---|---|
@@ -367,11 +362,9 @@ Pertahankan precedence P2; testing allowlist merupakan gate tambahan sesudah sup
 | 3 | `business_email` kosong | `no_business_email` |
 | 4 | Format email invalid | `invalid_email` |
 | 5 | Fingerprint masuk suppression | `suppressed` |
-| 6 | Testing mode aktif dan alamat bukan allowlist | `not_allowlisted` |
 
-Semua gate lulus → `eligible=true`. Fingerprint dibuat dengan service P2 setelah email valid; pertahankan canonicalization existing (jangan menambahkan Gmail dot/plus alias expansion). Exact allowlist setelah normalisasi yang sama; jangan wildcard, domain-wide allowance atau fallback ke email pengirim. Test mode kosong/invalid atau allowlist kosong saat testing harus fail closed. Default aman adalah testing aktif; normal mode diaktifkan secara eksplisit pada fase rollout, bukan sekarang.
+Semua gate lulus → `eligible=true`. Fingerprint dibuat dengan service P2 setelah email valid; pertahankan canonicalization existing (jangan menambahkan Gmail dot/plus alias expansion). Gunakan alamat bisnis yang disetujui tanpa fallback ke alamat pengirim.
 
-`victorw7286@gmail.com` hanya diizinkan jika syarat lain lulus. Allowlist bukan consent otomatis, bukan alamat override dan bukan alasan mengubah `business_email` UMKM asli. Gunakan data sintetis pada QA. Untuk tes otomatis gunakan alamat contoh dan konfigurasi override yang terisolasi; verifikasi setting allowlist dev secara privat tanpa mengirim email.
 
 ```mermaid
 flowchart TD
@@ -386,11 +379,7 @@ flowchart TD
     E -->|Ya| F[Calculate P2 fingerprint]
     F --> G{Suppressed?}
     G -->|Ya| X5[suppressed]
-    G -->|Tidak| H{Testing mode?}
-    H -->|Ya| I{Exact allowlist match?}
-    I -->|Tidak| X6[not_allowlisted]
-    I -->|Ya| J[Eligible]
-    H -->|Tidak| J
+    G -->|Tidak| J[Eligible]
     X1 --> K[Return eligible false]
     X2 --> K
     X3 --> K
@@ -418,7 +407,7 @@ TTL respons 60 detik membatasi penggunaan data penerima yang sudah ditarik. P5-0
 | AC-07 | Email change | Consent lama reset atomik; stale grant ditolak; grant baru eksplisit sah; unrelated update tidak reset |
 | AC-08 | Email validation | Missing/invalid dan non-Final ditolak sesuai precedence P2 |
 | AC-09 | Suppression | Suppressed email tetap ditolak meskipun consent aktif |
-| AC-10 | Testing allowlist | Exact allowed passes bila eligible; alamat lain/empty allowlist fail closed |
+| AC-10 | Kelayakan email bisnis | Alamat valid dengan consent aktif lulus jika tidak disuppresi |
 | AC-11 | PII dan secret protection | Tidak muncul di webhook, canonical report, manifest, log, evidence; ineligible tidak mengembalikan alamat |
 | AC-12 | P4 independence | Signed GET berhasil tanpa report/manifest/upload Laravel, dengan event sah |
 | AC-13 | UI authorization | Section consent existing berfungsi; perubahan email reset, error/success sesuai respons; unauthorized mutation ditolak |
@@ -447,7 +436,7 @@ Target 5–10 menit. Hard limit **15 menit kumulatif QA**, bukan per task/test d
 
 ## 9. Deployment dan keamanan operasional
 
-- Setelah targeted gates lulus, provision dedicated secret dan test-mode allowlist pada konfigurasi privat dev Laravel/Hermes. Backup konfigurasi yang berubah secara privat, dengan permission terbatas. Verifikasi loader dan matching secret tanpa mencetak nilainya; config refresh Laravel sesuai convention. Tidak perlu restart Hermes kecuali diperlukan dan aman; jangan mengaktifkan worker.
+- Setelah targeted gates lulus, provision dedicated secret pada konfigurasi privat dev Laravel/Hermes. Backup konfigurasi yang berubah secara privat, dengan permission terbatas. Verifikasi loader dan matching secret tanpa mencetak nilainya; config refresh Laravel sesuai convention. Tidak perlu restart Hermes kecuali diperlukan dan aman; jangan mengaktifkan worker.
 - Jangan menyalin SMTP credentials pada P5-01/P5-02; itu scope P5-03. Jangan melakukan SMTP connectivity test sekarang.
 - Pertahankan `HERMES_WEBHOOK_ENABLED=false`, `JMI_ARTIFACT_PIPELINE_ENABLED=0`, `JMI_ARTIFACT_DELIVERY_ENABLED=0`, dan email rollout nonaktif (misalnya `JMI_EMAIL_DELIVERY_ENABLED=0` jika variabel sudah dikenalkan). Jangan menghapus pause/kill switch existing, mengaktifkan Windows Task Scheduler, atau memicu cron recovery secara manual.
 - Pertahankan 3 report historis, evaluasi 9–11 legacy, 7 archived jobs, dan outbox existing. Jangan melakukan replay, backfill, atau mutasi UMKM asli untuk tes. Consent hanya berubah atas aksi pengguna sah setelah fitur digunakan.
@@ -466,13 +455,13 @@ Inventaris container, network dan volume sebelum QA. Label setiap resource semen
 - `docs/evidence/p5-02-qa-summary.md` — AC mapping, results, wall-clock, smoke checks and cleanup.
 - `docs/audit/P5-01_P5-02_JoyUMKM_Recipient_Consent_Completion.md` — consolidated verdict, changed files, config status tanpa nilai, source/QA limitations, P5-03 handoff. Hindari evidence redundan.
 
-Handoff P5-03 harus menetapkan actual GET endpoint, signer dan config mapping, local/HTTPS policy, eligible response/TTL, safe error classification, fingerprint semantics, allowlist enforcement dan kewajiban re-pull setiap percobaan. Konfirmasi kembali SMTP existing belum disentuh dan tidak ada email nyata. P5-05 harus menggunakan local Package Ready dan tidak bergantung pada P4 remote complete.
+Handoff P5-03 harus menetapkan actual GET endpoint, signer dan config mapping, local/HTTPS policy, eligible response/TTL, safe error classification, fingerprint semantics dan kewajiban re-pull setiap percobaan. Konfirmasi kembali SMTP existing belum disentuh dan tidak ada email nyata. P5-05 harus menggunakan local Package Ready dan tidak bergantung pada P4 remote complete.
 
 ## 12. Definition of done dan stop condition
 
 **P5-01 FULL COMPLETION — PASS** jika endpoint signed GET terimplementasi, event/UMKM binding aman, eligible/ineligible contract terverifikasi, TTL dan PII protection lulus, dedicated config tersedia, signed HTTP probe aktual berhasil tanpa bergantung P4 complete.
 
-**P5-02 FULL COMPLETION — PASS** jika grant/revoke dan UI existing berfungsi dengan ownership existing, consent-address invariant dan stale grant protection lulus, precedence eligibility/suppression/allowlist terverifikasi, targeted QA dan cleanup selesai.
+**P5-02 FULL COMPLETION — PASS** jika grant/revoke dan UI existing berfungsi dengan ownership existing, consent-address invariant dan stale grant protection lulus, precedence eligibility dan suppression terverifikasi, targeted QA dan cleanup selesai.
 
 **P5-01 & P5-02 OVERALL — PASS** hanya jika mandatory gates AC-01–AC-16 lulus. Bila belum, laporkan PARTIAL/BLOCKED dengan bukti aktual dan sisa pekerjaan yang spesifik. P5 keseluruhan belum PASS karena P5-03–P5-07 berada di luar scope. Tidak perlu mengklaim kesiapan Gmail/hosting/dispatch live.
 

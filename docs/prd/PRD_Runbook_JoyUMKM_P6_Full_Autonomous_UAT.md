@@ -29,7 +29,7 @@ Gunakan Playwright untuk bertindak sebagai pengguna sah melalui website JoyUMKM.
 | K2 | Playwright sebagai pengguna website JoyUMKM aktual. |
 | K3 | Satu UMKM khusus UAT dan satu finalisasi baru. |
 | K4 | Real AI dan real Gmail menggunakan konfigurasi/provider existing. |
-| K5 | Testing allowlist tetap aktif, tepat satu alamat pengujian. |
+| K5 | Guard UAT membatasi pemrosesan ke satu event yang disetujui. |
 | K6 | Queue, scheduler dan recovery existing menjalankan otomatisasi. |
 | K7 | Tidak ada historical replay, backlog processing atau email duplikat. |
 | K8 | Targeted bug fix oleh Codex diizinkan, tanpa membuka kembali seluruh fase. |
@@ -78,8 +78,8 @@ Catatan penyusun: handoff P0–P5 telah dibaca untuk menyusun kontrak operasiona
 | Business trigger | Satu UMKM UAT sah, satu evaluasi Enam Faktor baru, satu Final |
 | AI | Real provider/model configured pada jalur JMI; satu analisis logis yang valid; no extra AI untuk email |
 | SMTP | Gmail existing, `smtp.gmail.com:465` implicit verified TLS; AUTH probe tanpa DATA; satu accepted message maksimum |
-| Alamat uji | `victorw7286@gmail.com` (privat, satu-satunya target; jangan hardcode ke source/log/evidence) |
-| Recipient policy | Fresh signed GET, consent eksplisit, suppression, fingerprint, testing allowlist Laravel & Hermes tetap on |
+| Alamat uji | `owner-approved@example.test` (privat, satu-satunya target; jangan hardcode ke source/log/evidence) |
+| Recipient policy | Fresh signed GET, consent eksplisit, suppression, fingerprint |
 | Artefak | Satu canonical report, PDF, XLSX, immutable manifest |
 | Worker | Existing dedicated queue `hermes-webhooks`, Laravel scan/scheduler, Hermes `jmi-recover` |
 | Technical QA | Maksimum 15 menit kumulatif, targeted only |
@@ -232,7 +232,7 @@ sequenceDiagram
 
 1. Buat run ID UTC dan staging privat owned-by-run; catat source Git status, actual host/container identity, `docker ps -a`, volume/network inventory, port/process/task baseline. Jangan dump environment/secrets. Catat hash relevant historical job files, row counts/digests outbox/report/manifest/delivery dan existing evaluation IDs; capture read-only, bounded. Hanya outbox/queue/job yang relevan; jangan audit seluruh database.
 2. Pastikan Laragon, actual Apache/FastCGI, MySQL `joyumkm-v2`, UTC session, schema migration (P5 migration batch 9 sesuai checkpoint), QPDF 12.4.2 dan Python helper dapat diakses service user, disk private dan ACL masih aman. Gunakan inspection read-only, `php artisan migrate:status`, `schedule:list`, `hermes:webhook-status` jika tersedia, existing safe diagnostics. Jangan Tinker, jangan migrate ulang bila tidak perlu. Periksa URL actual browser dan endpoint callback/snapshot/recipient/artifact/status dari perspektif container; local alias `host.docker.internal` + Host header sesuai actual contract. P3 dahulu menggunakan port 8000; pastikan runtime snapshot tidak masih menunjuk server QA yang sudah mati. Jangan menganggap port lama aktif.
-3. Hermes: verifikasi volume mount, UID runtime, permissions private env, actual config precedence, route `joyumkm-events` memakai script intake JMI (`joyumkm_intake.py` sesuai P1), bukan legacy agent prompt. Verifikasi authenticated webhook target dan allowed host. HTTPS verified non-local; local HTTP hanya alias yang telah diizinkan. Jangan print signature/secrets. Cocokkan HMAC dedicated secret masing-masing secara boolean saja. Periksa real provider/model runner yang efektif, no fake model/test stub untuk real run. Email testing mode tetap aktif; jangan menyamakan `JMI_TEST_MODE` untuk fake AI dengan testing allowlist email. Pastikan provider credential sah tersedia tanpa memanggil model tambahan.
+3. Hermes: verifikasi volume mount, UID runtime, permissions private env, actual config precedence, route `joyumkm-events` memakai script intake JMI (`joyumkm_intake.py` sesuai P1), bukan legacy agent prompt. Verifikasi authenticated webhook target dan allowed host. HTTPS verified non-local; local HTTP hanya alias yang telah diizinkan. Jangan print signature/secrets. Cocokkan HMAC dedicated secret masing-masing secara boolean saja. Periksa real provider/model runner yang efektif, no fake model/test stub untuk real run. Pastikan provider credential sah tersedia tanpa memanggil model tambahan.
 4. Existing worker/scheduler: P4-07 mencatat task Windows `JoyUMKM Hermes Webhook Worker` dan `JoyUMKM Laravel Scheduler` disabled, IgnoreNew, project working directory, dedicated `database:hermes-webhooks`. Inspect actual status, definition, action, user, last run dan other scheduled jobs. Hermes mempunyai satu cron `jmi-recover` ID `5fa98346fe3a`, interval sekitar 5 menit, no-agent script. Gunakan existing mekanisme, jangan duplikasi. Periksa apakah cron sedang berjalan/berpotensi mengambil job lain sebelum membuka guard.
 5. Verifikasi folder staging P5 absent dan perbarui catatan verdict sesuai §2. Jangan mengulang QA P5.
 
@@ -247,7 +247,7 @@ Utamakan UMKM test dengan histori bulan sebelumnya dan data Tiga Dimensi existin
 `HERMES_WEBHOOK_ENABLED=false` tidak menghentikan pembuatan pending outbox ketika user finalisasi. P1 mencatat scan dapat mengirim backlog tersebut setelah flag dibuka. Hermes recovery existing juga dapat memproses pending/processing job lama. Flag enrollment P3/P4/P5 saja **bukan** jaminan backlog aman.
 
 - Inspect outbox pending/retry_wait, dedicated queue pending/delayed/reserved dan in-flight dispatch; failed/dead/legacy tetap histori. Inspect Hermes pending/processing, active lease, callback/recovery due, archived, existing enrolled jobs. Jangan menjalankan scanner atau recovery sebagai percobaan preflight.
-- Terapkan guard scoped untuk dispatch, intake, analysis/recovery, artifact delivery, SMTP dan status sync. Gunakan existing isolation/filters jika tersedia. Jika tidak, buktikan seluruh jalur candidate kosong/quiescent dan cegah trigger non-UAT selama window (exclusive local access + enforceable event scope). Bila ini tidak cukup, buat guard UAT minimal fail-closed, misalnya allowlist berdasarkan dedicated UMKM + exact authorized draft/finalization identity, kemudian pin UUID event setelah commit. Guard harus berlaku juga pada direct queued job, scanner, gateway intake/recovery dan worker, bukan hanya UI atau SMTP allowlist. Pastikan tidak ada celah race antara Final commit dan pinning: event UAT boleh tertahan aman sampai identity dipin, lalu diproses oleh **scheduler/worker normal**, bukan dispatch manual. Enrollment flags sudah aktif sebelum first intake.
+- Terapkan guard scoped untuk dispatch, intake, analysis/recovery, artifact delivery, SMTP dan status sync. Gunakan existing isolation/filters jika tersedia. Jika tidak, buktikan seluruh jalur candidate kosong/quiescent dan cegah trigger non-UAT selama window (exclusive local access + enforceable event scope). Bila ini tidak cukup, buat guard UAT minimal fail-closed, misalnya allowlist berdasarkan dedicated UMKM + exact authorized draft/finalization identity, kemudian pin UUID event setelah commit. Guard harus berlaku juga pada direct queued job, scanner, gateway intake/recovery dan worker, termasuk pada SMTP. Pastikan tidak ada celah race antara Final commit dan pinning: event UAT boleh tertahan aman sampai identity dipin, lalu diproses oleh **scheduler/worker normal**, bukan dispatch manual. Enrollment flags sudah aktif sebelum first intake.
 - Dry-run candidate selection/targeted test tanpa external side effects membuktikan non-UAT tidak bisa terkirim, dianalisis, direcover atau disubmit. Jangan mass-update status outbox, archive job baru untuk menyembunyikan backlog, truncate queues, delete historical jobs, atau menandai backlog delivered. Jangan menghapus atau melemahkan guard untuk mendapatkan PASS.
 - Scope gate mencakup one-event admission dan one authorized accepted message, bukan sekadar filter recipient. Pantau guard selama window. Jika ada unexpected event, pause/disable segera dan preserve evidence.
 
@@ -261,7 +261,7 @@ Sebelum perubahan config, simpan salinan privat dari file env terkait, task defi
 
 Gunakan konfigurasi SMTP existing dari `JMI_HOME/email.env`. Dari runtime Hermes sebagai UID yang benar, lakukan koneksi implicit TLS tervalidasi ke `smtp.gmail.com:465`, EHLO dan AUTH, lalu QUIT. **Tidak ada MAIL/RCPT/DATA atau email test terpisah.** Bounded timeout, satu probe; jika perlu targeted retry karena transient sebelum auth, jangan loop. Jangan mencetak password, username atau raw SMTP transcript. Invalid credential, TLS trust failure, missing provider authorization → stop live activation; jangan downgrade TLS, reset password, atau minta owner manual testing. Catat safe result dan exact remediation yang dibutuhkan.
 
-Verifikasi exact allowlist dan test mode dari Laravel dan Hermes, bukan hanya dari file template. Alamat target `victorw7286@gmail.com` harus satu-satunya allowed mailbox dan sesuai approved UAT identity. Jangan mengganti alamat penerima lewat fallback config. Pastikan suppression tidak mengizinkan bypass; consent diberikan lewat UI pada P6-03.
+Verifikasi signed GET untuk identitas event UAT, email usaha yang disetujui, consent melalui UI, fingerprint, dan suppression.
 
 ### 6.2 Flag matrix (nilai efektif)
 
@@ -277,13 +277,12 @@ Nama/precedence mengikuti source existing. Temukan flag artifact pause, status s
 | `JMI_EMAIL_DELIVERY_PAUSED` | `1` | `0` |
 | `JMI_EMAIL_STATUS_SYNC_ENABLED` | `0` | `1` |
 | `JMI_EMAIL_STATUS_SYNC_PAUSED` | `1` | `0` |
-| Laravel + Hermes email testing allowlist | Enabled, one mailbox | Unchanged |
 | `JMI_TEST_MODE`, `JMI_FAKE_MODEL`, SMTP mock/stub | Inspect existing configuration; real paths inactive | Real AI/SMTP only for UAT; no fake override |
 | `state/delivery.pause`, `state/email.pause`, actual sync pause marker | Preserve baseline; block sends in final safe state | Release only under scoped guard; restore on exit |
 | Worker/scheduler Windows | Disabled per P4 handoff, verify actual | Existing tasks running during UAT |
 | `jmi-recover` Hermes | Existing cron state | Existing cron with scoped candidates only |
 
-`JMI_TEST_MODE` is not the email testing allowlist. Do not disable email restrictions in order to use real AI. Never overwrite unrelated Hermes/provider configuration. If status sync flag names differ, use and record actual names. Back up pause marker contents/ownership before controlled release.
+Never overwrite unrelated Hermes/provider configuration. If status sync flag names differ, use and record actual names. Back up pause marker contents/ownership before controlled release.
 
 ### 6.3 Activation order
 
@@ -414,7 +413,7 @@ Compare baseline and final: 1 new Final; 1 new v2 event; 1 new Hermes job; 1 can
 | PDF/XLSX stage fails pre-commit | Use normal same-event recovery and existing generator | Run AI again |
 | Committed package corrupt/conflict | Stop; restore identical verified bytes if supported and authorized | Regenerate manifest/overwrite committed identity |
 | P4 upload fails | Preserve local package; retry safe upload via normal recovery | Send second email to demonstrate success |
-| SMTP explicit safe transient rejection | Existing bounded retry if due in remaining window | Bypass consent/allowlist or reset counters |
+| SMTP explicit safe transient rejection | Existing bounded retry if due in remaining window | Bypass consent atau suppression or reset counters |
 | SMTP auth/TLS/permanent rejection | Stop email branch, safe code, targeted diagnosis | Downgrade TLS, print secret or new test email |
 | SMTP ambiguous or sending checkpoint interrupted | `delivery_unknown`; pause automatic send, preserve Message-ID and state | Automatic resend, even if inbox absent |
 | SMTP accepted, status callback fails | Retry status sync only; keep sent terminal | SMTP re-submit, AI/render again |
@@ -441,7 +440,7 @@ Codex may change code/config only for root cause proven in P6. Backup changed so
 
 Implement `finally`/equivalent guarded cleanup for all changes. Disable UAT admission and new Laravel dispatch first; ensure non-UAT guard remains enforced until live services stopped. Apply existing pause/kill gates for new SMTP/artifact/status work and new analysis/intake as supported. Do not terminate a possible in-flight SMTP DATA just to meet timer; let existing bounded timeout/ack persistence finish if safe, then classify ambiguous outcome conservatively. Preserve durable state. Stop only processes/tasks started by this run (exact task name/PID), return Windows worker/scheduler to prior disabled state. Restore existing cron config/state and ensure it cannot process pending UAT/non-UAT work after window. If existing Hermes `jmi-recover` is active at baseline, don't disable unrelated Hermes scheduling; use scoped safe gating. If a failed pending analysis might still call model despite rollout flags off, keep explicit job-specific hold/guard or supported pause until authorized; verify this empirically via read-only candidate inspection. **Disabling artifact/email flags alone is not sufficient to stop AI retries.** Document residual holds rather than pretending rollback complete.
 
-Restore all UAT-specific config overrides and pause markers to safe state in §6.2; keep email testing mode and private allowlist intact. Verify effective runtime config after restore, not only file content. Preserve credentials, HMAC/pepper, UAT business Final and artifacts, accepted email record and revision evidence. No whole-volume rollback, DB restore over new data, or migration rollback deleting accepted outcome. If source fix must be reverted, use scoped backup after compare; do not destroy newer state or roll back acknowledged send. Do not disable or disturb unrelated projects/services.
+Restore all UAT-specific config overrides and pause markers to safe state in §6.2. Verify effective runtime config after restore, not only file content. Preserve credentials, HMAC/pepper, UAT business Final and artifacts, accepted email record and revision evidence. No whole-volume rollback, DB restore over new data, or migration rollback deleting accepted outcome. If source fix must be reverted, use scoped backup after compare; do not destroy newer state or roll back acknowledged send. Do not disable or disturb unrelated projects/services.
 
 ### 11.2 Cleanup
 
@@ -527,7 +526,7 @@ Evidence: [three deliverable paths]
 
 - [ ] P5 cleanup addendum confirmed; no re-audit.
 - [ ] Preflight baseline, authorized test identity, exact scope guard and rollback ready.
-- [ ] Gmail TLS/AUTH only, real AI configuration checked, testing allowlist unchanged.
+- [ ] Gmail TLS/AUTH only, real AI configuration checked.
 - [ ] All enrollment flags enabled before intake, guarded background services running.
 - [ ] Playwright login, consent, one draft/one Final, pinned UUID.
 - [ ] Normal automatic flow produces real AI result, report, PDF/XLSX, manifest.
@@ -537,6 +536,6 @@ Evidence: [three deliverable paths]
 - [ ] Disable admission, safe settle, restore flags/tasks, preserve checkpoints, cleanup.
 - [ ] Write final truthful verdict and handoff. No extra event, no permanent activation.
 
-**Design clarifications in this runbook:** exact one-event guard must cover AI/recovery in addition to SMTP allowlist; two cumulative timers (technical QA 15 min and live observation 20 min) are tracked separately; no separate live AI smoke prompt or SMTP DATA probe; when inbox access is unavailable, distinguish technical PASS from actual inbox evidence. These operational details implement approved K1–K12 and do not authorize broader access or spending. If actual source differs, use verified supported controls or report a genuine blocker.
+**Design clarifications in this runbook:** exact one-event guard must cover AI, recovery, and SMTP; two cumulative timers (technical QA 15 min and live observation 20 min) are tracked separately; no separate live AI smoke prompt or SMTP DATA probe; when inbox access is unavailable, distinguish technical PASS from actual inbox evidence. These operational details implement approved K1–K12 and do not authorize broader access or spending. If actual source differs, use verified supported controls or report a genuine blocker.
 
 **STOP AFTER P6.** No rollout permanen, deployment hosting, historical replay, commit/push or additional feature implementation.

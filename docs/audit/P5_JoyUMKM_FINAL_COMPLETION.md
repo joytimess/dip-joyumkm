@@ -10,4 +10,4 @@
 
 Migrasi status sudah berjalan di dev. Source Hermes dan secret terpisah telah diprovisi. Webhook, pipeline artefak, upload otomatis, SMTP, dan sinkronisasi status tetap off. Email delivery dan status sync tetap dipause. Tidak ada restart, pemrosesan backlog, atau perubahan data historis. Belum ada commit atau push.
 
-P6 belum dimulai. Handoff P6 mencakup Gmail TLS 465 dan controlled send ke allowlist privat, pembuktian inbox secara terpisah, evaluasi Final baru dengan AI nyata, dan dispatch terkontrol tanpa replay backlog. Hosting nonlokal memerlukan verifikasi sesuai P4-07. Outcome ambigu tetap memerlukan tinjauan operator karena SMTP tidak menjamin exactly-once.
+P6 belum dimulai. Handoff P6 mencakup Gmail TLS 465 dan controlled send pada event UAT yang disetujui, pembuktian inbox secara terpisah, evaluasi Final baru dengan AI nyata, dan dispatch terkontrol tanpa replay backlog. Hosting nonlokal memerlukan verifikasi sesuai P4-07. Outcome ambigu tetap memerlukan tinjauan operator karena SMTP tidak menjamin exactly-once.

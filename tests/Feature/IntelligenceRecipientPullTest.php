@@ -31,8 +31,6 @@ class IntelligenceRecipientPullTest extends TestCase
         $this->freezeSecond();
         config([
             'services.hermes_intelligence_recipient.secret' => self::SECRET,
-            'services.hermes_intelligence_recipient.test_mode' => true,
-            'services.hermes_intelligence_recipient.test_allowlist' => ' OWNER@example.test ',
             'services.intelligence.recipient_pepper' => str_repeat('p', 32),
         ]);
     }
@@ -109,22 +107,12 @@ class IntelligenceRecipientPullTest extends TestCase
             'consented_business_email' => self::EMAIL,
         ])->assertOk()->assertJsonPath('data.notification_consent_active', true);
 
-        config(['services.hermes_intelligence_recipient.test_allowlist' => 'different@example.test']);
-        $this->get($path, $headers)->assertOk()->assertExactJson([
-            'event_id' => $event->event_id, 'eligible' => false, 'reason' => 'not_allowlisted',
-        ]);
-        config(['services.hermes_intelligence_recipient.test_allowlist' => '']);
-        $this->get($path, $headers)->assertStatus(503)->assertExactJson(['code' => 'recipient_unavailable']);
-        config(['services.hermes_intelligence_recipient.test_mode' => 'invalid']);
-        $this->get($path, $headers)->assertStatus(503)->assertExactJson(['code' => 'recipient_unavailable']);
+        $this->get($path, $headers)->assertOk()->assertJsonPath('recipient_email', self::EMAIL);
         config([
-            'services.hermes_intelligence_recipient.test_mode' => true,
-            'services.hermes_intelligence_recipient.test_allowlist' => self::EMAIL,
             'services.intelligence.recipient_pepper' => 'short',
         ]);
         $this->get($path, $headers)->assertStatus(503)->assertExactJson(['code' => 'recipient_unavailable']);
         config([
-            'services.hermes_intelligence_recipient.test_allowlist' => '',
             'services.intelligence.recipient_pepper' => str_repeat('p', 32),
         ]);
         app(EmailSuppressionService::class)->suppress(self::EMAIL, 'manual', 'test');

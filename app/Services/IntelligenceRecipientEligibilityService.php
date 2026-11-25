@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Models\IntelligenceReport;
 use App\Models\SixFactorEvaluation;
 use App\Models\Umkm;
-use RuntimeException;
 
 /**
  * Kelayakan penerima laporan. Hasilnya hanya memuat alasan dan fingerprint, tidak pernah alamat email.
@@ -60,22 +59,6 @@ class IntelligenceRecipientEligibilityService
 
         if ($this->suppressions->containsFingerprint($fingerprint)) {
             return $this->result(false, self::REASON_SUPPRESSED, $fingerprint);
-        }
-
-        $testMode = config('services.hermes_intelligence_recipient.test_mode');
-        if (! is_bool($testMode)) {
-            throw new RuntimeException('Mode pengujian penerima tidak valid.');
-        }
-
-        if ($testMode) {
-            $configured = config('services.hermes_intelligence_recipient.test_allowlist');
-            $allowlist = is_string($configured) ? array_map(trim(...), explode(',', strtolower($configured))) : [];
-            if ($allowlist === [] || array_filter($allowlist, static fn (string $email): bool => ! filter_var($email, FILTER_VALIDATE_EMAIL))) {
-                throw new RuntimeException('Allowlist penerima belum dikonfigurasi dengan valid.');
-            }
-            if (! in_array(strtolower($email), $allowlist, true)) {
-                return $this->result(false, 'not_allowlisted', $fingerprint);
-            }
         }
 
         return $this->result(true, null, $fingerprint);

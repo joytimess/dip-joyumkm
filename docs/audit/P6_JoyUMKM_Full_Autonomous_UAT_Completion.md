@@ -32,7 +32,7 @@
   - XLSX: 5 worksheet (Ringkasan, Enam Faktor, Tiga Dimensi, Histori, Rekomendasi), SHA-256 `fb895dd9f8f8afedc313fc9a06ec7a4579ad6196540b0717cb7ad3a980c402e3` (cocok dengan manifest dan Laravel).
   - Manifest: `artifact_set_hash` `dbbd4994e9ffe6d1025963755377adfaf576b0331100e2e24c38e5a0fa945cc2`, sama di Hermes dan Laravel.
   - Laravel: callback dan upload PDF/XLSX `acknowledged` (`remote_artifact_status: complete`). Baris `intelligence_reports` id 4 berstatus `artifact_status: complete` dengan dua baris `intelligence_artifacts`.
-  - Email: satu pesan SMTP, `status: sent`, `smtp_phase: data`, `attempt_no: 1`, dua lampiran (PDF dan XLSX), penerima allowlist test. Gate email dibuka sementara hanya untuk pengiriman ini, lalu dikembalikan ke ENABLED=0 / PAUSED=1.
+  - Email: satu pesan SMTP, `status: sent`, `smtp_phase: data`, `attempt_no: 1`, dua lampiran (PDF dan XLSX), penerima UAT yang disetujui. Gate email dibuka sementara hanya untuk pengiriman ini, lalu dikembalikan ke ENABLED=0 / PAUSED=1.
   - Status sync: `accepted`, revision 1 ter-ACK, `email_status_sync.json` berstatus `synced`. Gate sync dibuka sementara, lalu dikembalikan ke ENABLED=0 / PAUSED=1.
 - **Cleanup dan rollout:** pin UAT dihapus (arsip di `state/uat-scope.json.removed-after-bounded-run`). Flag artifact dan delivery tidak diset di environment proses Hermes, sehingga default OFF. `email.env` ENABLED=0 / PAUSED=1. `delivery-status.env` sync ENABLED=0 / PAUSED=1. Laravel `HERMES_WEBHOOK_ENABLED=false`. Windows task `JoyUMKM Hermes Webhook Worker` dan `JoyUMKM Laravel Scheduler` Disabled.
 - **Verdict:**

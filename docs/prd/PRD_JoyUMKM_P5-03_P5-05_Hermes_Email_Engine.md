@@ -10,9 +10,9 @@
 ## 1. Background dan checkpoint diterima
 
 - P2 telah menyediakan data contract, `intelligence_deliveries`, consent dan suppression/fingerprint. P3 telah membangun canonical report, PDF (ReportLab), XLSX (XlsxWriter), manifest immutable dan automatic Package Ready. P4 delivery ke Laravel, private storage, authorized download serta hardening sudah PASS untuk Laragon.
-- P5-01 dan P5-02 FULL COMPLETION — PASS untuk Laragon/Hermes Docker: signed GET dengan TTL 60 detik, consent grant/revoke dari Detail UMKM → Kontak Usaha → Edit Kontak, stale grant ditolak, email berubah mencabut consent lama, exact allowlist dan suppression aktif. 42 tes MySQL/469 assertions, HTTP Docker→Apache/FastCGI, Edge 390px, Pint/Vite PASS. QA sekitar 12 menit, tidak ada resource QA tertinggal.
+- P5-01 dan P5-02 FULL COMPLETION — PASS untuk Laragon/Hermes Docker: signed GET dengan TTL 60 detik, consent grant/revoke dari Detail UMKM → Kontak Usaha → Edit Kontak, stale grant ditolak, email berubah mencabut consent lama, suppression aktif. 42 tes MySQL/469 assertions, HTTP Docker→Apache/FastCGI, Edge 390px, Pint/Vite PASS. QA sekitar 12 menit, tidak ada resource QA tertinggal.
 - Signed GET terbukti bekerja untuk event v2 valid walaupun report/manifest/upload P4 belum ada. Probe sebelumnya bukan runtime recipient consumer. P5-03 mengimplementasikan consumer tersebut.
-- Gmail SMTP credentials tersedia di `.env` Laravel menurut owner. Belum diuji melalui SMTP Hermes. Email uji tunggal yang disetujui: `victorw7286@gmail.com`. Tidak ada izin pengiriman email nyata pada pekerjaan ini (termasuk ke alamat uji); real Gmail testing dijadwalkan pada tahap berikutnya dengan otorisasi tersendiri.
+- Gmail SMTP credentials tersedia di `.env` Laravel menurut owner. Belum diuji melalui SMTP Hermes. Email uji tunggal yang disetujui: `owner-approved@example.test`. Tidak ada izin pengiriman email nyata pada pekerjaan ini (termasuk ke alamat uji); real Gmail testing dijadwalkan pada tahap berikutnya dengan otorisasi tersendiri.
 - Production rollout masih nonaktif. P1 operational live dispatch dan hosting nonlokal nginx/PHP-FPM belum diverifikasi. Jangan membuka kembali fase yang sudah diterima untuk menutup batas yang bukan scope ini.
 
 ### 1.1 Referensi wajib
@@ -121,7 +121,7 @@ HTTP 200 eligible memiliki field `event_id`, `umkm_id`, `eligible` (boolean true
 
 Email harus satu mailbox valid sesuai kontrak Laravel, tanpa display name injection, CR/LF/control, multiple recipient atau comma-list. Normalisasi pembandingan trim+lowercase sesuai P2, bukan menghapus plus addressing atau titik Gmail. Pepper tetap di Laravel; fingerprint diterima dari signed API via transport tepercaya, tidak dihitung dengan secret recipient. Tidak log alamat mentah atau menaruhnya di durable job data.
 
-HTTP 200 ineligible: hanya `event_id`, `eligible:false`, `reason`; event binding tetap diperiksa. Reasons: `evaluation_not_final`, `no_consent`, `no_business_email`, `invalid_email`, `suppressed`, `not_allowlisted`. Unknown reason/malformed schema fail closed, bukan eligible. `Cache-Control:no-store` existing; jangan cache response, jangan reuse address setelah TTL.
+HTTP 200 ineligible: hanya `event_id`, `eligible:false`, `reason`; event binding tetap diperiksa. Reasons: `evaluation_not_final`, `no_consent`, `no_business_email`, `invalid_email`, `suppressed`. Unknown reason/malformed schema fail closed, bukan eligible. `Cache-Control:no-store` existing; jangan cache response, jangan reuse address setelah TTL.
 
 | Hasil | Perlakuan |
 |---|---|
@@ -137,7 +137,7 @@ Pull tepat sebelum setiap attempt, termasuk retry. Siapkan body dan verified att
 
 ### 4.3 Defense in depth testing
 
-Laravel testing mode + allowlist tetap aktif. Provision Hermes testing guard privat dengan exact normalized allowlist yang sama (hanya `victorw7286@gmail.com` untuk dev); jangan hardcode email di Python. QA memakai allowlist override pada state terisolasi dengan synthetic mailbox bila perlu. Testing guard harus fail closed jika flag/allowlist invalid. Tidak memakai allowlist sebagai fallback recipient. Actual envelope recipient dan To wajib cocok dengan eligible response dan allowlist. Tidak CC/BCC, tidak list recipient. Jangan mengaktifkan mode non-testing.
+Hermes menggunakan mailbox tunggal dari respons signed GET Laravel yang masih berlaku untuk envelope dan To. Jangan gunakan fallback recipient, CC, atau BCC.
 
 ## 5. P5-03 — Gmail SMTP transport
 
@@ -150,8 +150,6 @@ Contoh keys yang diusulkan (nama boleh disesuaikan loader existing, dokumentasik
 ```dotenv
 JMI_EMAIL_DELIVERY_ENABLED=0
 JMI_EMAIL_DELIVERY_PAUSED=1
-INTELLIGENCE_EMAIL_TEST_MODE=true
-INTELLIGENCE_EMAIL_TEST_ALLOWLIST=<private owner-approved address>
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_ENCRYPTION=tls
@@ -447,7 +445,7 @@ flowchart TD
 
 Hard limit 15 minutes for all QA activities in this combined task. Record monotonic wall-clock start/end for QA including setup, reruns, cleanup. Suggested allocation: 4 min focused unit tests, 4 min representative integration, 2 min recovery and privacy checks, 2 min deployment verification and cleanup, 3 min reserve. If time budget insufficient, prioritize mandatory security tests and truthful status. Do not skip mandatory acceptance criteria silently.
 
-Use one isolated synthetic event/package derived from existing valid P3/P4 QA evidence; create a new isolated fixture identity only if existing fixture supports it without mutating committed package. Do not replay live data. Use local fake SMTP with captured MIME and phase-aware fault stubs, no Gmail connection/auth/send. Actual TLS trust validation can be tested using controlled fake context/local TLS fixture; no weakening production SSL. Use fake clock for TTL and retry. QA config and allowlist separate from real credentials. Use existing Hermes image/container or one shared test runner with isolated state; one shared MySQL/Laravel QA service only if necessary for representative signed GET, no new stack per test. Reuse P5-01 real HTTP evidence but run one runtime consumer signed GET probe against isolated Laravel if feasible within budget (not fake API alone for acceptance of runtime interoperability). Event without remote report/upload is the intended representative case. Capture SMTP message only for synthetic data in memory or private temporary file, strip email/PII from permanent evidence. No real SMTP network traffic.
+Use one isolated synthetic event/package derived from existing valid P3/P4 QA evidence; create a new isolated fixture identity only if existing fixture supports it without mutating committed package. Do not replay live data. Use local fake SMTP with captured MIME and phase-aware fault stubs, no Gmail connection/auth/send. Actual TLS trust validation can be tested using controlled fake context/local TLS fixture; no weakening production SSL. Use fake clock for TTL and retry. QA config uses synthetic credentials. Use existing Hermes image/container or one shared test runner with isolated state; one shared MySQL/Laravel QA service only if necessary for representative signed GET, no new stack per test. Reuse P5-01 real HTTP evidence but run one runtime consumer signed GET probe against isolated Laravel if feasible within budget (not fake API alone for acceptance of runtime interoperability). Event without remote report/upload is the intended representative case. Capture SMTP message only for synthetic data in memory or private temporary file, strip email/PII from permanent evidence. No real SMTP network traffic.
 
 Run only tests for new modules and directly changed integration hooks plus minimal P4 targeted non-regression where hooks changed. Existing P5-01/02 42 tests, full historical Hermes 158 ×2, P4 fault injection A–W, P3 generator QA, five-package matrix, and broad migration/HTTP security matrix are not to be repeated without a concrete changed contract. Recovery proof: one restart or process replacement using same isolated state, covering sent checkpoint and ambiguous intent by focused fixture; do not create a new Docker container per case.
 
@@ -470,7 +468,7 @@ Run only tests for new modules and directly changed integration hooks plus minim
 | AC-13 | Durable recovery | Restart/read persisted state, sent reused and sending intent stays unknown; no AI/render |
 | AC-14 | Historical isolation and rollout | Legacy/archived/non-enrolled no state/send; pause/off guard blocks new attempts |
 | AC-15 | Privacy and secure transport | TLS enforced, credentials and recipient raw absent from logs/state/evidence; no redirect/plaintext downgrade |
-| AC-16 | Testing allowlist | Deny non-allowlisted recipient and fail closed on invalid/missing dev allowlist |
+| AC-16 | Recipient binding | SMTP envelope and To use the authorized mailbox |
 | AC-17 | Persistent deployment | Backup and SHA-256 verification of changed runtime modules/tests, flags off, existing production job state untouched |
 | AC-18 | QA budget and cleanup | Measured wall-clock ≤15 min, no task-owned resources left, evidence/handoff complete |
 
@@ -506,11 +504,11 @@ Consolidated handoff: per-task verdict, AC-01..18 results, actual paths/config k
 
 - **P5-03 FULL COMPLETION — PASS** for local implementation when private configuration, signer/recipient consumer, verified TLS transport and phase-aware SMTP outcomes pass isolated QA. Gmail live authentication/submission remains NOT RUN per approved scope, not a claim of production readiness.
 - **P5-04 FULL COMPLETION — PASS** when deterministic formal email and exact two verified attachments, null handling, MIME safety and size cap pass.
-- **P5-05 FULL COMPLETION — PASS** when automatic independent delivery, durable enrollment/state, bounded retry, crash recovery, no auto-resend on ambiguity, privacy, allowlist, persistent deployment and QA cleanup pass.
+- **P5-05 FULL COMPLETION — PASS** when automatic independent delivery, durable enrollment/state, bounded retry, crash recovery, no auto-resend on ambiguity, privacy, persistent deployment and QA cleanup pass.
 - **P5-03 & P5-04 & P5-05 OVERALL — PASS** only if all mandatory gates pass for local scope. P5 overall remains incomplete until P5-06 and P5-07. If gate unverified or failed, report PARTIAL/FAIL honestly with concrete reason and next action; no false PASS to meet time budget. Do not stop at preflight when implementation is authorized and feasible.
 
 Keep `HERMES_WEBHOOK_ENABLED=false`, `JMI_ARTIFACT_PIPELINE_ENABLED=0`, `JMI_ARTIFACT_DELIVERY_ENABLED=0`, `JMI_EMAIL_DELIVERY_ENABLED=0`; verify actual equivalent pause configuration. No real SMTP/email, no real AI, no backlog, no historic replay, no regenerate committed artefacts, no DB dev fixture mutation, no migration, no consent/pepper changes, no Laravel application source changes, no commit/push, no git reset/clean, no global Docker cleanup, no P5-06/P5-07/P6. Do not expose secrets. No extra PRD or approval loop.
 
-**Design clarifications added to the approved overview:** SMTP message cap 24,000,000 encoded bytes is a conservative local default pending actual provider verification; Hermes-side exact allowlist and independent pause are defense-in-depth; durable pre-DATA intent deliberately favors avoiding duplicate mail over retry when acceptance cannot be proven; pending status-sync projection preserves both artifact hashes. Actual source conventions may refine names, not weaken these invariants.
+**Design clarifications added to the approved overview:** SMTP message cap 24,000,000 encoded bytes is a conservative local default pending actual provider verification; Hermes has an independent email pause; durable pre-DATA intent deliberately favors avoiding duplicate mail over retry when acceptance cannot be proven; pending status-sync projection preserves both artifact hashes. Actual source conventions may refine names, not weaken these invariants.
 
 **END — STOP after P5-05 handoff.**

@@ -12,12 +12,12 @@
 | AC-06 | PASS | Revoke berulang membersihkan metadata. Pull aktual setelah revoke mengembalikan 200 `no_consent` tanpa kontak. |
 | AC-07 | PASS | MySQL menguji grant lama setelah alamat berubah, grant baru dalam update email, serta update PIC yang mempertahankan consent. |
 | AC-08 | PASS | P2 dan jalur pull menggunakan urutan eligibility yang sama. Tes P2 mencakup alamat kosong dan invalid. Pull untuk evaluasi Draft menghasilkan `evaluation_not_final`. |
-| AC-09 | PASS | Suppression tetap menolak alamat dengan consent aktif dan menang sebelum testing allowlist. |
-| AC-10 | PASS | Exact match setelah normalisasi memberi akses. Alamat lain ditolak dan allowlist kosong menutup akses dengan 503. |
-| AC-11 | PASS | Tes P2 memeriksa payload outbox bebas data kontak. Probe hanya mencatat status dan hasil cocok. Respons ineligible memakai exact shape tanpa PII. Pemeriksaan log lokal terbaru tidak menemukan secret recipient atau alamat allowlist. Report dan manifest P4 tidak ditulis oleh alur ini. |
+| AC-09 | PASS | Suppression tetap menolak alamat dengan consent aktif. |
+| AC-10 | PASS | Kelayakan penerima diuji dengan alamat sintetis. |
+| AC-11 | PASS | Tes P2 memeriksa payload outbox bebas data kontak. Probe hanya mencatat status dan hasil cocok. Respons ineligible memakai exact shape tanpa PII. Pemeriksaan log lokal terbaru tidak menemukan secret recipient. Report dan manifest P4 tidak ditulis oleh alur ini. |
 | AC-12 | PASS | Signed GET berhasil pada event sintetis tanpa report atau upload P4. |
 | AC-13 | PASS | Edge 390 px menguji default unchecked, grant, pesan reset saat email berubah, grant dengan alamat baru, dan revoke. Pemeriksaan DOM tidak menemukan overflow horizontal. PHPUnit menolak guest dan akun lain. |
-| AC-14 | PASS | Secret dedicated cocok, berbeda dari secret lain dan disimpan dengan izin privat. Secret pendek, pepper tidak valid dan mode uji invalid menghasilkan 503. Nilai runtime SMTP dan pepper Laravel tetap sama. |
+| AC-14 | PASS | Secret dedicated cocok, berbeda dari secret lain dan disimpan dengan izin privat. Secret pendek dan pepper tidak valid menghasilkan 503. Nilai runtime SMTP dan pepper Laravel tetap sama. |
 | AC-15 | PASS | QA memakai data sintetis. Tidak ada SMTP, AI, P4 regeneration, live dispatch, replay, atau perubahan data historis. |
 | AC-16 | PASS | 42 tes terarah dan 469 assertions lulus. HTTP Docker, browser, Pint dan Vite lulus. Fixture serta resource temporer dibersihkan. |
 
