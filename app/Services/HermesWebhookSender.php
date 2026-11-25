@@ -11,6 +11,47 @@ use Illuminate\Support\Facades\Http;
 
 class HermesWebhookSender
 {
+    /** @return array{event_id: string, evaluation_id: int, umkm_id: int}|null */
+    public function uatPin(): ?array
+    {
+        $raw = @file_get_contents(storage_path('app/private/hermes-uat-scope.json'), length: 4096);
+        $scope = $raw === false ? null : json_decode($raw, true);
+        if (! is_array($scope)
+            || ($scope['mode'] ?? null) !== 'pinned'
+            || ! is_string($scope['run_id'] ?? null)
+            || ! preg_match('/^\d{8}T\d{6}Z$/D', $scope['run_id'])
+            || ! is_int($scope['expires_at'] ?? null)
+            || $scope['expires_at'] <= now()->getTimestamp()
+            || ! is_string($scope['event_id'] ?? null)
+            || ! preg_match('/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/D', $scope['event_id'])
+            || ! is_int($scope['evaluation_id'] ?? null) || $scope['evaluation_id'] <= 0
+            || ! is_int($scope['umkm_id'] ?? null) || $scope['umkm_id'] <= 0) {
+            return null;
+        }
+
+        return $scope;
+    }
+
+    public function allows(WebhookOutbox $event): bool
+    {
+        if (! config('services.hermes_webhook.uat_scope_enabled')) {
+            return true;
+        }
+
+        $pin = $this->uatPin();
+        $payload = $event->payload;
+
+        return $pin !== null && $event->event_id === $pin['event_id']
+            && $event->event_type === 'evaluation.finalized' && $event->event_version === 2
+            && $event->aggregate_id === $pin['evaluation_id']
+            && ($payload['source'] ?? null) === 'joyumkm'
+            && ($payload['event_id'] ?? null) === $pin['event_id']
+            && ($payload['event_type'] ?? null) === 'evaluation.finalized'
+            && ($payload['event_version'] ?? null) === 2
+            && ($payload['data']['six_factor']['evaluation_id'] ?? null) === $pin['evaluation_id']
+            && ($payload['data']['umkm_id'] ?? null) === $pin['umkm_id'];
+    }
+
     public function configurationIssue(): ?string
     {
         if (config('services.hermes_webhook.enabled') !== true) {
@@ -54,6 +95,10 @@ class HermesWebhookSender
     /** @return array{http_status: ?int, error: ?string, summary: ?string, retryable: bool, retry_after: int} */
     public function send(WebhookOutbox $event): array
     {
+        if (! $this->allows($event)) {
+            return ['http_status' => null, 'error' => 'uat_scope_denied', 'summary' => 'Event di luar cakupan UAT.', 'retryable' => true, 'retry_after' => 0];
+        }
+
         $body = $event->getRawOriginal('payload');
         $timestamp = now()->getTimestamp();
         $secret = (string) config('services.hermes_webhook.secret');
@@ -80,6 +125,7 @@ class HermesWebhookSender
                 'event_id' => $event->event_id,
                 'exception' => $e->getMessage(),
             ]);
+
             return [
                 'http_status' => null,
                 'error' => 'network_error',

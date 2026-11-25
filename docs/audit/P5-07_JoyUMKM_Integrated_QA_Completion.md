@@ -8,6 +8,8 @@ Migrasi lulus fresh, down/up kosong, dan upgrade dari dump dev yang dipulihkan d
 
 Backup privat Windows berada pada `%LOCALAPPDATA%/JoyUMKM-P506-Private-20261124T174935Z` dan dibatasi ke akun pemilik, SYSTEM, dan Administrators. Isinya dump MySQL, salinan konfigurasi sebelum provisioning, dan bukti visual sintetis. Source Hermes sebelumnya berada di `/opt/data/joyumkm-intelligence/.JoyUMKM-P506-Private-20261124T174935Z`. Untuk rollback, pertahankan pause, pulihkan source Hermes dan konfigurasi dari backup privat setelah membandingkan perubahan terbaru, lalu hentikan penggunaan route/proyeksi P5-06. Rollback migration menolak eksekusi jika snapshot sudah ada sehingga riwayat tidak terhapus.
 
-Resource Docker, MySQL QA dan schema restore, Apache/FastCGI QA, Chrome QA, dan staging Hermes sudah dibersihkan. File token fixture Windows sudah dihapus dan database penerbit token sudah dibuang. Folder `%TEMP%/joyumkm-p506-work` masih ada, termasuk profil browser QA yang sudah berhenti. Inventaris Docker kembali ke baseline 16 kontainer. Tidak ada port QA yang masih listen.
+Resource Docker, MySQL QA dan schema restore, Apache/FastCGI QA, Chrome QA, dan staging Hermes sudah dibersihkan. File token fixture Windows sudah dihapus dan database penerbit token sudah dibuang. Pada akhir QA, review otomatis menolak penghapusan rekursif folder `%TEMP%/joyumkm-p506-work`, termasuk profil browser QA yang sudah berhenti. Inventaris Docker kembali ke baseline 16 kontainer. Tidak ada port QA yang masih listen.
 
 [Hasil per acceptance criterion](../evidence/p5-07-qa-summary.md)
+
+**Addendum cleanup.** Owner mengonfirmasi folder sudah tidak ada. Preflight P6 pada 25 November 2026 sekitar 01:22 WIB mengonfirmasi `Test-Path=False`. AC-15 ditutup PASS. Durasi dan hasil pengujian historis tetap tercatat sebagaimana dijalankan.

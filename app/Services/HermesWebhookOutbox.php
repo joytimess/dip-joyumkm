@@ -147,7 +147,16 @@ class HermesWebhookOutbox
     public function scan(): array
     {
         $counts = ['queued' => 0, 'failed' => 0];
-        foreach (WebhookOutbox::query()->due()->select('id')->lazyById(200) as $event) {
+        $query = WebhookOutbox::query()->due()->select('id');
+        if (config('services.hermes_webhook.uat_scope_enabled')) {
+            $pin = $this->sender->uatPin();
+            if ($pin === null) {
+                return $counts;
+            }
+            $query->where('event_id', $pin['event_id']);
+        }
+
+        foreach ($query->lazyById(200) as $event) {
             $queued = $this->enqueueSafely($event->id);
             if ($queued !== false) {
                 $counts[$queued === true ? 'queued' : 'failed']++;
@@ -159,8 +168,8 @@ class HermesWebhookOutbox
 
     public function requeue(string $eventId): bool
     {
-        $event = WebhookOutbox::query()->where('event_id', $eventId)->first(['id']);
-        if ($event === null || ! WebhookOutbox::query()->whereKey($event->id)
+        $event = WebhookOutbox::query()->where('event_id', $eventId)->first();
+        if ($event === null || ! $this->sender->allows($event) || ! WebhookOutbox::query()->whereKey($event->id)
             ->where('status', WebhookOutbox::DEAD)->update([
                 'status' => WebhookOutbox::PENDING,
                 'attempts' => 0,
@@ -237,7 +246,7 @@ class HermesWebhookOutbox
 
             return $database->transaction(function () use ($id, $query, $database, $queue): bool {
                 $event = $query->whereKey($id)->due()->lockForUpdate()->first();
-                if ($event === null) {
+                if ($event === null || ! $this->sender->allows($event)) {
                     return false;
                 }
 
@@ -270,7 +279,7 @@ class HermesWebhookOutbox
 
         return $query->getModel()->getConnection()->transaction(function () use ($query, $id): ?WebhookOutbox {
             $event = $query->whereKey($id)->due()->lockForUpdate()->first();
-            if ($event === null) {
+            if ($event === null || ! $this->sender->allows($event)) {
                 return null;
             }
 

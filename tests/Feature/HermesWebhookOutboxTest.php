@@ -32,10 +32,28 @@ class HermesWebhookOutboxTest extends TestCase
 
     private const URL = 'https://receiver.example.test/joyumkm-events';
 
-    public function test_only_official_finalization_creates_the_minimal_server_snapshot(): void
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function test_only_official_finalization_creates_the_minimal_server_snapshot(bool $uatHold): void
     {
         $this->freezeSecond();
         Http::preventStrayRequests();
+        if ($uatHold) {
+            $this->app->instance(HermesWebhookSender::class, new class extends HermesWebhookSender
+            {
+                public function uatPin(): ?array
+                {
+                    return null;
+                }
+            });
+            config([
+                'services.hermes_webhook.enabled' => true,
+                'services.hermes_webhook.url' => self::URL,
+                'services.hermes_webhook.allowed_host' => 'receiver.example.test',
+                'services.hermes_webhook.secret' => 'test-only',
+                'services.hermes_webhook.uat_scope_enabled' => true,
+            ]);
+        }
         $umkm = Umkm::factory()->create();
         $this->actingAs($umkm->user, 'sanctum');
         $base = '/api/umkms/'.$umkm->id.'/six-factor-evaluations';
@@ -89,7 +107,52 @@ class HermesWebhookOutboxTest extends TestCase
             ],
         ], json_decode($event->payload, true, flags: JSON_THROW_ON_ERROR));
         $this->assertDatabaseEmpty('jobs');
+        if ($uatHold) {
+            $outbox = app(HermesWebhookOutbox::class);
+            $this->assertSame(['queued' => 0, 'failed' => 0], $outbox->scan());
+            (new DeliverHermesWebhook($event->id))->handle($outbox);
+            $this->assertDatabaseHas('webhook_outbox', [
+                'id' => $event->id,
+                'status' => 'pending',
+                'attempts' => 0,
+            ]);
+        }
         Http::assertNothingSent();
+    }
+
+    public function test_worker_discards_preexisting_envelope_outside_the_current_uat_pin(): void
+    {
+        $this->configureSender();
+        Http::fake([self::URL => $this->acceptedAck(...)]);
+
+        $otherDraft = $this->completeDraft();
+        $this->postJson($this->finalizeUrl($otherDraft), options: JSON_FORCE_OBJECT)->assertOk();
+        $other = WebhookOutbox::query()->sole();
+        $this->assertNotNull($other->queued_job_id);
+
+        config(['services.hermes_webhook.enabled' => false]);
+        $draft = $this->completeDraft();
+        $this->postJson($this->finalizeUrl($draft), options: JSON_FORCE_OBJECT)->assertOk();
+        $pinned = WebhookOutbox::query()->where('aggregate_id', $draft->id)->sole();
+        $sender = Mockery::mock(HermesWebhookSender::class)->makePartial();
+        $sender->shouldReceive('uatPin')->andReturn([
+            'event_id' => $pinned->event_id,
+            'evaluation_id' => $draft->id,
+            'umkm_id' => $draft->umkm_id,
+        ]);
+        $this->app->instance(HermesWebhookSender::class, $sender);
+        config(['services.hermes_webhook.enabled' => true, 'services.hermes_webhook.uat_scope_enabled' => true]);
+
+        $outbox = app(HermesWebhookOutbox::class);
+        $this->assertSame(['queued' => 1, 'failed' => 0], $outbox->scan());
+        $this->assertSame(['queued' => 0, 'failed' => 0], $outbox->scan());
+        $this->runWorker();
+        Http::assertNothingSent();
+        $this->assertSame($other->getAttributes(), $other->fresh()->getAttributes());
+        $this->runWorker();
+        Http::assertSentCount(1);
+        $this->assertSame(WebhookOutbox::DELIVERED, $pinned->fresh()->status);
+        $this->assertDatabaseEmpty('jobs');
     }
 
     public function test_payload_snapshots_the_latest_eligible_three_dimension_assessment(): void

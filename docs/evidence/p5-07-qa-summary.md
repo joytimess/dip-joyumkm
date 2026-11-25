@@ -18,7 +18,7 @@ QA 24 November 2026 17:44:04 UTC sampai 17:58:08 UTC, sekitar **14 menit 4 detik
 | AC-12 | PASS | Chrome 1440 dan 390 px dengan status sent dari API nyata, waktu WIB, dan tanpa overflow. Respons simulasi untuk retry/unknown/skipped/changed/blocked/legacy serta loading, error, dan retry baca-saja. Vite lulus dengan warning ukuran chunk chart. |
 | AC-13 | PASS | Fresh, down/up, upgrade dari restore dump dev, dan regresi P2/P4. Digest riwayat cocok. Job tanpa marker sync dilewati. |
 | AC-14 | PASS | Secret dedicated cocok/berbeda diverifikasi privat. ACL Windows terproteksi dan mode Hermes 0600. Signed dev unknown event 404 tanpa penulisan. Rollout tetap off. |
-| AC-15 | PARTIAL | Backup/restore, migrasi, hash runtime, durasi, dan inventaris Docker lulus. Review otomatis menolak penghapusan folder staging Windows. |
+| AC-15 | PASS | Backup/restore, migrasi, hash runtime, durasi, dan inventaris Docker lulus. Penghapusan staging Windows sempat ditolak review otomatis. Owner mengonfirmasi staging sudah tidak ada dan preflight P6 pada 25 November 2026 mengonfirmasi `Test-Path=False`. |
 
 ## Perintah dan hitungan
 

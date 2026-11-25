@@ -45,6 +45,7 @@ return [
 
     'hermes_webhook' => [
         'enabled' => env('HERMES_WEBHOOK_ENABLED', false),
+        'uat_scope_enabled' => env('HERMES_WEBHOOK_UAT_SCOPE_ENABLED', false),
         'url' => env('HERMES_WEBHOOK_URL'),
         'allowed_host' => env('HERMES_WEBHOOK_ALLOWED_HOST'),
         'secret' => env('HERMES_WEBHOOK_SECRET'),
