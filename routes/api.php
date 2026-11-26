@@ -74,6 +74,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
     Route::get('/umkms/{id}/evaluations/latest', [EvaluationController::class, 'latest'])->whereNumber('id');
     Route::post('/umkms/{id}/evaluations', [EvaluationController::class, 'store'])->whereNumber('id');
+    Route::post('/umkms/{id}/six-factor-evaluations/predict', SixFactorPredictionController::class)
+        ->whereNumber('id')->name('umkms.six-factor-evaluations.predict');
     Route::prefix('/umkms/{id}/six-factor-evaluations')
         ->where(['id' => '[0-9]+', 'evaluationId' => '[0-9]+'])
         ->controller(SixFactorEvaluationController::class)
