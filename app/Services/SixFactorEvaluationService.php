@@ -73,12 +73,7 @@ class SixFactorEvaluationService
             return [
                 'status' => SixFactorEvaluation::FINAL,
                 'total_score' => $total,
-                'category' => match (true) {
-                    $total <= 12 => 'Kurang Sehat',
-                    $total <= 18 => 'Cukup Sehat',
-                    $total <= 24 => 'Sehat',
-                    default => 'Sangat Sehat',
-                },
+                'category' => SixFactorEvaluation::categoryForTotal($total),
                 'finalized_at' => now(),
             ];
         });

@@ -62,6 +62,19 @@ class SixFactorEvaluation extends Model
         return $this->belongsTo(Umkm::class);
     }
 
+    /**
+     * Kategori kesehatan untuk total 6-30 sesuai rentang yang ditegakkan CHECK pada tabel.
+     */
+    public static function categoryForTotal(int $total): string
+    {
+        return match (true) {
+            $total <= 12 => 'Kurang Sehat',
+            $total <= 18 => 'Cukup Sehat',
+            $total <= 24 => 'Sehat',
+            default => 'Sangat Sehat',
+        };
+    }
+
     public function delete(): never
     {
         throw new LogicException('Evaluasi enam faktor tidak dapat dihapus.');
