@@ -1,0 +1,12 @@
+P2 runtime smoke (Hermes uid 10000, MySQL 8.4.3)
+PASS TLS with server CA validation
+PASS analytics_umkms count 428
+PASS analytics_evaluations count 1284
+PASS analytics_six_factor_evaluations count 1284
+PASS UPDATE on analytics view denied (1142, zero-row predicate)
+PASS SELECT on QA users base table denied (1142)
+PASS SELECT on two out-of-scope schema references denied (1142)
+PASS exactly three SELECT grants, each on an analytics view
+out_of_cohort: 0
+orphaned_three: 0
+orphaned_six: 0

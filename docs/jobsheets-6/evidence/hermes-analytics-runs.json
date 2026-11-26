@@ -1,0 +1,445 @@
+﻿{
+  "workflow": "umkm-analytics-assistant",
+  "design_sha256": "655d2887e235262b6ff0ad83fdff0268bacd52f2077672d3ec09e75c36fc251b",
+  "source_description": "Local invocation of the persisted Hermes workflow. Telegram was not used for these runs.",
+  "runs": [
+    {
+      "run_id": "faf9a154cf8e",
+      "correlation_id": "verification-q7-9dade83a",
+      "question": "5 kota dengan rata-rata skor enam faktor tertinggi pada tiga bulan terakhir yang tersedia",
+      "source": "verification",
+      "status": "done",
+      "models": {
+        "plan": {
+          "model": "gpt-6-luna",
+          "provider": "openai-codex"
+        },
+        "analysis": {
+          "model": "gpt-6-luna",
+          "provider": "openai-codex"
+        }
+      },
+      "schema": {
+        "views": {
+          "analytics_umkms": [
+            "id",
+            "name",
+            "sector",
+            "province",
+            "city"
+          ],
+          "analytics_evaluations": [
+            "id",
+            "umkm_id",
+            "ins_score",
+            "ect_score",
+            "ops_score",
+            "average_score",
+            "submitted_at",
+            "period_month"
+          ],
+          "analytics_six_factor_evaluations": [
+            "id",
+            "umkm_id",
+            "sumber_daya",
+            "kepemimpinan",
+            "lingkungan_kerja",
+            "nilai_organisasi",
+            "stabilitas",
+            "kinerja",
+            "total_score",
+            "finalized_at",
+            "period_month"
+          ]
+        },
+        "rules": [
+          "Synthetic cohort only. All assessment records are final.",
+          "Join assessment.umkm_id to analytics_umkms.id; no raw history-to-history joins.",
+          "Tiga Dimensi scores use 0-100. Six factor scores use 1-5 and total_score uses 6-30.",
+          "period_month is YYYY-MM, interpreted in WIB. Latest uses timestamp then id.",
+          "Use positional ? for strings and user input. The query limit is at most 200."
+        ],
+        "current_month_wib": "2026-11",
+        "periods": {
+          "analytics_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          },
+          "analytics_six_factor_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          }
+        }
+      },
+      "plan": {
+        "sql": "SELECT u.city AS kota, COUNT(*) AS observasi, ROUND(AVG(e.total_score), 2) AS rata_rata FROM analytics_six_factor_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id WHERE e.period_month BETWEEN ? AND ? GROUP BY u.city ORDER BY AVG(e.total_score) DESC, u.city ASC LIMIT 5",
+        "params": [
+          "2026-08",
+          "2026-10"
+        ],
+        "intent": {
+          "metric": "rata-rata skor total Enam Faktor (total_score) per kota",
+          "evaluation_type": "six_factor",
+          "filters": "Tidak ada filter tambahan",
+          "period": "2026-08 hingga 2026-10, tiga bulan terakhir yang tersedia secara inklusif",
+          "group_by": "kota",
+          "sort": "Rata-rata total_score menurun; tie-breaker nama kota menaik",
+          "limit": 5,
+          "clarification_needed": false
+        }
+      },
+      "mysql": {
+        "status": "ok",
+        "rows": [
+          {
+            "kota": "Tangerang Selatan",
+            "observasi": 29,
+            "rata_rata": "18.76"
+          },
+          {
+            "kota": "Bandung",
+            "observasi": 31,
+            "rata_rata": "18.65"
+          },
+          {
+            "kota": "Malang",
+            "observasi": 30,
+            "rata_rata": "18.23"
+          },
+          {
+            "kota": "Jakarta Timur",
+            "observasi": 35,
+            "rata_rata": "17.71"
+          },
+          {
+            "kota": "Jakarta Selatan",
+            "observasi": 30,
+            "rata_rata": "17.67"
+          }
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "scope": "synthetic-cohort",
+        "duration_ms": 23,
+        "validated_sql": "SELECT u.city AS kota, COUNT(*) AS observasi, ROUND(AVG(e.total_score), 2) AS rata_rata FROM analytics_six_factor_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id WHERE e.period_month BETWEEN ? AND ? GROUP BY u.city ORDER BY AVG(e.total_score) DESC, u.city ASC LIMIT 5"
+      },
+      "filter": {
+        "rows": [
+          {
+            "kota": "Tangerang Selatan",
+            "observasi": 29,
+            "rata_rata": "18.76"
+          },
+          {
+            "kota": "Bandung",
+            "observasi": 31,
+            "rata_rata": "18.65"
+          },
+          {
+            "kota": "Malang",
+            "observasi": 30,
+            "rata_rata": "18.23"
+          },
+          {
+            "kota": "Jakarta Timur",
+            "observasi": 35,
+            "rata_rata": "17.71"
+          },
+          {
+            "kota": "Jakarta Selatan",
+            "observasi": 30,
+            "rata_rata": "17.67"
+          }
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "has_data": true,
+        "evaluation_type": "six_factor",
+        "period": "2026-08 sampai 2026-10 (WIB)"
+      },
+      "skipped": [],
+      "reply": "Data sintetis JoyUMKM\nJenis: Enam Faktor (skala 6-30 untuk total)\nPeriode: 2026-08 sampai 2026-10 (WIB)\nBaris hasil: 5\nkota: Tangerang Selatan | observasi: 29 | rata_rata: 18.76\nkota: Bandung | observasi: 31 | rata_rata: 18.65\nkota: Malang | observasi: 30 | rata_rata: 18.23\nkota: Jakarta Timur | observasi: 35 | rata_rata: 17.71\nkota: Jakarta Selatan | observasi: 30 | rata_rata: 17.67\nInterpretasi: Tangerang Selatan memiliki rata-rata skor tertinggi dalam daftar, disusul Bandung dan Malang. Jakarta Timur dan Jakarta Selatan berada di posisi berikutnya dengan rata-rata yang berdekatan.\nSaran: Gunakan daftar ini sebagai gambaran kota dengan rata-rata skor tertinggi pada periode tersebut; data tidak cukup untuk merekomendasikan tindakan lebih lanjut.",
+      "telegram_delivery": null
+    },
+    {
+      "run_id": "b81c4fe351ff",
+      "correlation_id": "verification-q4-9d5eab66",
+      "question": "Bandingkan rata-rata INS, ECT, OPS per sektor.",
+      "source": "verification",
+      "status": "done",
+      "models": {
+        "plan": {
+          "model": "gpt-6-luna",
+          "provider": "openai-codex"
+        },
+        "analysis": {
+          "model": "gpt-6-luna",
+          "provider": "openai-codex"
+        }
+      },
+      "schema": {
+        "views": {
+          "analytics_umkms": [
+            "id",
+            "name",
+            "sector",
+            "province",
+            "city"
+          ],
+          "analytics_evaluations": [
+            "id",
+            "umkm_id",
+            "ins_score",
+            "ect_score",
+            "ops_score",
+            "average_score",
+            "submitted_at",
+            "period_month"
+          ],
+          "analytics_six_factor_evaluations": [
+            "id",
+            "umkm_id",
+            "sumber_daya",
+            "kepemimpinan",
+            "lingkungan_kerja",
+            "nilai_organisasi",
+            "stabilitas",
+            "kinerja",
+            "total_score",
+            "finalized_at",
+            "period_month"
+          ]
+        },
+        "rules": [
+          "Synthetic cohort only. All assessment records are final.",
+          "Join assessment.umkm_id to analytics_umkms.id; no raw history-to-history joins.",
+          "Tiga Dimensi scores use 0-100. Six factor scores use 1-5 and total_score uses 6-30.",
+          "period_month is YYYY-MM, interpreted in WIB. Latest uses timestamp then id.",
+          "Use positional ? for strings and user input. The query limit is at most 200."
+        ],
+        "current_month_wib": "2026-11",
+        "periods": {
+          "analytics_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          },
+          "analytics_six_factor_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          }
+        }
+      },
+      "plan": {
+        "sql": "SELECT u.sector AS sektor, COUNT(*) AS observasi, ROUND(AVG(e.ins_score), 2) AS rata_ins, ROUND(AVG(e.ect_score), 2) AS rata_ect, ROUND(AVG(e.ops_score), 2) AS rata_ops FROM analytics_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id GROUP BY u.sector ORDER BY u.sector ASC LIMIT 200",
+        "params": [],
+        "intent": {
+          "metric": "Rata-rata INS, ECT, dan OPS per sektor",
+          "evaluation_type": "three_dimension",
+          "filters": "Tidak ada",
+          "period": "Seluruh periode cohort",
+          "group_by": "Sektor",
+          "sort": "Sektor menaik sebagai tie-breaker stabil",
+          "limit": 200,
+          "clarification_needed": false
+        }
+      },
+      "mysql": {
+        "status": "ok",
+        "rows": [
+          {
+            "sektor": "Fashion & Kriya",
+            "observasi": 225,
+            "rata_ins": "50.19",
+            "rata_ect": "49.81",
+            "rata_ops": "50.22"
+          },
+          {
+            "sektor": "Grosir & Retail",
+            "observasi": 300,
+            "rata_ins": "47.61",
+            "rata_ect": "47.35",
+            "rata_ops": "47.68"
+          },
+          {
+            "sektor": "Jasa",
+            "observasi": 255,
+            "rata_ins": "48.69",
+            "rata_ect": "48.85",
+            "rata_ops": "48.74"
+          },
+          {
+            "sektor": "Makanan & Minuman",
+            "observasi": 360,
+            "rata_ins": "50.42",
+            "rata_ect": "50.31",
+            "rata_ops": "50.46"
+          },
+          {
+            "sektor": "Pertanian",
+            "observasi": 144,
+            "rata_ins": "53.76",
+            "rata_ect": "53.08",
+            "rata_ops": "53.91"
+          }
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "scope": "synthetic-cohort",
+        "duration_ms": 27,
+        "validated_sql": "SELECT u.sector AS sektor, COUNT(*) AS observasi, ROUND(AVG(e.ins_score), 2) AS rata_ins, ROUND(AVG(e.ect_score), 2) AS rata_ect, ROUND(AVG(e.ops_score), 2) AS rata_ops FROM analytics_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id GROUP BY u.sector ORDER BY u.sector ASC LIMIT 200"
+      },
+      "filter": {
+        "rows": [
+          {
+            "sektor": "Fashion & Kriya",
+            "observasi": 225,
+            "rata_ins": "50.19",
+            "rata_ect": "49.81",
+            "rata_ops": "50.22"
+          },
+          {
+            "sektor": "Grosir & Retail",
+            "observasi": 300,
+            "rata_ins": "47.61",
+            "rata_ect": "47.35",
+            "rata_ops": "47.68"
+          },
+          {
+            "sektor": "Jasa",
+            "observasi": 255,
+            "rata_ins": "48.69",
+            "rata_ect": "48.85",
+            "rata_ops": "48.74"
+          },
+          {
+            "sektor": "Makanan & Minuman",
+            "observasi": 360,
+            "rata_ins": "50.42",
+            "rata_ect": "50.31",
+            "rata_ops": "50.46"
+          },
+          {
+            "sektor": "Pertanian",
+            "observasi": 144,
+            "rata_ins": "53.76",
+            "rata_ect": "53.08",
+            "rata_ops": "53.91"
+          }
+        ],
+        "row_count": 5,
+        "truncated": false,
+        "has_data": true,
+        "evaluation_type": "three_dimension",
+        "period": "Seluruh periode cohort"
+      },
+      "skipped": [],
+      "reply": "Data sintetis JoyUMKM\nJenis: Tiga Dimensi (skala 0-100)\nPeriode: Seluruh periode cohort\nBaris hasil: 5\nsektor: Fashion & Kriya | observasi: 225 | rata_ins: 50.19 | rata_ect: 49.81 | rata_ops: 50.22\nsektor: Grosir & Retail | observasi: 300 | rata_ins: 47.61 | rata_ect: 47.35 | rata_ops: 47.68\nsektor: Jasa | observasi: 255 | rata_ins: 48.69 | rata_ect: 48.85 | rata_ops: 48.74\nsektor: Makanan & Minuman | observasi: 360 | rata_ins: 50.42 | rata_ect: 50.31 | rata_ops: 50.46\nsektor: Pertanian | observasi: 144 | rata_ins: 53.76 | rata_ect: 53.08 | rata_ops: 53.91\nSaran: Tinjau praktik pada sektor dengan rata-rata lebih tinggi untuk melihat apakah ada pendekatan yang relevan bagi sektor dengan nilai lebih rendah, tanpa mengasumsikan penyebab perbedaan.",
+      "telegram_delivery": null
+    },
+    {
+      "run_id": "2160287aa1ae",
+      "correlation_id": "verification-no-data-a0051e65",
+      "question": "Berapa rata-rata skor total Enam Faktor per kota untuk Januari 1901?",
+      "source": "verification",
+      "status": "done",
+      "models": {
+        "plan": {
+          "model": "gpt-6-luna",
+          "provider": "openai-codex"
+        }
+      },
+      "schema": {
+        "views": {
+          "analytics_umkms": [
+            "id",
+            "name",
+            "sector",
+            "province",
+            "city"
+          ],
+          "analytics_evaluations": [
+            "id",
+            "umkm_id",
+            "ins_score",
+            "ect_score",
+            "ops_score",
+            "average_score",
+            "submitted_at",
+            "period_month"
+          ],
+          "analytics_six_factor_evaluations": [
+            "id",
+            "umkm_id",
+            "sumber_daya",
+            "kepemimpinan",
+            "lingkungan_kerja",
+            "nilai_organisasi",
+            "stabilitas",
+            "kinerja",
+            "total_score",
+            "finalized_at",
+            "period_month"
+          ]
+        },
+        "rules": [
+          "Synthetic cohort only. All assessment records are final.",
+          "Join assessment.umkm_id to analytics_umkms.id; no raw history-to-history joins.",
+          "Tiga Dimensi scores use 0-100. Six factor scores use 1-5 and total_score uses 6-30.",
+          "period_month is YYYY-MM, interpreted in WIB. Latest uses timestamp then id.",
+          "Use positional ? for strings and user input. The query limit is at most 200."
+        ],
+        "current_month_wib": "2026-11",
+        "periods": {
+          "analytics_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          },
+          "analytics_six_factor_evaluations": {
+            "first_period": "2025-11",
+            "last_period": "2026-10"
+          }
+        }
+      },
+      "plan": {
+        "sql": "SELECT u.city AS kota, COUNT(*) AS observasi, ROUND(AVG(e.total_score), 2) AS rata_rata FROM analytics_six_factor_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id WHERE e.period_month = ? GROUP BY u.city ORDER BY AVG(e.total_score) DESC, u.city ASC",
+        "params": [
+          "1901-01"
+        ],
+        "intent": {
+          "metric": "Rata-rata skor total Enam Faktor",
+          "evaluation_type": "six_factor",
+          "filters": "Tidak ada",
+          "period": "1901-01",
+          "group_by": "Kota",
+          "sort": "Rata-rata skor total menurun, lalu nama kota menaik",
+          "limit": 200,
+          "clarification_needed": false
+        }
+      },
+      "mysql": {
+        "status": "ok",
+        "rows": [],
+        "row_count": 0,
+        "truncated": false,
+        "scope": "synthetic-cohort",
+        "duration_ms": 20,
+        "validated_sql": "SELECT u.city AS kota, COUNT(*) AS observasi, ROUND(AVG(e.total_score), 2) AS rata_rata FROM analytics_six_factor_evaluations AS e JOIN analytics_umkms AS u ON e.umkm_id = u.id WHERE e.period_month = ? GROUP BY u.city ORDER BY AVG(e.total_score) DESC, u.city ASC LIMIT 201"
+      },
+      "filter": {
+        "rows": [],
+        "row_count": 0,
+        "truncated": false,
+        "has_data": false,
+        "evaluation_type": "six_factor",
+        "period": "1901-01 (WIB)"
+      },
+      "skipped": [
+        "has_data",
+        "analysis",
+        "reply"
+      ],
+      "reply": "Tidak ada data sintetis yang cocok dengan pertanyaan dan periode tersebut.",
+      "telegram_delivery": null
+    }
+  ]
+}
