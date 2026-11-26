@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\IntelligenceSnapshotController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\SixFactorEvaluationController;
+use App\Http\Controllers\Api\SixFactorMonitoringController;
+use App\Http\Controllers\Api\SixFactorPredictionController;
 use App\Http\Controllers\Api\UmkmController;
 use App\Http\Middleware\VerifyIntelligenceArtifactSignature;
 use App\Http\Middleware\VerifyIntelligenceCallbackSignature;
@@ -43,6 +45,11 @@ Route::options('/internal/intelligence/recipients/{eventId}', fn () => abort(405
 Route::get('/internal/intelligence/events/{eventId}/snapshot', [IntelligenceSnapshotController::class, 'show'])
     ->where('eventId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
     ->middleware(VerifyIntelligenceSnapshotSignature::class);
+
+// Pemantauan periodik Jobsheet 5: GET read-only total skor final Enam Faktor. Ditandatangani secret snapshot yang sama.
+Route::get('/internal/monitoring/six-factor/latest-finals', SixFactorMonitoringController::class)
+    ->middleware(VerifyIntelligenceSnapshotSignature::class)
+    ->name('internal.monitoring.six-factor.latest-finals');
 
 // Unggah artefak P4-01: PUT biner, HMAC khusus artefak terikat method/path/event/kind/digest. Tanpa Sanctum.
 Route::put('/internal/intelligence/artifacts/{eventId}/{kind}', [IntelligenceArtifactController::class, 'update'])

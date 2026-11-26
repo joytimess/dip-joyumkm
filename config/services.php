@@ -61,6 +61,12 @@ return [
         'secret' => env('HERMES_ONBOARDING_WEBHOOK_SECRET'),
     ],
 
+    'hermes_prediction' => [
+        'enabled' => env('HERMES_PREDICTION_ENABLED', false),
+        'url' => env('HERMES_PREDICTION_URL'),
+        'secret' => env('HERMES_PREDICTION_SECRET'),
+    ],
+
     'hermes_intelligence_callback' => [
         'secret' => env('HERMES_INTELLIGENCE_CALLBACK_SECRET'),
         'tolerance_seconds' => (int) env('HERMES_INTELLIGENCE_CALLBACK_TOLERANCE_SECONDS', 300),

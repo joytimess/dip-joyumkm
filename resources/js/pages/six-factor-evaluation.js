@@ -40,6 +40,9 @@ export function initEvaluation(path, signal) {
     const finalize = byId('finalize-draft');
     const cancel = byId('cancel-draft');
     const retrySave = byId('retry-save');
+    const predict = byId('predict-health');
+    const predictionResult = byId('prediction-result');
+    const predictionError = byId('prediction-error');
     const confirmation = byId('draft-confirmation');
     const confirm = byId('confirm-draft-action');
     const historical = byId('historical-result');
@@ -48,6 +51,7 @@ export function initEvaluation(path, signal) {
     let action;
     let target;
     let previousReadState;
+    let prediction;
 
     const active = () => !signal.aborted && !!token && getToken() === token;
     const request = async (suffix, options) => (await api(path + suffix, options)).data;
@@ -213,6 +217,20 @@ export function initEvaluation(path, signal) {
         return history;
     }
 
+    function clearPrediction() {
+        prediction?.controller?.abort();
+        prediction = undefined;
+        predictionResult.replaceChildren();
+        predictionError.hidden = true;
+        predictionError.textContent = '';
+    }
+
+    function showPredictionError(message) {
+        predictionResult.replaceChildren();
+        predictionError.hidden = false;
+        predictionError.textContent = message;
+    }
+
     function render(state) {
         const { scores, ready, phase, readError, saveError, actionError } = state;
         const loading = phase === 'loading';
@@ -230,6 +248,13 @@ export function initEvaluation(path, signal) {
         fields.disabled = !ready;
         finalize.disabled = !state.canFinalize;
         cancel.disabled = !state.canCancel;
+        if (predict) {
+            if (prediction && (readError || phase === 'finalize' || phase === 'cancel'
+                || factors.some(([key]) => scores[key] !== prediction.scores[key]))) {
+                clearPrediction();
+            }
+            predict.disabled = !ready || Boolean(prediction?.controller);
+        }
         retrySave.hidden = (!saveError && !state.holdPending) || !active();
         retrySave.textContent = saveError ? 'Coba lagi' : 'Simpan perubahan';
         retrySave.disabled = !ready;
@@ -273,6 +298,52 @@ export function initEvaluation(path, signal) {
     }
 
     const draft = createSixFactorDraft({ request, reloadResults, render, active });
+
+    predict?.addEventListener('click', async () => {
+        const { scores, ready } = draft.snapshot();
+        if (!ready || prediction?.controller) return;
+
+        clearPrediction();
+        const current = { scores };
+        prediction = current;
+        const missing = factors.filter(([key]) => !scale.includes(scores[key]));
+        if (missing.length) {
+            showPredictionError('Lengkapi nilai untuk ' + missing.map(([, label]) => label).join(', ') + '.');
+            return;
+        }
+
+        current.controller = new AbortController();
+        predict.disabled = true;
+        predictionResult.append(element('p', { class: 'section-desc mt-2', text: 'Menghitung prediksi…' }));
+        try {
+            const result = await request('/predict', { method: 'POST', body: { scores }, signal: current.controller.signal });
+            if (prediction !== current || !active()) return;
+            predictionResult.replaceChildren(
+                element('p', { class: 'hstack wrap mt-3' }, [
+                    element('span', { class: 'sr-only', text: 'Total skor prediksi' }),
+                    element('strong', { id: 'prediction-total-score', class: 'section-title num', text: formatNumber(result.total_score) + '/30' }),
+                    element('span', { id: 'prediction-category', class: 'pill pill-muted', text: result.category }),
+                ]),
+                element('p', { class: 'section-desc mt-2 break-words' }, [
+                    element('strong', { class: 'block', text: 'Rekomendasi' }),
+                    element('span', { id: 'prediction-recommendation', text: result.recommendation }),
+                ]),
+            );
+        } catch (error) {
+            if (prediction !== current || !active()) return;
+            const messages = {
+                422: 'Periksa kembali keenam nilai. Setiap faktor memerlukan nilai 1–5.',
+                503: 'Layanan prediksi sedang tidak tersedia. Silakan coba lagi.',
+                504: 'Waktu tunggu prediksi habis. Silakan coba lagi.',
+            };
+            showPredictionError(messages[error.status] || publicError(error, 'Prediksi belum dapat dihitung. Silakan coba lagi.'));
+        } finally {
+            if (prediction === current && active()) {
+                current.controller = undefined;
+                predict.disabled = !draft.snapshot().ready;
+            }
+        }
+    });
 
     function ask(nextAction, opener) {
         action = nextAction;

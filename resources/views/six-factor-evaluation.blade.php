@@ -31,6 +31,13 @@
                     <fieldset id="draft-scores" class="grid gap-4" disabled></fieldset>
                     <p class="form-message mt-4" role="alert" hidden></p>
                     <div class="card six-factor-footer mt-4">
+                        @if (config('services.hermes_prediction.enabled'))
+                            <div class="min-w-0 basis-full">
+                                <button id="predict-health" type="button" class="btn btn-light button button-outline" disabled>Prediksi Kesehatan</button>
+                                <div id="prediction-result" role="status" aria-atomic="true"></div>
+                                <div role="alert"><p id="prediction-error" class="form-message mt-3 mb-0" hidden></p></div>
+                            </div>
+                        @endif
                         <div class="hstack wrap six-factor-feedback">
                             <p id="draft-status" role="status" aria-atomic="true"></p>
                             <button id="retry-save" type="button" class="btn btn-light button button-outline" hidden>Coba lagi</button>
