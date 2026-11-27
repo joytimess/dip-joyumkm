@@ -17,7 +17,13 @@ use Carbon\CarbonImmutable;
  */
 final class AnalyticsDatasetPlanner
 {
+    /** Jumlah profil dasar (v1). Plan dasar tidak boleh bergeser. */
     public const UMKM_COUNT = 428;
+
+    /** Profil ekspansi v2, indeks 428..457, dengan scope acak terpisah dari plan dasar. */
+    public const EXPANSION_COUNT = 30;
+
+    public const TOTAL_COUNT = self::UMKM_COUNT + self::EXPANSION_COUNT;
 
     public const MONTH_COUNT = 12;
 
@@ -58,6 +64,26 @@ final class AnalyticsDatasetPlanner
         ['lowest' => 13, 'highest' => 18, 'evaluations' => 309],
         ['lowest' => 19, 'highest' => 24, 'evaluations' => 308],
         ['lowest' => 25, 'highest' => 30, 'evaluations' => 307],
+    ];
+
+    /** @var array<string, int> */
+    public const EXPANSION_SECTOR_COUNTS = [
+        'makanan-minuman' => 8,
+        'grosir-retail' => 7,
+        'jasa' => 6,
+        'fashion-kriya' => 5,
+        'pertanian' => 4,
+    ];
+
+    /** Tiga UMKM ekspansi per kota. */
+    public const EXPANSION_PER_CITY = 3;
+
+    /** @var list<array{lowest: int, highest: int, evaluations: int}> */
+    public const EXPANSION_SIX_FACTOR_BANDS = [
+        ['lowest' => 6, 'highest' => 12, 'evaluations' => 22],
+        ['lowest' => 13, 'highest' => 18, 'evaluations' => 23],
+        ['lowest' => 19, 'highest' => 24, 'evaluations' => 23],
+        ['lowest' => 25, 'highest' => 30, 'evaluations' => 22],
     ];
 
     /**
@@ -120,11 +146,11 @@ final class AnalyticsDatasetPlanner
             fn (string $slug, int $count): array => [$slug, $count],
             array_keys(self::SECTOR_COUNTS),
             array_values(self::SECTOR_COUNTS),
-        ), 'sector');
+        ), 'sector', self::UMKM_COUNT);
         $cities = $this->shuffledExpansion(array_map(
             fn (array $row): array => [$row, $row['count']],
             self::CITY_COUNTS,
-        ), 'city');
+        ), 'city', self::UMKM_COUNT);
         $triples = $this->shuffledSixFactorTriples();
 
         $umkms = [];
@@ -143,18 +169,113 @@ final class AnalyticsDatasetPlanner
     }
 
     /**
-     * Mengembalikan kategori target per total (dipakai verifikasi, bukan generator).
+     * 30 profil ekspansi (indeks 428..457) dengan scope acak sendiri; tidak membaca atau menggeser plan dasar 428.
+     *
+     * @param  list<FactorMeta>  $factors
+     * @return array{months: list<string>, account_created_at: CarbonImmutable, umkms: list<UmkmPlan>}
+     */
+    public function planExpansion(string $referenceStartMonth, array $factors): array
+    {
+        $start = CarbonImmutable::createFromFormat('!Y-m', $referenceStartMonth, self::PERIOD_TIMEZONE);
+        $months = [];
+        for ($month = 0; $month < self::MONTH_COUNT; $month++) {
+            $months[] = $start->addMonths($month)->format('Y-m');
+        }
+
+        $sectors = $this->shuffledExpansion(array_map(
+            fn (string $slug, int $count): array => [$slug, $count],
+            array_keys(self::EXPANSION_SECTOR_COUNTS),
+            array_values(self::EXPANSION_SECTOR_COUNTS),
+        ), 'sector-v2', self::EXPANSION_COUNT);
+        $cities = $this->shuffledExpansion(array_map(
+            fn (array $row): array => [$row, self::EXPANSION_PER_CITY],
+            self::CITY_COUNTS,
+        ), 'city-v2', self::EXPANSION_COUNT);
+        $triples = $this->expansionTriples();
+
+        $umkms = [];
+        for ($offset = 0; $offset < self::EXPANSION_COUNT; $offset++) {
+            $umkms[] = $this->umkmPlan(self::UMKM_COUNT + $offset, $sectors[$offset], $cities[$offset], $start, $triples[$offset], $factors);
+        }
+
+        return [
+            'months' => $months,
+            'account_created_at' => $this->wibDate($start->subMonth(), 1, 0, 0),
+            'umkms' => $umkms,
+        ];
+    }
+
+    /**
+     * Kategori target per total (dipakai verifikasi, bukan generator) untuk 428 (v1) atau 458 (v2) UMKM.
      *
      * @return array<string, int>
      */
-    public static function expectedSixFactorCategoryCounts(): array
+    public static function expectedSixFactorCategoryCounts(int $umkmCount = self::UMKM_COUNT): array
     {
+        self::assertSupportedCount($umkmCount);
         $counts = [];
-        foreach (self::SIX_FACTOR_BANDS as $band) {
-            $counts[SixFactorEvaluation::categoryForTotal($band['lowest'])] = $band['evaluations'];
+        foreach (self::SIX_FACTOR_BANDS as $position => $band) {
+            $extra = $umkmCount === self::TOTAL_COUNT ? self::EXPANSION_SIX_FACTOR_BANDS[$position]['evaluations'] : 0;
+            $counts[SixFactorEvaluation::categoryForTotal($band['lowest'])] = $band['evaluations'] + $extra;
         }
 
         return $counts;
+    }
+
+    /**
+     * @return array<string, int> Kunci "kota|provinsi".
+     */
+    public static function expectedCityCounts(int $umkmCount = self::UMKM_COUNT): array
+    {
+        self::assertSupportedCount($umkmCount);
+        $counts = [];
+        foreach (self::CITY_COUNTS as $row) {
+            $counts[$row['city'].'|'.$row['province']] = $row['count'] + ($umkmCount === self::TOTAL_COUNT ? self::EXPANSION_PER_CITY : 0);
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    public static function expectedSectorCounts(int $umkmCount = self::UMKM_COUNT): array
+    {
+        self::assertSupportedCount($umkmCount);
+        $counts = self::SECTOR_COUNTS;
+        if ($umkmCount === self::TOTAL_COUNT) {
+            foreach (self::EXPANSION_SECTOR_COUNTS as $slug => $count) {
+                $counts[$slug] += $count;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Evaluasi per bulan per jenis: kelas indeks % 4 mengisi bulan c, c+4, c+8.
+     *
+     * @param  list<string>  $months
+     * @return array<string, int>
+     */
+    public static function expectedPerMonthCounts(int $umkmCount, array $months): array
+    {
+        self::assertSupportedCount($umkmCount);
+        $counts = array_fill_keys($months, 0);
+        for ($index = 0; $index < $umkmCount; $index++) {
+            foreach ([0, 4, 8] as $step) {
+                $counts[$months[$index % 4 + $step]]++;
+            }
+        }
+
+        return $counts;
+    }
+
+    private static function assertSupportedCount(int $umkmCount): void
+    {
+        if ($umkmCount !== self::UMKM_COUNT && $umkmCount !== self::TOTAL_COUNT) {
+            throw AnalyticsDatasetException::because('Jumlah UMKM dataset harus 428 (v1) atau 458 (v2).');
+        }
     }
 
     /**
@@ -415,20 +536,60 @@ final class AnalyticsDatasetPlanner
     }
 
     /**
+     * Pool 90 total ekspansi: 20 tripel tren (rank i, i+30, i+60) dan 10 tripel stabil (rank berurutan).
+     *
+     * @return list<array{trend: string, totals: list<int>}>
+     */
+    private function expansionTriples(): array
+    {
+        $pool = [];
+        foreach (self::EXPANSION_SIX_FACTOR_BANDS as $band) {
+            $totals = $band['highest'] - $band['lowest'] + 1;
+            $base = intdiv($band['evaluations'], $totals);
+            $extra = $band['evaluations'] % $totals;
+            for ($total = $band['lowest']; $total <= $band['highest']; $total++) {
+                $count = $base + ($total - $band['lowest'] < $extra ? 1 : 0);
+                array_push($pool, ...array_fill(0, $count, $total));
+            }
+        }
+
+        $triples = [];
+        $remaining = [];
+        for ($item = 0; $item < 30; $item++) {
+            if ($item < 20) {
+                $triples[] = $this->trendTriple([$pool[$item], $pool[$item + 30], $pool[$item + 60]], 100, $item);
+
+                continue;
+            }
+            array_push($remaining, $pool[$item], $pool[$item + 30], $pool[$item + 60]);
+        }
+        sort($remaining);
+        for ($item = 0; $item < 10; $item++) {
+            $triples[] = $this->flatTriple(array_slice($remaining, $item * 3, 3), 101, $item);
+        }
+
+        if (count($triples) !== self::EXPANSION_COUNT || count($pool) !== self::EXPANSION_COUNT * 3) {
+            throw AnalyticsDatasetException::because('Pool total Enam Faktor ekspansi tidak seimbang dengan 30 UMKM.');
+        }
+
+        return $this->random->shuffle($triples, 'six-triple-assignment-v2');
+    }
+
+    /**
      * @template T
      *
      * @param  list<array{0: T, 1: int}>  $counted
      * @return list<T>
      */
-    private function shuffledExpansion(array $counted, string $scope): array
+    private function shuffledExpansion(array $counted, string $scope, int $expectedCount): array
     {
         $expanded = [];
         foreach ($counted as [$item, $count]) {
             array_push($expanded, ...array_fill(0, $count, $item));
         }
 
-        if (count($expanded) !== self::UMKM_COUNT) {
-            throw AnalyticsDatasetException::because('Jumlah distribusi master tidak sama dengan 428 UMKM.');
+        if (count($expanded) !== $expectedCount) {
+            throw AnalyticsDatasetException::because('Jumlah distribusi master tidak sama dengan jumlah UMKM yang direncanakan.');
         }
 
         return $this->random->shuffle($expanded, 'expansion', $scope);

@@ -11,7 +11,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ekspor CSV satu baris per UMKM sintetis cohort. Hanya membaca data milik akun cohort (tanpa lintas tenant).
+ * Ekspor CSV satu baris per UMKM sintetis cohort. Anggota dipilih dari keanggotaan cohort (analytics_dataset_members), bukan dari pemilik.
  */
 final class AnalyticsDatasetExporter
 {
@@ -40,11 +40,12 @@ final class AnalyticsDatasetExporter
             throw AnalyticsDatasetException::because('Cohort dataset analitik belum ada; jalankan AnalyticsDatasetSeeder terlebih dahulu.');
         }
 
-        $rows = $this->rows($connection, (int) $cohort->user_id, (string) $cohort->dataset_key, (string) $cohort->dataset_version);
-        if (count($rows) !== AnalyticsDatasetPlanner::UMKM_COUNT
-            || count(array_unique(array_column($rows, 'umkm_id'))) !== AnalyticsDatasetPlanner::UMKM_COUNT
-            || count(array_unique(array_map(fn (array $row): string => mb_strtolower($row['name']), $rows))) !== AnalyticsDatasetPlanner::UMKM_COUNT) {
-            throw AnalyticsDatasetException::because('Ekspor harus berisi tepat 428 baris dengan kunci UMKM dan nama unik.');
+        $memberIds = $connection->table('analytics_dataset_members')->where('analytics_dataset_cohort_id', $cohort->id)->orderBy('umkm_id')->pluck('umkm_id')->map(fn (mixed $id): int => (int) $id)->all();
+        $expected = (int) $cohort->umkm_count;
+        $rows = $this->rows($connection, $memberIds, (string) $cohort->dataset_key, (string) $cohort->dataset_version);
+        if (count($memberIds) !== $expected || count($rows) !== $expected
+            || count(array_unique(array_column($rows, 'umkm_id'))) !== $expected) {
+            throw AnalyticsDatasetException::because("Ekspor harus berisi tepat {$expected} baris anggota cohort dengan kunci UMKM unik.");
         }
 
         $directory = dirname($path);
@@ -70,13 +71,14 @@ final class AnalyticsDatasetExporter
     }
 
     /**
+     * @param  list<int>  $memberIds
      * @return list<array<string, mixed>>
      */
-    private function rows(ConnectionInterface $connection, int $userId, string $datasetKey, string $datasetVersion): array
+    private function rows(ConnectionInterface $connection, array $memberIds, string $datasetKey, string $datasetVersion): array
     {
         $umkms = $connection->table('umkms')
             ->join('sectors', 'sectors.id', '=', 'umkms.sector_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $memberIds)
             ->orderBy('umkms.id')
             ->get(['umkms.id', 'umkms.name', 'sectors.slug as sector', 'umkms.province', 'umkms.city', 'umkms.omzet',
                 'umkms.omzet_period', 'umkms.business_capital', 'umkms.year_founded', 'umkms.employee_count', 'umkms.owner_name'])
@@ -85,7 +87,7 @@ final class AnalyticsDatasetExporter
         $latestThree = [];
         $threeRows = $connection->table('evaluations')
             ->join('umkms', 'umkms.id', '=', 'evaluations.umkm_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $memberIds)
             ->where('evaluations.status', 'final')
             ->orderBy('evaluations.id')
             ->get(['evaluations.id', 'evaluations.umkm_id', 'evaluations.ins_score', 'evaluations.ect_score',
@@ -98,7 +100,7 @@ final class AnalyticsDatasetExporter
         $latestSix = [];
         $sixRows = $connection->table('six_factor_evaluations')
             ->join('umkms', 'umkms.id', '=', 'six_factor_evaluations.umkm_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $memberIds)
             ->where('six_factor_evaluations.status', SixFactorEvaluation::FINAL)
             ->orderBy('six_factor_evaluations.finalized_at')
             ->orderBy('six_factor_evaluations.id')

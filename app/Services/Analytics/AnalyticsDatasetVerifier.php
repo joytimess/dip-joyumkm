@@ -21,18 +21,25 @@ final class AnalyticsDatasetVerifier
 {
     private const SCORE_TOLERANCE = 0.00005;
 
+    /** Jumlah UMKM yang diharapkan pada inspeksi berjalan (428 untuk v1, 458 untuk v2). */
+    private int $expectedCount = AnalyticsDatasetPlanner::UMKM_COUNT;
+
     public function __construct(private readonly ScoringService $scoring) {}
 
     /**
+     * Inspeksi invarian seed awal. Anggota dipilih berdasarkan keanggotaan cohort (daftar ID UMKM), bukan pemilik.
+     *
+     * @param  list<int>  $umkmIds  ID UMKM anggota cohort.
      * @param  list<FactorMeta>  $factors
      * @param  list<string>  $months  Periode referensi (Y-m, WIB), tepat 12 bulan.
      * @return InspectionReport
      */
-    public function inspect(ConnectionInterface $connection, int $userId, string $email, array $factors, array $months, CarbonImmutable $now): array
+    public function inspect(ConnectionInterface $connection, array $umkmIds, string $email, array $factors, array $months, CarbonImmutable $now): array
     {
+        $this->expectedCount = count($umkmIds);
         $umkms = $connection->table('umkms')
             ->leftJoin('sectors', 'sectors.id', '=', 'umkms.sector_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $umkmIds)
             ->orderBy('umkms.id')
             ->get(['umkms.id', 'umkms.name', 'umkms.province', 'umkms.city', 'umkms.omzet', 'umkms.omzet_period',
                 'umkms.business_capital', 'umkms.year_founded', 'umkms.employee_count', 'umkms.created_at',
@@ -42,7 +49,7 @@ final class AnalyticsDatasetVerifier
 
         $threeRows = $connection->table('evaluations')
             ->join('umkms', 'umkms.id', '=', 'evaluations.umkm_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $umkmIds)
             ->orderBy('evaluations.id')
             ->get(['evaluations.id', 'evaluations.umkm_id', 'evaluations.status', 'evaluations.ins_score',
                 'evaluations.ect_score', 'evaluations.ops_score', 'evaluations.average_score', 'evaluations.category',
@@ -54,14 +61,14 @@ final class AnalyticsDatasetVerifier
             ->join('umkms', 'umkms.id', '=', 'evaluations.umkm_id')
             ->join('questions', 'questions.id', '=', 'evaluation_answers.question_id')
             ->join('factors', 'factors.id', '=', 'questions.factor_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $umkmIds)
             ->get(['evaluation_answers.evaluation_id', 'evaluation_answers.question_id', 'evaluation_answers.value',
                 'questions.is_active', 'factors.code', 'factors.scale_min', 'factors.scale_max'])
             ->all();
 
         $sixRows = $connection->table('six_factor_evaluations')
             ->join('umkms', 'umkms.id', '=', 'six_factor_evaluations.umkm_id')
-            ->where('umkms.user_id', $userId)
+            ->whereIn('umkms.id', $umkmIds)
             ->orderBy('six_factor_evaluations.id')
             ->select('six_factor_evaluations.*')
             ->get()
@@ -107,6 +114,39 @@ final class AnalyticsDatasetVerifier
     }
 
     /**
+     * Pemeriksaan operasional cohort selesai: hanya keanggotaan dan keberadaan riwayat awal. Tidak membandingkan
+     * pemilik, nama, sidik jari, atau jumlah evaluasi, sehingga perubahan sah (transfer, evaluasi baru) tidak terbaca sebagai drift.
+     *
+     * @return list<string> Daftar masalah; kosong berarti konsisten.
+     */
+    public function inspectMembership(ConnectionInterface $connection, int $cohortId, int $expectedCount): array
+    {
+        $problems = [];
+        $members = $connection->table('analytics_dataset_members')->where('analytics_dataset_cohort_id', $cohortId)->get(['umkm_id', 'synthetic_key']);
+        if ($members->count() !== $expectedCount) {
+            $problems[] = "anggota cohort {$members->count()}, tercatat {$expectedCount}";
+        }
+        if ($members->pluck('synthetic_key')->unique()->count() !== $members->count()) {
+            $problems[] = 'synthetic_key tidak unik';
+        }
+
+        $ids = $members->pluck('umkm_id')->all();
+        $existing = $connection->table('umkms')->whereIn('id', $ids)->count();
+        if ($existing !== count($ids)) {
+            $problems[] = 'ada anggota tanpa UMKM (orphan): '.(count($ids) - $existing);
+        }
+        $threeComplete = $connection->table('evaluations')->whereIn('umkm_id', $ids)->where('status', 'final')
+            ->select('umkm_id')->groupBy('umkm_id')->havingRaw('COUNT(*) >= 3')->get()->count();
+        $sixComplete = $connection->table('six_factor_evaluations')->whereIn('umkm_id', $ids)->where('status', SixFactorEvaluation::FINAL)
+            ->select('umkm_id')->groupBy('umkm_id')->havingRaw('COUNT(*) >= 3')->get()->count();
+        if ($threeComplete !== count($ids) || $sixComplete !== count($ids)) {
+            $problems[] = "riwayat awal tidak lengkap (3D {$threeComplete}, 6F {$sixComplete} dari ".count($ids).')';
+        }
+
+        return $problems;
+    }
+
+    /**
      * @param  InspectionReport  $report
      *
      * @throws AnalyticsDatasetException
@@ -125,7 +165,7 @@ final class AnalyticsDatasetVerifier
      */
     private function checkUmkms(array &$checks, array $umkms, array $factors): void
     {
-        $checks[] = $this->check('umkm_count', AnalyticsDatasetPlanner::UMKM_COUNT, count($umkms));
+        $checks[] = $this->check('umkm_count', $this->expectedCount, count($umkms));
 
         $cityActual = [];
         $sectorActual = [];
@@ -142,19 +182,16 @@ final class AnalyticsDatasetVerifier
             }
         }
 
-        $cityExpected = [];
-        foreach (AnalyticsDatasetPlanner::CITY_COUNTS as $row) {
-            $cityExpected[$row['city'].'|'.$row['province']] = $row['count'];
-        }
+        $cityExpected = AnalyticsDatasetPlanner::expectedCityCounts($this->expectedCount);
         ksort($cityExpected);
         ksort($cityActual);
         $checks[] = $this->check('umkm_city_province_distribution', $cityExpected, $cityActual);
 
-        $sectorExpected = AnalyticsDatasetPlanner::SECTOR_COUNTS;
+        $sectorExpected = AnalyticsDatasetPlanner::expectedSectorCounts($this->expectedCount);
         ksort($sectorExpected);
         ksort($sectorActual);
         $checks[] = $this->check('umkm_sector_distribution', $sectorExpected, $sectorActual);
-        $checks[] = $this->check('umkm_business_identity_unique', AnalyticsDatasetPlanner::UMKM_COUNT, count($names));
+        $checks[] = $this->check('umkm_business_identity_unique', $this->expectedCount, count($names));
         $checks[] = $this->check('umkm_no_contact_or_consent_or_wa_request', count($umkms), $contactClean);
     }
 
@@ -168,7 +205,7 @@ final class AnalyticsDatasetVerifier
      */
     private function checkThreeDimension(array &$checks, array $threeRows, array $answersByEvaluation, array $factors, array $months, array $umkmNameById): void
     {
-        $expectedCount = AnalyticsDatasetPlanner::UMKM_COUNT * 3;
+        $expectedCount = $this->expectedCount * 3;
         $checks[] = $this->check('three_dimension_count', $expectedCount, count($threeRows));
         $checks[] = $this->check('three_dimension_all_final', $expectedCount, count(array_filter($threeRows, fn (object $row): bool => $row->status === 'final' && $row->submitted_at !== null)));
 
@@ -179,8 +216,8 @@ final class AnalyticsDatasetVerifier
             $perMonth[$month] = ($perMonth[$month] ?? 0) + 1;
             $monthsByUmkm[(int) $row->umkm_id][] = $month;
         }
-        $checks[] = $this->check('three_dimension_per_month_per_type', array_fill_keys($months, AnalyticsDatasetPlanner::EVALUATIONS_PER_TYPE_PER_MONTH), $perMonth);
-        $checks[] = $this->check('three_dimension_three_distinct_months_per_umkm', AnalyticsDatasetPlanner::UMKM_COUNT, count(array_filter(
+        $checks[] = $this->check('three_dimension_per_month_per_type', AnalyticsDatasetPlanner::expectedPerMonthCounts($this->expectedCount, $months), $perMonth);
+        $checks[] = $this->check('three_dimension_three_distinct_months_per_umkm', $this->expectedCount, count(array_filter(
             $monthsByUmkm,
             fn (array $list): bool => count($list) === 3 && count(array_unique($list)) === 3,
         )));
@@ -226,7 +263,7 @@ final class AnalyticsDatasetVerifier
             $categoriesSeen[$row->category] = true;
         }
 
-        $checks[] = $this->check('three_dimension_answer_count', AnalyticsDatasetPlanner::UMKM_COUNT * 3 * $expectedPerEvaluation, $answerCount);
+        $checks[] = $this->check('three_dimension_answer_count', $this->expectedCount * 3 * $expectedPerEvaluation, $answerCount);
         $checks[] = $this->check('three_dimension_answers_shape_all_active_questions', true, $shapeOk && $activeQuestionsPerEvaluation === $expectedPerEvaluation);
         $checks[] = $this->check('three_dimension_answer_values_valid', true, $validAnswers);
         $checks[] = $this->check('three_dimension_scores_recomputed_match', 0, $recomputeMismatch);
@@ -243,8 +280,8 @@ final class AnalyticsDatasetVerifier
      */
     private function checkSixFactor(array &$checks, array $sixRows, array $months, array $umkmNameById): void
     {
-        $checks[] = $this->check('six_factor_count', AnalyticsDatasetPlanner::UMKM_COUNT * 3, count($sixRows));
-        $checks[] = $this->check('six_factor_all_final_no_draft_or_cancelled', AnalyticsDatasetPlanner::UMKM_COUNT * 3, count(array_filter(
+        $checks[] = $this->check('six_factor_count', $this->expectedCount * 3, count($sixRows));
+        $checks[] = $this->check('six_factor_all_final_no_draft_or_cancelled', $this->expectedCount * 3, count(array_filter(
             $sixRows,
             fn (object $row): bool => $row->status === SixFactorEvaluation::FINAL && $row->cancelled_at === null && $row->finalized_at !== null,
         )));
@@ -283,13 +320,13 @@ final class AnalyticsDatasetVerifier
         $checks[] = $this->check('six_factor_total_equals_sum', true, $totalsOk);
         $checks[] = $this->check('six_factor_category_matches_total', true, $categoryOk);
         $checks[] = $this->check('six_factor_period_month_matches_wib', true, $periodOk);
-        $checks[] = $this->check('six_factor_per_month_per_type', array_fill_keys($months, AnalyticsDatasetPlanner::EVALUATIONS_PER_TYPE_PER_MONTH), $perMonth);
+        $checks[] = $this->check('six_factor_per_month_per_type', AnalyticsDatasetPlanner::expectedPerMonthCounts($this->expectedCount, $months), $perMonth);
         $checks[] = $this->check('six_factor_total_range_6_to_30_covered', 25, count(array_filter(
             array_keys($totals),
             fn (int $total): bool => $total >= 6 && $total <= 30,
         )));
 
-        $expectedCategories = AnalyticsDatasetPlanner::expectedSixFactorCategoryCounts();
+        $expectedCategories = AnalyticsDatasetPlanner::expectedSixFactorCategoryCounts($this->expectedCount);
         ksort($expectedCategories);
         ksort($categoryCounts);
         $checks[] = $this->check('six_factor_category_distribution_target', $expectedCategories, $categoryCounts);
@@ -358,10 +395,10 @@ final class AnalyticsDatasetVerifier
             }
         }
 
-        $checks[] = $this->check('aligned_histories_both_types_same_months', AnalyticsDatasetPlanner::UMKM_COUNT, $aligned);
-        $checks[] = $this->check('chronological_order_per_umkm_per_type', AnalyticsDatasetPlanner::UMKM_COUNT, $orderOk);
-        $checks[] = $this->check('latest_three_dimension_is_latest_month', AnalyticsDatasetPlanner::UMKM_COUNT, $latestThreeOk);
-        $checks[] = $this->check('latest_six_factor_is_latest_month', AnalyticsDatasetPlanner::UMKM_COUNT, $latestSixOk);
+        $checks[] = $this->check('aligned_histories_both_types_same_months', $this->expectedCount, $aligned);
+        $checks[] = $this->check('chronological_order_per_umkm_per_type', $this->expectedCount, $orderOk);
+        $checks[] = $this->check('latest_three_dimension_is_latest_month', $this->expectedCount, $latestThreeOk);
+        $checks[] = $this->check('latest_six_factor_is_latest_month', $this->expectedCount, $latestSixOk);
 
         $trendCounts = ['up' => 0, 'down' => 0, 'stable' => 0];
         foreach ($sixByUmkm as $list) {
