@@ -9,7 +9,9 @@ use App\Models\Question;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoSeeder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use LogicException;
@@ -31,14 +33,15 @@ class DemoSeederTest extends TestCase
         $owner = User::query()->where('email', 'demo@joyumkm.test')->firstOrFail();
         $this->assertSame('Warjon', $owner->name);
         $this->assertTrue(Hash::check('JoyUMKM-Demo-2026!', $owner->password));
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseCount('umkms', 4);
-        $this->assertDatabaseCount('evaluations', 4);
-        $this->assertDatabaseCount('evaluation_answers', 64);
-        $this->assertSame([96.5, 95.1, 91.7, 87.5], Evaluation::query()->orderBy('id')->pluck('average_score')->all());
-        $this->assertSame(['final', 'final', 'final', 'draft'], Evaluation::query()->orderBy('id')->pluck('status')->all());
-        $this->assertNotNull(Evaluation::query()->orderBy('id')->firstOrFail()->submitted_at);
-        $this->assertNull(Evaluation::query()->orderByDesc('id')->firstOrFail()->submitted_at);
+        // DatabaseSeeder lokal juga menanam grup sampel; kontrak demo diuji pada akun dan UMKM demo saja.
+        $this->assertSame(1, User::query()->where('email', 'demo@joyumkm.test')->count());
+        $this->assertSame(4, $owner->umkms()->count());
+        $this->assertSame(4, $this->demoEvaluations($owner)->count());
+        $this->assertSame(64, DB::table('evaluation_answers')->whereIn('evaluation_id', $this->demoEvaluations($owner)->select('id'))->count());
+        $this->assertSame([96.5, 95.1, 91.7, 87.5], $this->demoEvaluations($owner)->orderBy('id')->pluck('average_score')->all());
+        $this->assertSame(['final', 'final', 'final', 'draft'], $this->demoEvaluations($owner)->orderBy('id')->pluck('status')->all());
+        $this->assertNotNull($this->demoEvaluations($owner)->orderBy('id')->firstOrFail()->submitted_at);
+        $this->assertNull($this->demoEvaluations($owner)->orderByDesc('id')->firstOrFail()->submitted_at);
         $this->assertSame(['Kawalogy', 'Warjon', 'Upside Down', 'ayam geprek'], $owner->umkms()->orderBy('id')->pluck('name')->all());
     }
 
@@ -55,9 +58,9 @@ class DemoSeederTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseCount('umkms', 3);
-        $this->assertDatabaseCount('evaluations', 4);
+        $this->assertSame(1, User::query()->where('email', 'demo@joyumkm.test')->count());
+        $this->assertSame(3, $owner->umkms()->count());
+        $this->assertSame(4, $this->demoEvaluations($owner)->count());
         $this->assertSame('Pendamping Lokal', $owner->fresh()->name);
         $this->assertTrue(Hash::check('PasswordBaru2026!', $owner->fresh()->password));
         $this->assertSame('Usaha diubah', $first->fresh()->name);
@@ -141,6 +144,14 @@ class DemoSeederTest extends TestCase
 
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('evaluations', 0);
+    }
+
+    /**
+     * @return Builder<Evaluation>
+     */
+    private function demoEvaluations(User $owner): Builder
+    {
+        return Evaluation::query()->whereIn('umkm_id', $owner->umkms()->select('id'));
     }
 
     private function enableDemo(): void

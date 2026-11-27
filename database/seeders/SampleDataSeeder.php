@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Factor;
 use App\Models\Sector;
 use App\Models\User;
 use App\Services\EvaluationService;
 use App\Services\QuestionnaireService;
 use Carbon\Carbon;
 use Faker\Factory as FakerFactory;
+use Faker\Generator;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
@@ -167,8 +169,9 @@ class SampleDataSeeder extends Seeder
                         $targetCategory = 'CUKUP';
                     }
 
-                    // Jumlah evaluasi final yang akan dibuat.
-                    $finalCount = $isPartial ? 1 : $faker->numberBetween(1, $maxEvaluations);
+                    // Jumlah evaluasi final yang akan dibuat. Draft kosong tambahan ikut dihitung dalam batas profil.
+                    $finalLimit = $isDraftEmpty ? max(1, $maxEvaluations - 1) : $maxEvaluations;
+                    $finalCount = $isPartial ? 1 : $faker->numberBetween(1, $finalLimit);
 
                     // Total slot tanggal: final + 1 jika draft kosong.
                     $totalSlots = $isDraftEmpty ? $finalCount + 1 : $finalCount;
@@ -229,7 +232,7 @@ class SampleDataSeeder extends Seeder
      *
      * @return array<int>
      */
-    private function buildDistribution(int $total, int $accounts, \Faker\Generator $faker): array
+    private function buildDistribution(int $total, int $accounts, Generator $faker): array
     {
         if ($accounts === 1) {
             return [$total];
@@ -288,7 +291,7 @@ class SampleDataSeeder extends Seeder
         // Acak urutan dengan seed tetap agar deterministik.
         $seed = self::FAKER_SEED;
         usort($queue, function ($a, $b) use (&$seed): int {
-            $seed = ($seed * 1664525 + 1013904223) & 0x7fffffff;
+            $seed = ($seed * 1664525 + 1013904223) & 0x7FFFFFFF;
 
             return ($seed % 3) - 1;
         });
@@ -301,7 +304,7 @@ class SampleDataSeeder extends Seeder
     // -------------------------------------------------------------------------
 
     /** @return array<string> */
-    private function buildUmkmNamePool(\Faker\Generator $faker, int $size): array
+    private function buildUmkmNamePool(Generator $faker, int $size): array
     {
         $prefixes = [
             'Usaha', 'Toko', 'Warung', 'Kedai', 'Bengkel', 'Studio', 'Rumah', 'Karya',
@@ -349,7 +352,7 @@ class SampleDataSeeder extends Seeder
     }
 
     /** @param  array<string>  $accountUsedNames */
-    private function pickUniqueName(array $pool, array $accountUsedNames, \Faker\Generator $faker): string
+    private function pickUniqueName(array $pool, array $accountUsedNames, Generator $faker): string
     {
         $shuffled = $pool;
         shuffle($shuffled);
@@ -364,7 +367,7 @@ class SampleDataSeeder extends Seeder
         return 'Usaha Mandiri '.$faker->unique()->randomNumber(5, true);
     }
 
-    private function generateOwnerName(\Faker\Generator $faker): string
+    private function generateOwnerName(Generator $faker): string
     {
         return $faker->name();
     }
@@ -373,7 +376,7 @@ class SampleDataSeeder extends Seeder
     // Helpers: omzet per sektor
     // -------------------------------------------------------------------------
 
-    private function generateOmzet(\Faker\Generator $faker, string $sectorSlug): int
+    private function generateOmzet(Generator $faker, string $sectorSlug): int
     {
         return match ($sectorSlug) {
             'makanan-minuman' => $faker->numberBetween(2_000_000, 50_000_000),
@@ -392,9 +395,9 @@ class SampleDataSeeder extends Seeder
     /**
      * Buat array Carbon berurutan naik, tersebar dalam ~6 bulan terakhir.
      *
-     * @return array<\Carbon\Carbon>
+     * @return array<Carbon>
      */
-    private function buildEvaluationDates(\Faker\Generator $faker, int $count): array
+    private function buildEvaluationDates(Generator $faker, int $count): array
     {
         $now = Carbon::now();
         $start = $now->copy()->subMonths(6);
@@ -471,7 +474,7 @@ class SampleDataSeeder extends Seeder
      * ke soal-soal dengan mempertahankan nilai dalam opsi valid. Skor aktual dihitung
      * oleh ScoringService; kita hanya mendekati target.
      *
-     * @param  Collection<int,\App\Models\Factor>  $factors
+     * @param  Collection<int,Factor>  $factors
      * @return array<array{question_id:int,value:int}>
      */
     private function buildAnswers(Collection $factors, float $targetScore): array
@@ -512,7 +515,7 @@ class SampleDataSeeder extends Seeder
      * Jawaban parsial: hanya dua faktor dijawab, satu faktor (OPS) dikosongkan.
      * Disimpan sebagai draft agar tidak gagal validasi completeness.
      *
-     * @param  Collection<int,\App\Models\Factor>  $factors
+     * @param  Collection<int,Factor>  $factors
      * @return array<array{question_id:int,value:int}>
      */
     private function buildPartialAnswers(Collection $factors): array

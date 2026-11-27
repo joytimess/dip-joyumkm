@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Evaluation;
+use App\Models\Sector;
 use App\Models\Umkm;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\SampleDataSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SampleDataSeederTest extends TestCase
@@ -74,9 +76,7 @@ class SampleDataSeederTest extends TestCase
     // Guard: password
     // -------------------------------------------------------------------------
 
-    /**
-     * @dataProvider invalidPasswords
-     */
+    #[DataProvider('invalidPasswords')]
     public function test_invalid_seed_password_does_not_create_sample(?string $password): void
     {
         $this->enableSample();
@@ -424,7 +424,7 @@ class SampleDataSeederTest extends TestCase
         $this->enableSample();
 
         // Hapus semua sektor sehingga Sector::query()->random() gagal.
-        \App\Models\Sector::query()->delete();
+        Sector::query()->delete();
 
         try {
             $this->seed(SampleDataSeeder::class);
@@ -432,7 +432,8 @@ class SampleDataSeederTest extends TestCase
             // Expected.
         }
 
-        $this->assertDatabaseCount('users', 0, 'Rollback harus menghapus semua data partial.');
+        // Rollback harus menghapus semua data partial.
+        $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('umkms', 0);
     }
 }
