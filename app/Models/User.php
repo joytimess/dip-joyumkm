@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,6 +25,27 @@ class User extends Authenticatable
     public function umkms(): HasMany
     {
         return $this->hasMany(Umkm::class);
+    }
+
+    public function userRole(): UserRole
+    {
+        return UserRole::fromStored($this->getAttribute('role'));
+    }
+
+    public function isSuperadmin(): bool
+    {
+        return $this->userRole() === UserRole::Superadmin;
+    }
+
+    /**
+     * Satu-satunya scope akses UMKM: global untuk Superadmin, milik sendiri untuk Analyst dan User.
+     * Pembuatan UMKM tetap lewat umkms() (pemilik = pelaku).
+     *
+     * @return Builder<Umkm>
+     */
+    public function accessibleUmkms(): Builder
+    {
+        return $this->isSuperadmin() ? Umkm::query() : $this->umkms()->getQuery();
     }
 
     protected function casts(): array
