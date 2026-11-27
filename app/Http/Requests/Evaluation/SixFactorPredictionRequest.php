@@ -15,7 +15,7 @@ class SixFactorPredictionRequest extends ApiRequest
     {
         $digits = ltrim($this->route('id'), '0');
         $id = (int) $digits;
-        abort_unless((string) $id === $digits && $this->user()->umkms()->whereKey($id)->exists(), 404);
+        abort_unless((string) $id === $digits && $this->user()->accessibleUmkms()->whereKey($id)->exists(), 404);
 
         return true;
     }

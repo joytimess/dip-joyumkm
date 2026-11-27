@@ -13,7 +13,7 @@ class SixFactorEvaluationRequest extends ApiRequest
     public function authorize(): bool
     {
         if (! $this->isMethodSafe()) {
-            abort_unless($this->user()->umkms()->whereKey($this->umkmId())->exists(), 404);
+            abort_unless($this->user()->accessibleUmkms()->whereKey($this->umkmId())->exists(), 404);
         }
 
         return true;

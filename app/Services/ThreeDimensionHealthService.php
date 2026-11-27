@@ -89,7 +89,7 @@ class ThreeDimensionHealthService
         $latestFinalIds = $this->latestEvaluationIds('final');
         $latestDraftIds = $this->latestEvaluationIds('draft');
 
-        return $user->umkms()->getQuery()->toBase()
+        return $user->accessibleUmkms()->toBase()
             ->leftJoinSub($latestFinalIds, 'final_index', function (JoinClause $join): void {
                 $join->on('final_index.umkm_id', '=', 'umkms.id');
             })

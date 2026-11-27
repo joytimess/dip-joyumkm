@@ -16,6 +16,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class UmkmService
@@ -24,7 +25,7 @@ class UmkmService
 
     public function queryWithLatest(User $user): Builder
     {
-        return $user->umkms()->getQuery()
+        return $user->accessibleUmkms()
             ->leftJoin('evaluations as latest_evaluation', function (JoinClause $join): void {
                 $join->on('latest_evaluation.umkm_id', '=', 'umkms.id')
                     ->where('latest_evaluation.id', '=', function (QueryBuilder $query): void {
@@ -114,8 +115,12 @@ class UmkmService
     {
         try {
             DB::transaction(function () use ($user, $id, $data): void {
-                $umkm = $user->umkms()->whereKey($id)->lockForUpdate()->firstOrFail();
+                $umkm = $user->accessibleUmkms()->whereKey($id)->lockForUpdate()->firstOrFail();
                 $intent = $data['notification_consent'] ?? null;
+                if ($intent === 'grant' && $umkm->user_id !== $user->id) {
+                    // Persetujuan notifikasi hanya boleh diberikan pemilik; akses global tidak menggantikan consent.
+                    throw new AccessDeniedHttpException('Persetujuan notifikasi hanya dapat diberikan oleh pemilik UMKM.');
+                }
                 if ($intent === 'grant' && trim((string) $umkm->business_email) !== trim((string) $data['expected_business_email'])) {
                     throw new ConflictHttpException('Email usaha telah berubah. Muat ulang data UMKM sebelum memberikan persetujuan.');
                 }
@@ -172,7 +177,7 @@ class UmkmService
         }
 
         $status = $this->openWa->check($number);
-        $saved = $user->umkms()->whereKey($id)->where('whatsapp_number', $number)->update([
+        $saved = $user->accessibleUmkms()->whereKey($id)->where('whatsapp_number', $number)->update([
             'wa_registration_status' => $status,
             'wa_checked_at' => $status === OpenWaNumberCheckService::UNCHECKED ? null : now(),
         ]);

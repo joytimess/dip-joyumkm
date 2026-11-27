@@ -247,7 +247,7 @@ class IntelligenceReportService
 
     private function ensureOwned(User $user, int $umkmId): void
     {
-        if (! $user->umkms()->whereKey($umkmId)->exists()) {
+        if (! $user->accessibleUmkms()->whereKey($umkmId)->exists()) {
             throw new NotFoundHttpException;
         }
     }

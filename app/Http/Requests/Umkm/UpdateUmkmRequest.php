@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Umkm;
 
+use App\Models\Umkm;
 use App\Services\UmkmService;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -23,12 +24,18 @@ class UpdateUmkmRequest extends StoreUmkmRequest
         return true;
     }
 
+    /** Keunikan nama dinilai terhadap pemilik UMKM, bukan pelaku (Superadmin dapat mengubah milik orang lain). */
+    private function resourceOwnerId(): int
+    {
+        return (int) (Umkm::query()->whereKey((int) $this->route('id'))->value('user_id') ?? $this->user()->id);
+    }
+
     public function rules(): array
     {
         $rules = parent::rules();
         $rules['name'] = [
             'required', 'string', 'max:120',
-            Rule::unique('umkms', 'name')->where('user_id', $this->user()->id)
+            Rule::unique('umkms', 'name')->where('user_id', $this->resourceOwnerId())
                 ->ignore((int) $this->route('id')),
         ];
 

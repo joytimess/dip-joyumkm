@@ -80,7 +80,7 @@ class SixFactorSummaryService
      */
     private function portfolioQuery(User $user): QueryBuilder
     {
-        return $user->umkms()->getQuery()->toBase()
+        return $user->accessibleUmkms()->toBase()
             ->leftJoin('sectors', 'sectors.id', '=', 'umkms.sector_id')
             ->leftJoinSub($this->latestFinalIndex($user), 'final_index', function (JoinClause $join): void {
                 $join->on('final_index.umkm_id', '=', 'umkms.id');
@@ -118,7 +118,7 @@ class SixFactorSummaryService
             ->select(['id', 'umkm_id'])
             ->selectRaw('ROW_NUMBER() OVER (PARTITION BY umkm_id ORDER BY finalized_at DESC, id DESC) AS final_position')
             ->where('status', SixFactorEvaluation::FINAL)
-            ->whereIn('umkm_id', Umkm::query()->toBase()->select('id')->where('user_id', $user->id));
+            ->whereIn('umkm_id', $user->accessibleUmkms()->toBase()->select('umkms.id'));
 
         return DB::query()
             ->fromSub($ranked, 'ranked_final')

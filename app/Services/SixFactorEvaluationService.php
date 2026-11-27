@@ -120,7 +120,7 @@ class SixFactorEvaluationService
 
     private function lockOwnedUmkm(User $user, int $umkmId): Umkm
     {
-        return $user->umkms()->whereKey($umkmId)->lockForUpdate()->firstOrFail();
+        return $user->accessibleUmkms()->whereKey($umkmId)->lockForUpdate()->firstOrFail();
     }
 
     /**
