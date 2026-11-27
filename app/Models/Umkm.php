@@ -28,6 +28,11 @@ class Umkm extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function datasetMember(): HasOne
+    {
+        return $this->hasOne(AnalyticsDatasetMember::class);
+    }
+
     public function sector(): BelongsTo
     {
         return $this->belongsTo(Sector::class);
