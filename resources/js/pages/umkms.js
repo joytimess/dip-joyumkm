@@ -3,10 +3,18 @@ import { pageApi } from '../api';
 import { createSummary } from '../summary';
 import { bindUmkmForm } from '../umkm-form';
 import { withListContext } from '../umkm-navigation';
+import { mountOwnerFilter, openTransferDialog } from '../admin-portfolio';
+import { isSuperadmin } from '../role';
 import { element, icon, formatNumber, formatScore, bindDialog, openDialog, setBusy, showError, toast } from '../ui';
 
 export async function init(signal) {
     const api = pageApi(signal);
+    const superadmin = isSuperadmin();
+    if (superadmin) {
+        const bar = element('div', { class: 'section-block' });
+        document.getElementById('umkm-summary').before(bar);
+        mountOwnerFilter(bar, api);
+    }
     const summary = createSummary(document.getElementById('umkm-summary'), signal);
     window.addEventListener('joyumkm:umkm-mutated', summary.reload, { signal });
     const listState = document.getElementById('umkm-list-state');
@@ -193,6 +201,16 @@ export async function init(signal) {
                     openEdit(umkm.id, trigger);
                 },
             }, [icon('edit'), 'Ubah']),
+            superadmin && umkm.owner?.role === 'analyst' ? element('button', {
+                type: 'button', class: 'row-action',
+                onclick: () => {
+                    menu.hidePopover();
+                    openTransferDialog(umkm, api, trigger, async () => {
+                        await loadList();
+                        window.dispatchEvent(new Event('joyumkm:umkm-mutated'));
+                    });
+                },
+            }, [icon('business'), 'Pindahkan kepemilikan']) : null,
             element('hr'),
             element('button', {
                 type: 'button', class: 'row-action danger',
@@ -203,6 +221,12 @@ export async function init(signal) {
             }, [icon('trash'), 'Hapus']),
         ]);
         return [trigger, menu];
+    }
+
+    function ownerLine(umkm) {
+        if (!umkm.owner) return null;
+        const roles = { analyst: 'Analyst', user: 'Pengguna', superadmin: 'Superadmin' };
+        return element('div', { class: 'small muted', style: 'margin-top:3px', text: `Pemilik: ${umkm.owner.name} (${roles[umkm.owner.role] ?? umkm.owner.role}${umkm.owner.is_active ? '' : ', nonaktif'})${umkm.is_cohort_member ? ' · dataset sintetis' : ''}` });
     }
 
     function statusBadge(umkm) {
@@ -281,6 +305,7 @@ export async function init(signal) {
                 element('td', { class: 'num', text: meta.from + index }),
                 element('td', { class: 'umkm-name' }, [
                     element('strong', { text: umkm.name }),
+                    ownerLine(umkm),
                 ]),
                 element('td', { class: 'table-location muted', text: umkm.province }),
                 element('td', {}, [element('span', { class: 'pill pill-muted sector-badge', text: umkm.sector.name })]),
@@ -299,6 +324,7 @@ export async function init(signal) {
                     element('div', {}, [
                         element('h3', {}, nameLink),
                         element('p', { class: 'muted', text: `${umkm.sector.name} · ${umkm.province}` }),
+                        ownerLine(umkm),
                     ]),
                     element('div', {}, renderActions(umkm, 'card', query)),
                 ]),

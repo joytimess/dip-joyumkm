@@ -4,6 +4,8 @@ import { chartHost, chartOptions, createChartPage, emptyState, evaluationLabel, 
 import { element, formatNumber, formatScore, showError } from '../ui';
 import { initSixFactorDashboard } from '../six-factor-dashboard';
 import { initThreeDimensionHealth } from '../three-dimension-health';
+import { mountGlobalPanel } from '../admin-portfolio';
+import { isSuperadmin } from '../role';
 
 function renderStatusBadge(status) {
     if (status === 'final') return element('span', { class: 'pill pill-green', text: 'Final' });
@@ -15,6 +17,7 @@ export function init(signal) {
     initThreeDimensionHealth(signal);
     initSixFactorDashboard(signal);
     const api = pageApi(signal);
+    if (isSuperadmin()) mountGlobalPanel(document.querySelector('.home-welcome'), api, signal);
     const draftCaption = document.getElementById('home-draft-caption');
     const summary = createSummary(document.getElementById('umkm-summary'), signal, (data) => {
         if (draftCaption) {

@@ -1,3 +1,5 @@
+import { setAnalystFilter, withAnalystFilter } from './role';
+
 export const TOKEN_KEY = 'joyumkm.token';
 export const USER_KEY = 'joyumkm.user';
 let redirecting = false;
@@ -16,6 +18,7 @@ export function getToken() {
 }
 
 export function saveSession(data) {
+    setAnalystFilter(null);
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
     localStorage.setItem(TOKEN_KEY, data.token);
 }
@@ -23,6 +26,7 @@ export function saveSession(data) {
 export function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    setAnalystFilter(null);
     concealWorkspace();
 }
 
@@ -48,7 +52,7 @@ export async function api(path, { method = 'GET', body, signal, authenticated = 
     let payload;
     try {
         const timeout = AbortSignal.timeout(20000);
-        response = await fetch(`/api${path}`, {
+        response = await fetch(`/api${withAnalystFilter(path, method)}`, {
             method, headers, body: body === undefined ? undefined : JSON.stringify(body),
             credentials: 'omit', cache: 'no-store', signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
         });
@@ -71,7 +75,9 @@ export async function api(path, { method = 'GET', body, signal, authenticated = 
         const message = response.status === 403 ? 'Anda tidak memiliki akses ke bagian ini.'
             : response.status >= 500 ? 'Terjadi gangguan pada server. Silakan coba lagi.'
                 : payload.message || 'Permintaan gagal. Silakan coba lagi.';
-        throw new ApiError(message, response.status, payload.errors || {});
+        const failure = new ApiError(message, response.status, payload.errors || {});
+        failure.code = payload.code;
+        throw failure;
     }
     if (expectedStatus !== undefined && response.status !== expectedStatus) {
         throw new ApiError('Respons server tidak sesuai. Periksa daftar UMKM sebelum mencoba lagi.', response.status);

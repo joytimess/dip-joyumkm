@@ -1,4 +1,5 @@
 import { api, TOKEN_KEY, USER_KEY, clearSession, concealWorkspace, getToken, redirectToLogin, saveSession } from './api';
+import { applyRole } from './role';
 import { renderErrors, clearErrors, setBusy, showError, toast } from './ui';
 
 export function bindSessionEvents() {
@@ -29,6 +30,7 @@ export async function guardProtectedPage(retry) {
         const { data: user } = await api('/auth/me');
         if (shell.hidden) return null;
         localStorage.setItem(USER_KEY, JSON.stringify(user));
+        applyRole(user);
         document.querySelectorAll('[data-user-name]').forEach((node) => { node.textContent = user.name; });
         const initials = user.name.trim().split(/\s+/u).slice(0, 2).map((word) => Array.from(word)[0]).join('').toLocaleUpperCase('id-ID');
         document.querySelectorAll('[data-user-initials]').forEach((node) => { node.textContent = initials; });

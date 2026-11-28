@@ -10,6 +10,8 @@ const pages = {
     'factor-profile': () => import('./pages/factor-profile'),
     distribution: () => import('./pages/distribution'),
     comparison: () => import('./pages/comparison'),
+    'admin-analysts': () => import('./pages/admin-analysts'),
+    'admin-transfers': () => import('./pages/admin-transfers'),
 };
 
 export function initWorkspace(user, overlays) {
@@ -163,7 +165,7 @@ export function initWorkspace(user, overlays) {
         if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey
             || event.shiftKey || event.altKey || (link.target && link.target !== '_self') || link.hasAttribute('download')) return;
         const target = new URL(link.href);
-        if (target.origin !== location.origin || !/^\/(?:home|umkms(?:\/\d+(?:\/six-factor-evaluations)?)?|form-data|factor-profile|distribution|comparison)\/?$/.test(target.pathname)) return;
+        if (target.origin !== location.origin || !/^\/(?:home|umkms(?:\/\d+(?:\/six-factor-evaluations)?)?|form-data|factor-profile|distribution|comparison|admin\/(?:analysts|transfers))\/?$/.test(target.pathname)) return;
         if (target.hash && target.pathname === url.pathname && target.search === url.search) {
             const anchor = document.getElementById(target.hash.slice(1));
             if (!anchor) return;

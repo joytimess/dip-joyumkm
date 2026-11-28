@@ -15,3 +15,5 @@ Route::view('/form-data', 'form-data')->name('form-data');
 Route::view('/factor-profile', 'factor-profile')->name('factor-profile');
 Route::view('/distribution', 'distribution')->name('distribution');
 Route::view('/comparison', 'comparison')->name('comparison');
+Route::view('/admin/analysts', 'admin-analysts')->name('admin.analysts');
+Route::view('/admin/transfers', 'admin-transfers')->name('admin.transfers');

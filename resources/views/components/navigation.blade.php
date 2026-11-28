@@ -21,6 +21,11 @@
         </div>
     @endforeach
 </nav>
+<div class="nav-group" role="group" aria-label="Administrasi" data-role-only="superadmin" hidden>
+    <p class="nav-section-label">Administrasi</p>
+    <a href="{{ route('admin.analysts') }}" data-workspace-page="admin-analysts" class="nav-link {{ ($navigationPage ?? $page) === 'admin-analysts' ? 'is-active active' : '' }}"><x-icon name="business"/><span>Manajemen Analyst</span></a>
+    <a href="{{ route('admin.transfers') }}" data-workspace-page="admin-transfers" class="nav-link {{ ($navigationPage ?? $page) === 'admin-transfers' ? 'is-active active' : '' }}"><x-icon name="distribution"/><span>Riwayat Transfer</span></a>
+</div>
 <div class="sidebar-bottom">
     <div class="sidebar-divider"></div>
     <button type="button" class="nav-link logout-link logout" data-logout><x-icon name="logout"/><span>Keluar</span></button>
