@@ -102,12 +102,17 @@ class UmkmController extends Controller
                 (int) $request->validated('record_id'),
             ));
         } catch (QueryException $exception) {
-            if ((int) ($exception->errorInfo[1] ?? 0) !== 1451
-                || ! str_contains($exception->errorInfo[2] ?? '', 'CONSTRAINT `six_factor_umkm_foreign`')) {
+            if ((int) ($exception->errorInfo[1] ?? 0) !== 1451) {
                 throw $exception;
             }
+            if (str_contains($exception->errorInfo[2] ?? '', 'CONSTRAINT `six_factor_umkm_foreign`')) {
+                throw new ConflictHttpException('UMKM tidak dapat dihapus karena memiliki riwayat penilaian enam faktor.', $exception);
+            }
+            if (str_contains($exception->errorInfo[2] ?? '', 'umkm_ownership_transfers')) {
+                throw new ConflictHttpException('UMKM tidak dapat dihapus karena memiliki riwayat transfer kepemilikan.', $exception);
+            }
 
-            throw new ConflictHttpException('UMKM tidak dapat dihapus karena memiliki riwayat penilaian enam faktor.', $exception);
+            throw $exception;
         }
     }
 }

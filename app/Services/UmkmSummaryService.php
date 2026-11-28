@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UmkmSummaryService
 {
@@ -45,6 +47,42 @@ class UmkmSummaryService
             'average_score' => $average,
             'category' => $this->scoringService->category($average),
             'critical_sector' => $criticalSector,
+            'portfolio' => $user->isSuperadmin() ? $this->portfolio($user) : null,
+        ];
+    }
+
+    /**
+     * Ringkasan lintas-Analyst untuk Superadmin. Hitungan evaluasi mengikuti filter analyst_id; daftar per-Analyst selalu lengkap.
+     *
+     * @return array<string, mixed>
+     */
+    private function portfolio(User $user): array
+    {
+        $scope = $user->accessibleUmkms()->select('umkms.id');
+        $members = DB::table('analytics_dataset_members')->selectRaw('1')->whereColumn('analytics_dataset_members.umkm_id', 'umkms.id');
+        $analysts = User::query()->where('role', UserRole::Analyst->value)
+            ->withCount(['umkms as umkms_count', 'umkms as cohort_umkms_count' => fn ($query) => $query->whereExists($members)])
+            ->orderBy('name')->orderBy('id')->get();
+        $sixFactor = DB::table('six_factor_evaluations')->whereIn('umkm_id', $scope)
+            ->selectRaw("COUNT(*) AS total, SUM(CASE WHEN status = 'final' THEN 1 ELSE 0 END) AS final_count")->first();
+
+        return [
+            'total_analysts' => $analysts->count(),
+            'active_analysts' => $analysts->where('is_active', true)->count(),
+            'three_dimension_evaluations' => DB::table('evaluations')->whereIn('umkm_id', $scope)->count(),
+            'six_factor_evaluations' => (int) $sixFactor->total,
+            'six_factor_final_evaluations' => (int) $sixFactor->final_count,
+            'per_analyst' => $analysts->map(fn (User $analyst): array => [
+                'id' => (int) $analyst->id,
+                'name' => $analyst->name,
+                'is_active' => $analyst->isActive(),
+                'umkms_count' => (int) $analyst->umkms_count,
+                'cohort_umkms_count' => (int) $analyst->cohort_umkms_count,
+                'non_cohort_umkms_count' => (int) $analyst->umkms_count - (int) $analyst->cohort_umkms_count,
+            ])->all(),
+            'umkms_by_owner_role' => DB::table('umkms')->join('users', 'users.id', '=', 'umkms.user_id')
+                ->selectRaw('users.role AS role, COUNT(*) AS total')->groupBy('users.role')->pluck('total', 'role')
+                ->map(fn ($total): int => (int) $total)->all(),
         ];
     }
 

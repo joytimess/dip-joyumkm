@@ -25,6 +25,15 @@ class UmkmResource extends JsonResource
             'recommendation' => $category,
             'evaluation_status' => $this->evaluation_status ?? 'none',
             'evaluation_id' => $this->evaluation_id === null ? null : (int) $this->evaluation_id,
+            $this->mergeWhen($request->user()?->isSuperadmin() === true && $this->resource->relationLoaded('user'), fn (): array => [
+                'owner' => [
+                    'id' => (int) $this->user_id,
+                    'name' => $this->user->name,
+                    'role' => $this->user->userRole()->value,
+                    'is_active' => $this->user->isActive(),
+                ],
+                'is_cohort_member' => (bool) $this->is_cohort_member,
+            ]),
             $this->mergeWhen($request->route('id') !== null || $request->isMethod('POST'), fn (): array => [
                 ...$this->resource->only([
                     'omzet_period', 'business_capital', 'year_founded', 'employee_count', 'nib', 'description',

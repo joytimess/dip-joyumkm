@@ -38,15 +38,14 @@ class UmkmPolicy
         return $this->view($user, $umkm);
     }
 
-    /** Disiapkan untuk P4; ditolak untuk semua peran sampai alur transfer ada. */
+    /** Transfer kepemilikan hanya untuk Superadmin aktif; aturan keamanan data ada di OwnershipTransferService. */
     public function transfer(User $user, Umkm $umkm): bool
     {
-        return false;
+        return $user->isSuperadmin() && $user->isActive();
     }
 
-    /** Disiapkan untuk P4; ditolak untuk semua peran sampai manajemen Analyst ada. */
     public function manageAnalysts(User $user): bool
     {
-        return false;
+        return $user->isSuperadmin() && $user->isActive();
     }
 }

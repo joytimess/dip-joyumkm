@@ -34,6 +34,8 @@ class EvaluationService
     public function store(User $user, int $id, array $data): Evaluation
     {
         return $this->database->transaction(function () use ($user, $id, $data): Evaluation {
+            // Kunci baris UMKM lebih dulu: protokol yang sama dengan jalur Enam Faktor dan transfer kepemilikan.
+            $user->accessibleUmkms()->whereKey($id)->lockForUpdate()->firstOrFail();
             $umkm = $this->umkmService->owned($user, $id);
             $factors = $this->questionnaireService->activeFactors();
             $questions = $factors->flatMap(fn (Factor $factor): Collection => $factor->questions)->keyBy('id');

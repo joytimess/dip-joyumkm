@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\AccountDeactivated;
+use App\Exceptions\OwnershipTransferConflict;
 use App\Http\Middleware\PreserveSixFactorHttpMethod;
 use App\Http\Middleware\PreventApiResponseCaching;
 use Illuminate\Auth\AuthenticationException;
@@ -91,6 +93,13 @@ return Application::configure(basePath: dirname(__DIR__))
                     : 'Email atau kata sandi tidak sesuai.';
 
                 return response()->json(['message' => $message], 401);
+            }
+
+            if ($exception instanceof OwnershipTransferConflict) {
+                return response()->json(['message' => $exception->getMessage(), 'code' => $exception->reasonCode], 409);
+            }
+            if ($exception instanceof AccountDeactivated) {
+                return response()->json(['message' => $exception->getMessage(), 'code' => 'account_inactive'], 403);
             }
 
             $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;

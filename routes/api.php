@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\AdminAnalystController;
+use App\Http\Controllers\Api\AdminOwnershipTransferController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EvaluationController;
@@ -18,6 +20,9 @@ use App\Http\Controllers\Api\SixFactorEvaluationController;
 use App\Http\Controllers\Api\SixFactorMonitoringController;
 use App\Http\Controllers\Api\SixFactorPredictionController;
 use App\Http\Controllers\Api\UmkmController;
+use App\Http\Middleware\ApplyAnalystFilter;
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsureSuperadmin;
 use App\Http\Middleware\VerifyIntelligenceArtifactSignature;
 use App\Http\Middleware\VerifyIntelligenceCallbackSignature;
 use App\Http\Middleware\VerifyIntelligenceDeliverySignature;
@@ -58,7 +63,16 @@ Route::put('/internal/intelligence/artifacts/{eventId}/{kind}', [IntelligenceArt
     ->middleware(['throttle:joyumkm-intelligence-artifact', VerifyIntelligenceArtifactSignature::class])
     ->name('internal.intelligence.artifacts.upload');
 
-Route::middleware('auth:sanctum')->group(function (): void {
+Route::middleware(['auth:sanctum', EnsureAccountActive::class, ApplyAnalystFilter::class])->group(function (): void {
+    Route::prefix('admin')->middleware(EnsureSuperadmin::class)->group(function (): void {
+        Route::get('/analysts', [AdminAnalystController::class, 'index']);
+        Route::post('/analysts', [AdminAnalystController::class, 'store']);
+        Route::get('/analysts/{id}', [AdminAnalystController::class, 'show'])->whereNumber('id');
+        Route::patch('/analysts/{id}', [AdminAnalystController::class, 'update'])->whereNumber('id');
+        Route::patch('/analysts/{id}/status', [AdminAnalystController::class, 'status'])->whereNumber('id');
+        Route::post('/umkms/{id}/transfer', [AdminOwnershipTransferController::class, 'store'])->whereNumber('id');
+        Route::get('/ownership-transfers', [AdminOwnershipTransferController::class, 'index']);
+    });
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard/factor-profile', [DashboardController::class, 'factorProfile']);

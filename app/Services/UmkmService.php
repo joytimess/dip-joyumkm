@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\AnalyticsDatasetMember;
 use App\Models\Sector;
 use App\Models\Umkm;
 use App\Models\User;
@@ -35,6 +36,10 @@ class UmkmService
                     });
             })
             ->select('umkms.*')
+            ->when($user->isSuperadmin(), fn (Builder $query) => $query->addSelect([
+                'is_cohort_member' => AnalyticsDatasetMember::query()->selectRaw('1')
+                    ->whereColumn('analytics_dataset_members.umkm_id', 'umkms.id')->limit(1),
+            ]))
             ->addSelect([
                 'latest_evaluation.id as evaluation_id',
                 'latest_evaluation.status as evaluation_status',
@@ -46,17 +51,23 @@ class UmkmService
             ]);
     }
 
+    /** @return list<string> Pemilik dimuat hanya untuk Superadmin (kolom aman saja). */
+    private function relations(User $user): array
+    {
+        return $user->isSuperadmin() ? ['sector', 'user:id,name,role,is_active'] : ['sector'];
+    }
+
     public function owned(User $user, int $id): Umkm
     {
         return $this->queryWithLatest($user)
-            ->with('sector')
+            ->with($this->relations($user))
             ->where('umkms.id', $id)
             ->firstOrFail();
     }
 
     public function list(User $user, array $filters): LengthAwarePaginator
     {
-        $query = $this->queryWithLatest($user)->with('sector');
+        $query = $this->queryWithLatest($user)->with($this->relations($user));
         if (isset($filters['search']) && $filters['search'] !== '') {
             $search = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $filters['search']);
             $query->whereRaw("umkms.name LIKE ? ESCAPE '!'", ['%'.$search.'%']);
@@ -190,7 +201,14 @@ class UmkmService
 
     public function delete(User $user, int $id): array
     {
-        $this->owned($user, $id)->delete();
+        // Kunci baris UMKM (protokol yang sama dengan transfer kepemilikan) lalu periksa ulang setelah lock.
+        DB::transaction(function () use ($user, $id): void {
+            $umkm = $user->accessibleUmkms()->whereKey($id)->lockForUpdate()->firstOrFail();
+            if (AnalyticsDatasetMember::query()->where('umkm_id', $umkm->id)->exists()) {
+                throw new ConflictHttpException('UMKM bagian dari dataset analitik tidak dapat dihapus melalui menu ini.');
+            }
+            $umkm->delete();
+        });
 
         return ['message' => 'UMKM dan seluruh evaluasinya berhasil dihapus.'];
     }

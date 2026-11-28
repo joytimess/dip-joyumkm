@@ -99,14 +99,19 @@ class RoleFoundationTest extends TestCase
         $this->assertNull($umkm->fresh()->notification_consent_at);
     }
 
-    public function test_transfer_and_analyst_management_abilities_are_denied_for_every_role(): void
+    public function test_transfer_and_analyst_management_abilities_are_reserved_for_the_active_superadmin(): void
     {
         $umkm = Umkm::factory()->create();
         foreach (UserRole::cases() as $role) {
             [$actor] = $this->tokenFor($role);
-            $this->assertTrue(Gate::forUser($actor)->denies('transfer', $umkm));
-            $this->assertTrue(Gate::forUser($actor)->denies('manageAnalysts', Umkm::class));
+            $allowed = $role === UserRole::Superadmin;
+            $this->assertSame($allowed, Gate::forUser($actor)->allows('transfer', $umkm));
+            $this->assertSame($allowed, Gate::forUser($actor)->allows('manageAnalysts', Umkm::class));
         }
+        [$inactiveAdmin] = $this->tokenFor(UserRole::Superadmin);
+        $inactiveAdmin->forceFill(['is_active' => false]);
+        $this->assertTrue(Gate::forUser($inactiveAdmin)->denies('transfer', $umkm));
+        $this->assertTrue(Gate::forUser($inactiveAdmin)->denies('manageAnalysts', Umkm::class));
     }
 
     public function test_monitoring_excludes_cohort_members_before_the_limit(): void

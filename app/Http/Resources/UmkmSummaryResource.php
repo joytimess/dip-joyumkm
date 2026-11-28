@@ -19,6 +19,7 @@ class UmkmSummaryResource extends JsonResource
             'average_score' => $this->resource['average_score'],
             'category' => $this->resource['category'],
             'critical_sector' => $this->resource['critical_sector'],
+            $this->mergeWhen($this->resource['portfolio'] !== null, fn (): array => ['portfolio' => $this->resource['portfolio']]),
         ];
     }
 }
