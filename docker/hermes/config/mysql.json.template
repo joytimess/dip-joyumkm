@@ -1,0 +1,9 @@
+{
+  "host": "host.docker.internal",
+  "port": 3306,
+  "user": "joyumkm_analytics_ro",
+  "password": "__GENERATED_BY_SETUP__",
+  "database": "joyumkm-v2",
+  "ssl_ca": "/opt/data/joyumkm-analytics/mysql-ca.pem",
+  "ssl_verify_identity": false
+}

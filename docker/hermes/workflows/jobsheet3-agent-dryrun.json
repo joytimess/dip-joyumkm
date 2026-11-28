@@ -1,0 +1,39 @@
+{
+  "nodes": [
+    {
+      "trigger_mode": "manual",
+      "id": "trigger1",
+      "type": "trigger",
+      "after": []
+    },
+    {
+      "id": "note1",
+      "type": "note",
+      "text": "Uji investigasi Jobsheet 3 item 5: apakah node Agent dapat menjalankan script Python terisolasi. Mode dry-run saja, tidak ada pengiriman."
+    },
+    {
+      "prompt": "Jalankan tepat satu perintah terminal berikut tanpa mengubah argumennya: /opt/hermes/.venv/bin/python -I /tmp/jobsheet3/send_demo.py --mode dry-run --to self --nama \"Pengguna Uji\" --pesan \"Uji coba agent node\". Jangan jalankan mode lain. Balas hanya dengan nilai field \"status\" dan \"body\" dari JSON keluaran perintah tersebut.",
+      "id": "agent1",
+      "type": "agent",
+      "after": [
+        "trigger1"
+      ]
+    },
+    {
+      "after": [
+        "agent1"
+      ],
+      "id": "cond1",
+      "type": "condition",
+      "expression": "out.agent1 contains \"dry_run_ok\""
+    },
+    {
+      "id": "out1",
+      "type": "output",
+      "after": [
+        "cond1"
+      ]
+    }
+  ],
+  "name": "jobsheet3-agent-dryrun"
+}

@@ -1,0 +1,61 @@
+{
+  "name": "umkm-predict",
+  "nodes": [
+    {
+      "id": "webhook",
+      "type": "trigger",
+      "trigger_mode": "webhook",
+      "method": "POST",
+      "path": "/predict",
+      "synchronous": true,
+      "active": false,
+      "after": [],
+      "x": 24,
+      "y": 90
+    },
+    {
+      "id": "validate",
+      "type": "transform",
+      "preset": "umkm-prediction",
+      "after": [
+        "webhook"
+      ],
+      "x": 218,
+      "y": 90
+    },
+    {
+      "id": "condition",
+      "type": "condition",
+      "expression": "out.validate.success == true",
+      "after": [
+        "validate"
+      ],
+      "x": 412,
+      "y": 90
+    },
+    {
+      "id": "ok",
+      "type": "respond",
+      "branch": true,
+      "status_code": 200,
+      "after": [
+        "condition"
+      ],
+      "x": 624,
+      "y": 26
+    },
+    {
+      "id": "invalid",
+      "type": "respond",
+      "branch": false,
+      "status_code": 400,
+      "after": [
+        "condition"
+      ],
+      "x": 624,
+      "y": 151
+    }
+  ],
+  "title": "JoyUMKM health prediction",
+  "description": "Validates six scores and returns the predicted category through the signed synchronous webhook."
+}

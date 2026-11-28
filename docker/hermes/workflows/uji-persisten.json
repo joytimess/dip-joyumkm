@@ -1,0 +1,25 @@
+{
+  "title": "Uji Persisten",
+  "description": "Jobsheet 1 demo: trigger, catatan, output tanpa agen AI dan tanpa target kirim. Tidak dijalankan.",
+  "nodes": [
+    {
+      "id": "trigger1",
+      "type": "trigger",
+      "trigger_mode": "manual",
+      "after": []
+    },
+    {
+      "id": "note1",
+      "type": "note",
+      "text": "Jobsheet 1: workflow ini hanya untuk uji persistensi setelah restart. Tidak ada node AI, tidak ada pengiriman."
+    },
+    {
+      "id": "out1",
+      "type": "output",
+      "after": [
+        "trigger1"
+      ]
+    }
+  ],
+  "name": "uji-persisten"
+}

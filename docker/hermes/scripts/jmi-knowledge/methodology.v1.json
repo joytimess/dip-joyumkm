@@ -1,0 +1,208 @@
+{
+  "knowledge_version": "joyumkm-methodology-2026-11-22.3",
+  "methodology_status": "partial",
+  "audit": {
+    "audited_at": "2026-11-22",
+    "repo": "/workspace/laragon/joyumkm",
+    "repo_revision": "485ff922e8d23ba2654c4495403f200f60fb654e",
+    "sources_used": [
+      {
+        "path": "app/Services/SixFactorEvaluationService.php",
+        "provides": "skala skor faktor (bilangan bulat 1-5), total 6-30, batas kategori Enam Faktor"
+      },
+      {
+        "path": "resources/js/six-factor-draft.js; docs/prd/JoyUMKM_V1_PRD_Brief_P2.md",
+        "provides": "nama dan urutan enam faktor"
+      },
+      {
+        "path": "database/seeders/QuestionnaireSeeder.php",
+        "provides": "definisi singkat, skala, dan teks pertanyaan INS/ECT/OPS"
+      },
+      {
+        "path": "config/umkm.php (scoring.categories)",
+        "provides": "batas kategori Tiga Dimensi (>=85,>=70,>=55,>=40,<40)"
+      },
+      {
+        "path": "docs/HERMES_WEBHOOK.md",
+        "provides": "kontrak payload V1/V2, business_context"
+      }
+    ],
+    "sources_not_found": [
+      "Definisi resmi, indikator, atau rubrik per faktor untuk keenam faktor Enam Faktor (hanya nama faktor, skala 1-5, dan batas kategori total yang ada).",
+      "Rubrik interpretasi per rentang skor untuk INS/ECT/OPS selain kategori rata-rata.",
+      "Sumber rujukan tertelusur untuk prinsip umum pengelolaan UMKM."
+    ]
+  },
+  "six_factor": {
+    "scale": {
+      "per_factor_min": 1,
+      "per_factor_max": 5,
+      "total_min": 6,
+      "total_max": 30
+    },
+    "factors": {
+      "sumber_daya": {
+        "label": "Sumber Daya",
+        "definition": null
+      },
+      "kepemimpinan": {
+        "label": "Kepemimpinan",
+        "definition": null
+      },
+      "lingkungan_kerja": {
+        "label": "Lingkungan Kerja",
+        "definition": null
+      },
+      "nilai_organisasi": {
+        "label": "Nilai Organisasi",
+        "definition": null
+      },
+      "stabilitas": {
+        "label": "Stabilitas",
+        "definition": null
+      },
+      "kinerja": {
+        "label": "Kinerja",
+        "definition": null
+      }
+    },
+    "definition_note": "Definisi/indikator resmi per faktor TIDAK ditemukan; hanya nama faktor. Jangan menyatakan apa yang diukur faktor di luar namanya; tafsirkan secara deskriptif (skor tinggi/rendah pada skala 1-5).",
+    "category_bands": [
+      {
+        "label": "Kurang Sehat",
+        "total_min": 6,
+        "total_max": 12
+      },
+      {
+        "label": "Cukup Sehat",
+        "total_min": 13,
+        "total_max": 18
+      },
+      {
+        "label": "Sehat",
+        "total_min": 19,
+        "total_max": 24
+      },
+      {
+        "label": "Sangat Sehat",
+        "total_min": 25,
+        "total_max": 30
+      }
+    ]
+  },
+  "three_dimension": {
+    "scale": {
+      "min": 0,
+      "max": 100,
+      "note": "skor dimensi dan rata-rata disimpan Laravel pada skala 0-100"
+    },
+    "dimensions": {
+      "ins": {
+        "label": "INS - Sumber Daya Kelembagaan (Institutional Resources)",
+        "definition": "Ketersediaan sumber daya kelembagaan dan dukungan eksternal untuk bisnis.",
+        "indicators": [
+          "Kepemilikan NIB",
+          "Pernah menerima bantuan pendanaan pemerintah",
+          "Pernah mengikuti kegiatan pemerintah",
+          "Berkolaborasi dengan pedagang/bisnis lain",
+          "Memakai pemasaran digital",
+          "Sumber modal utama (modal sendiri/keluarga/bank-kredit)"
+        ],
+        "answer_scale": "pilihan berlabel 1-3"
+      },
+      "ect": {
+        "label": "ECT - Konektivitas Ekonomi (Economic Connectivity)",
+        "definition": "Kinerja ekonomi dan konektivitas bisnis dengan pasar eksternal.",
+        "indicators": [
+          "Kemampuan menjangkau pasar/pelanggan baru",
+          "Pertumbuhan penjualan setahun terakhir",
+          "Liabilitas (pinjaman/utang) dapat dikelola",
+          "Arus kas sehat dan stabil"
+        ],
+        "answer_scale": "Likert 1-5 (persepsi pemilik)"
+      },
+      "ops": {
+        "label": "OPS - Stabilitas Operasional (Operational Stability)",
+        "definition": "Stabilitas operasional dan kemampuan bisnis mengelola proses sehari-hari.",
+        "indicators": [
+          "Modal kerja mencukupi",
+          "Gaji karyawan dibayar tepat waktu",
+          "Peralatan/mesin dalam kondisi baik",
+          "Rantai pasokan lancar",
+          "Permintaan dapat diprediksi",
+          "Kualitas hubungan jangka panjang dengan pelanggan"
+        ],
+        "answer_scale": "Likert 1-5 (persepsi pemilik)"
+      }
+    },
+    "category_bands": [
+      {
+        "label": "SANGAT BAIK",
+        "min": 85
+      },
+      {
+        "label": "BAIK",
+        "min": 70
+      },
+      {
+        "label": "CUKUP",
+        "min": 55
+      },
+      {
+        "label": "KURANG",
+        "min": 40
+      },
+      {
+        "label": "KRITIS",
+        "min": 0
+      }
+    ],
+    "interpretation_note": "Indikator berupa persepsi/pengakuan pemilik (self-reported), bukan data audit. Rubrik interpretasi per dimensi di luar kategori rata-rata TIDAK ditemukan."
+  },
+  "category_policy": "Kategori yang dikirim Laravel bersifat otoritatif. Jangan dihitung ulang, dikoreksi, atau diganti. Label V2 dan label V1 berbeda dan tidak boleh dicampur.",
+  "instrument_separation": "Enam Faktor (total 6-30) dan Tiga Dimensi (0-100) adalah dua instrumen terpisah. Dilarang membuat skor gabungan/komposit, dilarang menyimpulkan korelasi atau sebab-akibat antar-instrumen tanpa rubrik. Boleh menyandingkan sebagai pengamatan.",
+  "general_principles": {
+    "traceable_source": null,
+    "note": "Belum ada sumber rujukan tertelusur yang diaudit. Prinsip berikut adalah praktik umum, BUKAN metodologi resmi JoyUMKM; gunakan sebagai pertanyaan/eksperimen kecil, bukan klaim.",
+    "business_development": [
+      "Uji ide pertumbuhan dalam skala kecil sebelum menambah belanja atau kapasitas.",
+      "Ketahanan: kenali ketergantungan pada satu pemasok, pelanggan, atau orang kunci."
+    ],
+    "marketing_sales": [
+      "Catat asal pelanggan dan pembelian ulang sebelum menilai efektivitas pemasaran.",
+      "Eksperimen retensi berbiaya rendah (mis. daftar pelanggan, pesan tindak lanjut) dengan metrik jelas."
+    ],
+    "finance": [
+      "Pisahkan uang usaha dan pribadi; catat pemasukan dan pengeluaran rutin.",
+      "Tanpa data biaya, jangan menyimpulkan laba, margin, arus kas, atau kelayakan kredit."
+    ],
+    "operations_people": [
+      "Dokumentasikan proses inti sederhana (SOP satu halaman) dan pantau kualitas/keterlambatan.",
+      "Kejelasan peran, umpan balik berkala, dan pemeliharaan peralatan."
+    ]
+  },
+  "prohibited_claims": [
+    "Laba, margin, ROI, atau arus kas dari omzet/modal saja.",
+    "Kelayakan kredit atau kemampuan bayar dari omzet/modal saja.",
+    "Omzet bulanan sebagai omzet tahunan aktual (proyeksi x12 hanya boleh berlabel estimasi).",
+    "Janji kenaikan omzet/laba atau hasil pasti.",
+    "Skor gabungan Enam Faktor + Tiga Dimensi.",
+    "Sebab-akibat atau korelasi antar-instrumen tanpa dasar rubrik.",
+    "Nilai null diperlakukan sebagai 0.",
+    "Tren, benchmark sektor, atau fakta pasar yang tidak ada di payload.",
+    "Definisi indikator Enam Faktor yang tidak tercantum di sumber."
+  ],
+  "data_gap_vocabulary": {
+    "biaya_pengeluaran": "Data biaya dan pengeluaran usaha tidak tersedia dalam payload.",
+    "laba_arus_kas": "Data laba dan arus kas tidak tersedia dalam payload.",
+    "utang_kewajiban": "Data utang dan kewajiban tidak tersedia dalam payload.",
+    "data_pelanggan": "Data pelanggan (jumlah, asal, pembelian ulang) tidak tersedia dalam payload.",
+    "kanal_pemasaran": "Data kanal pemasaran dan efektivitasnya tidak tersedia dalam payload.",
+    "skor_per_indikator": "Skor per indikator tidak tersedia; hanya skor agregat yang dikirim.",
+    "definisi_enam_faktor": "Definisi dan indikator resmi per faktor Enam Faktor tidak tersedia.",
+    "rubrik_tiga_dimensi": "Rubrik interpretasi per dimensi Tiga Dimensi tidak tersedia.",
+    "tren_historis": "Data historis/tren tidak tersedia dalam payload.",
+    "data_penjualan_rinci": "Data penjualan rinci tidak tersedia dalam payload.",
+    "data_karyawan_rinci": "Data karyawan rinci (peran, gaji, turnover) tidak tersedia dalam payload."
+  }
+}

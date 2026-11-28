@@ -1,0 +1,82 @@
+{
+  "name": "umkm-monitoring",
+  "title": "JoyUMKM Periodic Monitoring",
+  "description": "Pemantauan skor final Enam Faktor setiap 10 menit. Skor di bawah 13 memicu notifikasi Prioritas Intervensi.",
+  "nodes": [
+    {
+      "id": "schedule",
+      "type": "trigger",
+      "monitoring_stage": "schedule",
+      "trigger_mode": "schedule",
+      "schedule": "*/10 * * * *",
+      "timezone": "Asia/Jakarta",
+      "after": [],
+      "x": 20,
+      "y": 90
+    },
+    {
+      "id": "http",
+      "type": "transform",
+      "monitoring_stage": "http",
+      "preset": "umkm-monitoring",
+      "after": [
+        "schedule"
+      ],
+      "x": 218,
+      "y": 90
+    },
+    {
+      "id": "edit-fields",
+      "type": "transform",
+      "monitoring_stage": "edit",
+      "preset": "umkm-monitoring",
+      "after": [
+        "http"
+      ],
+      "x": 416,
+      "y": 90
+    },
+    {
+      "id": "filter",
+      "type": "transform",
+      "monitoring_stage": "filter",
+      "preset": "umkm-monitoring",
+      "after": [
+        "edit-fields"
+      ],
+      "x": 614,
+      "y": 90
+    },
+    {
+      "id": "if",
+      "type": "condition",
+      "monitoring_stage": "if",
+      "expression": "out.filter.total_skor < 13",
+      "after": [
+        "filter"
+      ],
+      "x": 812,
+      "y": 90
+    },
+    {
+      "id": "telegram",
+      "type": "output",
+      "monitoring_stage": "telegram",
+      "after": [
+        "if"
+      ],
+      "x": 1038,
+      "y": 28
+    },
+    {
+      "id": "log",
+      "type": "output",
+      "monitoring_stage": "log",
+      "after": [
+        "if"
+      ],
+      "x": 1038,
+      "y": 156
+    }
+  ]
+}

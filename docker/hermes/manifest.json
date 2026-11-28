@@ -1,0 +1,215 @@
+{
+  "schema": 1,
+  "generated_from": "live deployment inventory 2026-11-27 (jobsheet2 / hermes_data)",
+  "compose": {
+    "file": "compose.yaml",
+    "project": "jobsheet2",
+    "legacy_file": "C:\\laragon\\jobsheet2\\docker-compose.yml",
+    "legacy_labels_note": "Live containers still carry the legacy config_files label; labels are NOT migrated by adoption."
+  },
+  "image": {
+    "ref": "nousresearch/hermes-agent@sha256:d6746a084e9341baada483e3d6210444d3c1aeb7c130f0915150065fb2851459",
+    "observed_tag": "nousresearch/hermes-agent:latest",
+    "registry_manifest_resolvable": true
+  },
+  "services": {
+    "hermes": {
+      "container": "hermes-agent",
+      "ports": [
+        "127.0.0.1:8642",
+        "127.0.0.1:9119"
+      ]
+    },
+    "workflow-ingress": {
+      "container": "hermes-workflow-ingress",
+      "ports": [
+        "127.0.0.1:8650",
+        "127.0.0.1:8651"
+      ]
+    },
+    "webhook-proxy": {
+      "container": "hermes-webhook-proxy",
+      "ports": [
+        "127.0.0.1:8644"
+      ]
+    }
+  },
+  "volume": "hermes_data",
+  "networks": [
+    "joyumkm-hermes-webhook"
+  ],
+  "proxy_asset": "docs/deployment/hermes-proxy/allowlist_proxy.py",
+  "plugin": {
+    "name": "visual-workflow",
+    "version": "1.1.0",
+    "license": "Apache-2.0",
+    "upstream": "https://github.com/Printaga/Hermes-Workflow",
+    "upstream_commit": "3f7a6a185e489ff4d75a0e8c1a9050c300f602d5",
+    "overlay_dir": "docker/hermes/scripts/visual-workflow-overlay",
+    "overlay_note": "Working-tree files that differ from / are absent in the pinned upstream commit. Apply over a checkout of upstream_commit.",
+    "excluded": [
+      "tests/test_analytics_telegram.py",
+      "tests/test_monitoring.py",
+      "tests/test_monitoring_telegram.py",
+      ".hermes-catalog.json (secret-like fixtures / catalog metadata)"
+    ],
+    "overlay_files": {
+      "dashboard/dist/index.js": "091c9f10569961a7a6185e2315b46c121010c352479ada6ee1a9252a8086590d",
+      "dashboard/plugin_api.py": "4c84a9e15b0f0bc20e363cda51b7f2f068e7220d3271b02e2df2004595c07c2d",
+      "examples/umkm-analytics-assistant.designer.json": "7db59ed5ecbdaf0fd12865c82585663a172a01125336a66ccbf0440bed74368d",
+      "examples/umkm-predict.designer.json": "de9cbcf0485060d08dccb439c35d250194c67528a2e1ebc216421c2178d93121",
+      "node-spec.json": "8166d0213a99801b956e6b0796a410dac890d9f4d444d79f2ab7c8dd9b071569",
+      "tests/test_analytics_presentation.py": "707879b8c45ba74e2a13ca1fd4410d23b730178caef7d4625cc1e47ac90407c9",
+      "tests/test_analytics_workflow.py": "475d92b243735694b57b867584cd9e9bd4545a16f8508306b62e2b408928212f",
+      "tests/test_canvas_contract.py": "0f6a792ad788c732ccb08dfa9f288e99d2c2b38906c099cfd8a71ed16dd261f8",
+      "tests/test_dashboard.py": "5b9d3ea7abe1a97387aa26f45aa3ac48bed30b041beefb3b3d75de825169dd6a",
+      "tests/test_monitoring_cron.py": "692b6f956efc3f2f3450164206a1c10666c6ed9d162c36ec20020a01d601d02b",
+      "tests/test_mysql.py": "1948d78101e64594479e6fcf6fb55748d9c5fa0e4cb7cadc11548a22a7bbe9e5",
+      "tests/test_node_spec.py": "f978b8c5e9a7f2a288e7a834782078a599e9e70612ba54d7744fa899ac8bd9b4",
+      "tests/test_prediction.py": "214c952cc057bf4e46b3fb38a14642f4e0da7accf820301cff927292a0377682",
+      "tests/test_register.py": "0b0e3f3ea8af7f7b60294699b644413be382f4f091ffd95e562590760ccf2967",
+      "tests/test_schedule.py": "2d477e994da0179f757e0538c08c7ca78aab81bea3de339639a3ed6efe7954a0",
+      "tests/test_triggers.py": "6110e4ffb1eeb4c4077e4db578732576740160554058d6531b921de4ef3d6575",
+      "umkm_monitoring_cron.py": "390df53f47f44495f9bcda955a2213814b59c82cbc907cc28e8728cfd33a4ada",
+      "visual_workflow_hermes/__init__.py": "0a538438cea91e658acccba79ac10e0865beadf16682ad580bead91fe06049b5",
+      "visual_workflow_hermes/analytics_presentation.py": "1b283cb56abcf3d6076d12bd84adb4cdd974dc4db62bd13a12af10789cfcaf36",
+      "visual_workflow_hermes/analytics_telegram.py": "b8a8a677b4dde076a27b8275ad8c5b8fc1b808e08fb41321812d3c7a8346ff95",
+      "visual_workflow_hermes/analytics_workflow.py": "b14b621b4a3476f45ede71dddb95c19cdb2d55c4f7601d6433b623cf9a17e9bf",
+      "visual_workflow_hermes/convert.py": "10df9d74f182e9e05ce347506f57d5e742226c727dbfcaa022b9c6cd3baff481",
+      "visual_workflow_hermes/monitoring.py": "0d1f84ac771b1148549fd5b3d5f7acb34de0279a517b84f1048acf4a6a8e04d0",
+      "visual_workflow_hermes/monitoring_telegram.py": "d0ac857b2dd625254fbafc700703257fab34a12f20fc1060562360d92de28b72",
+      "visual_workflow_hermes/mysql.py": "2b3cc165e606578e28780847e063276a4b14d3526209da72792ff25b8212a9f9",
+      "visual_workflow_hermes/onboarding.py": "d91877ca6192c423377bfcb6a5582c394f0d6c1dac5352e8fb46c7ee3eea2599",
+      "visual_workflow_hermes/onboarding_email.py": "cb8a10a2629953e537f7b4a56951424d9b90d3d3ba652c5e37fd2ec1425bbfbe",
+      "visual_workflow_hermes/onboarding_receiver.py": "ff47209a74052e7c9a3d47ca4c741141182544d8f537ceb8cf17c7301197092f",
+      "visual_workflow_hermes/prediction.py": "fbbd5d73d2be1f41ae5c55d3d2f595b0a84247d9fbac9dde8632bf0449906dbf",
+      "visual_workflow_hermes/prediction_receiver.py": "1abfcf6bde92c4eceff823c087fc606382e260cd4582b7dfc052c9478646bf52",
+      "visual_workflow_hermes/runner.py": "549adb1e6f34ff493afe78ed7dd1025b3dac31353d4f65cb5856183178864b92",
+      "visual_workflow_hermes/runtime.py": "102b55dd681fc7dba9b0bc9a8468b3851548593f4762ad195e54c6cd55fe45d2",
+      "visual_workflow_hermes/schedule.py": "f5a84fbde008ff696e9315b9d5011ee8da7e17897328857112fd071c3344d52c",
+      "visual_workflow_hermes/schema.py": "c45f299477d056b5f52437a7e15c014d3700fe02a5c2887dfad35fd4f4859e25",
+      "visual_workflow_hermes/triggers.py": "c509d69dc60b1520007b5c8ff1c068b458a785fc718a099e3412c44c82230e13",
+      "visual_workflow_hermes/webhook_ingress.py": "040f99aa0cc9e5c3414c81029f9ceb6c25799e1bd1725780091e2b365478a11b"
+    }
+  },
+  "jmi": {
+    "dir": "docker/hermes/scripts/jmi",
+    "volume_path": "joyumkm-intelligence/jmi",
+    "excluded_state": [
+      "callback_registry.json (operational history; config/callback_registry.template.json used instead)"
+    ],
+    "files": {
+      "__init__.py": "f75fd30d6c106fbfa9ab635a6dfcc97b75adc2fdc6c3e5f82d91659d00e9f67a",
+      "__main__.py": "6bba7d53b1a8b6d3b3e0d2ec7e069011742615ecfbfedd771e6f2e23e5c9312d",
+      "artifacts.py": "db6bbda2b1badc6b211477ad95e786300e0053b66128ead55fa6d9ad9d044d86",
+      "callback.py": "382571df39bb3778b4488c6d11982293e48cc615d226b0a3b1998aafc709882a",
+      "claims.py": "13f36f1d8584f0e87849ba4e27c4492a2e945211cc3d44e750efbea0d4acbb31",
+      "delivery.py": "4f0d1f75930a3aac195c7ae3e87be19c94096b2303840c1ac1270511becabd5c",
+      "email_delivery.py": "a175dec50bcebaf5eb155e220430d088a8609bae6abc58cd518755dd953c97e4",
+      "email_status_sync.py": "86ae8a18fc8e62e06fbb3eec5a5995407b469d24c8c6b585264a96c9966c3812",
+      "email_template.py": "9c019b8065918036ffeabcf445556533755d201b15a053f6598987503c3f4ea5",
+      "email_transport.py": "1c055230014afa12d8c84dc844231f29b9ba1de2ef1ff811d958462102b2275a",
+      "engine.py": "1054e53d670a3a5fe3de32fcf4a6de1dbfb0653d29eed193f69a7ac230c7c142",
+      "monthly.py": "c01949d52b876231a9f968730534a237eeeb28ef131f732a89ecbc9742dd8977",
+      "parse.py": "d92daec1d174925a49c373355d226bea7b54d3ed43230ae7f0d44788eb168ad9",
+      "pdf.py": "c57280deadee7edf8a0fe7707b5646a417de1f9d4dc88ee34e080f79db0f18d9",
+      "pdf_assets/DejaVu-LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+      "pdf_assets/DejaVuSans.ttf": "57f73e11f51999432bf7ab22ce55b6f945d5eca1bf824404cfa9ec2e3718c84e",
+      "pdf_assets/Poppins-OFL.txt": "5c4a92c8f8ce0ab211f4c72889d82383c9644546115d9ba39a4f2d5b8f37014b",
+      "pdf_assets/Poppins-Regular.ttf": "83b5b7477c68f4c0befe097269b7f3dfe30c20dc66e310dabc0d26de21bdb391",
+      "pdf_assets/Poppins-SemiBold.ttf": "e07369344481bb23e8d4a5f7a9ecfda959d02773359bb2a08b6a3165f786ffc6",
+      "pdf_assets/joyumkm-mark.png": "fc5da9e8534712b1cb0a153ccd45475cac815dcfbb2e3fd9db81db97615e64ed",
+      "pdf_template.py": "282da384f7d111a1a2dd324642c8ba910f507118c39369baf5c902d07c198656",
+      "pipeline.py": "5c9d24188e7f6ca29e996729b3af89c9ebc8357bdac9ff818388d0842732fdbf",
+      "prompt.py": "c602df9c6cabbb8fae09581cd21e03bdc09faf28ea9455a89041e99926e36e42",
+      "recipient.py": "2fd17f9805390dede279c93fb4caae428655a07823f17bc2cd30269db5050b1d",
+      "schema.py": "dbf0ffee909e2752910584ae9db1335640a8a0f6f18a78945a84391683c6e9db",
+      "snapshot.py": "b79d394828b12ea3eaaafe6b56448fea601ccf4beac71a952f763f7ef1411b45",
+      "store.py": "4f851897c1a4718e1eafb0b6e4c46794d9b2035bc000f0ad36e5f7476c114c22",
+      "transport.py": "c51ac2f7cd0f2f83a658accd1c30f1f87aadf624d22770a506908d75c20ecbbd",
+      "xlsx.py": "c6baafcfcdc04ec978dfd42fdf830ffc84996ab493d96671a94559bb04031e79",
+      "xlsx_template.py": "ed58220ae46af69d05051748907803ff71a6bfad04f98f2cae4bdb8549120142"
+    },
+    "knowledge_dir": "docker/hermes/scripts/jmi-knowledge",
+    "knowledge_volume_path": "joyumkm-intelligence/knowledge",
+    "knowledge_files": {
+      "methodology.v1.json": "055dd9a23a774396eca89015d8f44d7cdf11ad638c641dc91a8f61107e3ffd81"
+    }
+  },
+  "workflows": {
+    "dir": "docker/hermes/workflows",
+    "volume_path": "workflow-designs",
+    "identity": "file name == workflow name (definitions carry no id)",
+    "files": {
+      "jobsheet3-agent-dryrun.json": "f42b4e2ba7300fdb68f486a599e2edb4f4025766b595bc83431a45adba40ee09",
+      "jobsheet3-email.json": "bea9982668fc6196ce4abd96f371b32dd898eca86a8fc378775b80a4117013c9",
+      "joyumkm-user-onboarding.json": "7c716aaf83d2fa28b617d2c90aa37fce730c12e18cd492ff483c4c51dc5fba68",
+      "uji-persisten.json": "55b47e4972109b7aeec23467d246d5fe5de6e3cb10958c72ab2e395d37ca9a3f",
+      "umkm-analytics-assistant.json": "be35bfc7d3de50264ec7668873ad267c40daa2b615411876cf9ccabc58028658",
+      "umkm-monitoring.json": "3972bf899697febd94fb24166781825073e80290e7a0bde807fba3ef4d3b43d6",
+      "umkm-predict.json": "4a8c37a1963527bde8d3d10eae4babc6b1cdea883f30afefa1546bcd9af99930"
+    }
+  },
+  "python_dependencies": {
+    "target": "joyumkm-analytics/dependencies",
+    "packages": {
+      "pymysql": "1.1.2",
+      "sqlglot": "27.28.1"
+    },
+    "note": "pure-Python; venv has no pip, install with host python -m pip --target"
+  },
+  "sql": {
+    "path": "docs/jobsheets-6/evidence/analytics-views-v2.sql",
+    "sha256": "4fa80eb511dce76883617be5638a58a73c4ab02163913d2d62de768f5916f380",
+    "database": "joyumkm-v2",
+    "views": [
+      "analytics_umkms",
+      "analytics_evaluations",
+      "analytics_six_factor_evaluations"
+    ],
+    "definer": "joyumkm_analytics_def@localhost",
+    "reader": "joyumkm_analytics_ro@localhost",
+    "cohort": {
+      "dataset_key": "joyumkm-analytics",
+      "dataset_version": "v2"
+    }
+  },
+  "config_templates": {
+    "callback_registry.template.json": "618633e60f6ffff531bb1d62945473741b5a04185d0c620081eb87ae254b1de3",
+    "mysql.json.template": "c301138e8719a9a859bffa17d34e4a86d25cc4976396fa608a43c1c8d88e3c62",
+    "onboarding-settings.json.template": "4ab9dd6cc4df5ac313159693619fdcd81ac88b1ffefbc934b8798f78d1b0d0f7",
+    "state/artifact.env.template": "b9967104b439722e0c58d7241ffb0e9d0fedd6cbc6dbdbfbf2d5ad8cf0f411bc",
+    "state/callback.env.template": "5ac1be9b45c18586874004e5a030014b1a1f21e40fffb670114918e548df2538",
+    "state/delivery-status.env.template": "66aec0d70a74219f11131b567fd0c7c67a97f73ac218fef69b12ab81b965780d",
+    "state/dev-operation.env.template": "fc7bba2b22e069d295637b8125885036a22c224e795b0024f8705f01c393264f",
+    "state/email.env.template": "b82b29cb35974c7c49ce002de91f8041c84f21b189cf1562918dbf232ba0b1bc",
+    "state/recipient.env.template": "edb6cfc7506663dcdc74e0dd607eca2ba6de235448a9d231f91d17b96cf380c2",
+    "state/snapshot.env.template": "cafd3ddeac64e0c8bbe8d5215c09449b5386f638f8c33290e2165c2a252ef03c"
+  },
+  "expected_state": {
+    "cron_jobs_installed_paused": [
+      "jmi-recover",
+      "jmi-recover-prod",
+      "workflow:umkm-monitoring"
+    ],
+    "webhook_routes": [
+      "joyumkm-events",
+      "joyumkm-events-dev"
+    ],
+    "fresh_install_flags": {
+      "JMI_EMAIL_DELIVERY_ENABLED": "0",
+      "JMI_EMAIL_DELIVERY_PAUSED": "1",
+      "JMI_EMAIL_STATUS_SYNC_ENABLED": "0",
+      "JMI_EMAIL_STATUS_SYNC_PAUSED": "1",
+      "onboarding.enabled": false,
+      "onboarding.mode": "dry-run"
+    }
+  },
+  "manual_prerequisites_fresh": [
+    "Hermes first-run model/provider login (no credential is created by setup)",
+    "hermes plugins enable visual-workflow (verified subcommand exists; effect on a fresh volume not exercised)",
+    "Create webhook subscriptions joyumkm-events / joyumkm-events-dev with the Laravel HMAC secret",
+    "Install the three paused cron jobs",
+    "Fill state/*.env secrets from Laravel .env and SMTP values (placeholders __FROM_LARAVEL_ENV__ / __MANUAL__)"
+  ]
+}

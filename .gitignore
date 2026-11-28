@@ -35,3 +35,7 @@ Thumbs.db
 !/docs/evidence/p5-07-qa-summary.md
 .env.bak*
 docs/presentation/*
+# Hermes infrastructure: generated local config, secrets and backups never tracked
+docker/hermes/.env
+docker/hermes/generated/
+hermes-backups/

@@ -1,0 +1,7 @@
+{
+  "secret": "__FROM_LARAVEL_ENV__",
+  "enabled": false,
+  "mode": "dry-run",
+  "app_url": "http://joyumkm.test",
+  "allowlist": []
+}

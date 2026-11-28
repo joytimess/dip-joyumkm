@@ -1,0 +1,39 @@
+{
+  "nodes": [
+    {
+      "trigger_mode": "manual",
+      "id": "trigger1",
+      "type": "trigger",
+      "after": []
+    },
+    {
+      "id": "note1",
+      "type": "note",
+      "text": "Padanan Jobsheet 3: Manual Trigger -> Edit Fields (Set) -> Email. Hermes Visual Workflow tidak memiliki node Set/Edit Fields; agent1 (AI) menyusun isi pesan dari field nama dan pesan. Pengiriman email belum dikonfigurasi."
+    },
+    {
+      "prompt": "Tulis isi email singkat dalam Bahasa Indonesia. Nama penerima: Pengguna Uji. Pesan: Uji coba workflow jobsheet3. Balas hanya dengan isi email tanpa tambahan.",
+      "id": "agent1",
+      "type": "agent",
+      "after": [
+        "trigger1"
+      ]
+    },
+    {
+      "after": [
+        "agent1"
+      ],
+      "id": "cond1",
+      "type": "condition",
+      "expression": "out.agent1 contains \"Pengguna Uji\""
+    },
+    {
+      "id": "out1",
+      "type": "output",
+      "after": [
+        "cond1"
+      ]
+    }
+  ],
+  "name": "jobsheet3-email"
+}

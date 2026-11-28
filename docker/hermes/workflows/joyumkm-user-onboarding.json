@@ -1,0 +1,44 @@
+{
+  "name": "joyumkm-user-onboarding",
+  "nodes": [
+    {
+      "id": "registration",
+      "type": "trigger",
+      "trigger_mode": "webhook",
+      "event_type": "user.registered",
+      "after": [],
+      "x": 26,
+      "y": 40
+    },
+    {
+      "id": "registration_fields",
+      "type": "transform",
+      "preset": "registration",
+      "after": [
+        "registration"
+      ],
+      "x": 204,
+      "y": 40
+    },
+    {
+      "id": "recipient_policy",
+      "type": "condition",
+      "expression": "out.registration_fields.account_reference is not empty",
+      "after": [
+        "registration_fields"
+      ],
+      "x": 382,
+      "y": 40
+    },
+    {
+      "id": "welcome_email",
+      "type": "email",
+      "template": "welcome",
+      "after": [
+        "recipient_policy"
+      ],
+      "x": 560,
+      "y": 40
+    }
+  ]
+}

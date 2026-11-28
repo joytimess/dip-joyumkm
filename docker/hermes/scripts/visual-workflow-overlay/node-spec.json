@@ -1,0 +1,301 @@
+{
+  "$comment": "Common node contract across canvases. Fields and nodes marked dashboard-only extend the onboarding UI.",
+  "kinds": [
+    {
+      "kind": "mysql",
+      "tips": [],
+      "surfaces": [
+        "dashboard"
+      ],
+      "required": [
+        "credential_ref",
+        "operation"
+      ],
+      "fields": [
+        {
+          "name": "credential_ref",
+          "type": "text",
+          "tip": "mysql.credential_ref"
+        },
+        {
+          "name": "operation",
+          "type": "enum",
+          "tip": "mysql.operation"
+        },
+        {
+          "name": "query_input",
+          "type": "text",
+          "tip": "mysql.query_input"
+        },
+        {
+          "name": "sql",
+          "type": "textarea",
+          "tip": "mysql.sql"
+        },
+        {
+          "name": "params",
+          "type": "json",
+          "tip": "mysql.params"
+        },
+        {
+          "name": "timeout_ms",
+          "type": "number",
+          "tip": "mysql.timeout_ms"
+        },
+        {
+          "name": "max_rows",
+          "type": "number",
+          "tip": "mysql.max_rows"
+        }
+      ]
+    },
+    {
+      "kind": "trigger",
+      "required": [
+        "trigger_mode"
+      ],
+      "fields": [
+        {
+          "name": "trigger_mode",
+          "type": "enum",
+          "tip": "trigger.trigger_mode"
+        },
+        {
+          "name": "schedule",
+          "type": "cron",
+          "tip": "trigger.schedule"
+        },
+        {
+          "name": "event_type",
+          "type": "enum",
+          "tip": "trigger.event_type",
+          "surfaces": [
+            "dashboard"
+          ]
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "tip": "trigger.method",
+          "surfaces": [
+            "dashboard"
+          ]
+        },
+        {
+          "name": "path",
+          "type": "text",
+          "tip": "trigger.path",
+          "surfaces": [
+            "dashboard"
+          ]
+        },
+        {
+          "name": "synchronous",
+          "type": "bool",
+          "tip": "trigger.synchronous",
+          "surfaces": [
+            "dashboard"
+          ]
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "tip": "trigger.active",
+          "surfaces": [
+            "dashboard"
+          ]
+        }
+      ],
+      "tips": []
+    },
+    {
+      "kind": "agent",
+      "required": [
+        "prompt"
+      ],
+      "fields": [
+        {
+          "name": "prompt",
+          "type": "text",
+          "tip": "agent.prompt"
+        },
+        {
+          "name": "profile",
+          "type": "text",
+          "tip": "agent.profile"
+        },
+        {
+          "name": "model",
+          "type": "model",
+          "tip": "agent.model"
+        },
+        {
+          "name": "retries",
+          "type": "int",
+          "tip": "agent.retries"
+        }
+      ],
+      "tips": []
+    },
+    {
+      "kind": "condition",
+      "required": [
+        "expression"
+      ],
+      "fields": [
+        {
+          "name": "expression",
+          "type": "expression",
+          "tip": "condition.expression"
+        }
+      ],
+      "tips": []
+    },
+    {
+      "kind": "approval",
+      "required": [
+        "question"
+      ],
+      "fields": [
+        {
+          "name": "question",
+          "type": "text",
+          "tip": "approval.question"
+        },
+        {
+          "name": "context",
+          "type": "text",
+          "tip": "approval.context"
+        },
+        {
+          "name": "options",
+          "type": "list",
+          "tip": "approval.options"
+        },
+        {
+          "name": "timeout_minutes",
+          "type": "int",
+          "tip": "approval.timeout"
+        },
+        {
+          "name": "on_timeout",
+          "type": "enum",
+          "tip": "approval.on_timeout"
+        }
+      ],
+      "tips": []
+    },
+    {
+      "kind": "output",
+      "required": [],
+      "fields": [
+        {
+          "name": "send_to",
+          "type": "enum",
+          "tip": "output.send_to",
+          "derives": [
+            "deliver",
+            "target"
+          ]
+        }
+      ],
+      "tips": [
+        "output.parents"
+      ]
+    },
+    {
+      "kind": "note",
+      "required": [],
+      "fields": [
+        {
+          "name": "text",
+          "type": "text",
+          "tip": "note.text"
+        },
+        {
+          "name": "color",
+          "type": "enum",
+          "tip": "note.color"
+        }
+      ],
+      "tips": []
+    },
+    {
+      "kind": "transform",
+      "required": [
+        "preset"
+      ],
+      "fields": [
+        {
+          "name": "preset",
+          "type": "enum",
+          "tip": "transform.preset"
+        }
+      ],
+      "tips": [],
+      "surfaces": [
+        "dashboard"
+      ]
+    },
+    {
+      "kind": "email",
+      "required": [
+        "template"
+      ],
+      "fields": [
+        {
+          "name": "template",
+          "type": "enum",
+          "tip": "email.template"
+        }
+      ],
+      "tips": [],
+      "surfaces": [
+        "dashboard"
+      ]
+    },
+    {
+      "kind": "respond",
+      "required": [
+        "status_code"
+      ],
+      "surfaces": [
+        "dashboard"
+      ],
+      "tips": [],
+      "fields": [
+        {
+          "name": "status_code",
+          "type": "int",
+          "tip": "respond.status_code"
+        },
+        {
+          "name": "branch",
+          "type": "bool",
+          "tip": "respond.branch"
+        }
+      ]
+    }
+  ],
+  "trigger_modes": [
+    "manual",
+    "schedule",
+    "webhook",
+    "telegram"
+  ],
+  "deliver_modes": [
+    "notification",
+    "channel"
+  ],
+  "note_colors": [
+    "yellow",
+    "blue",
+    "green",
+    "red"
+  ],
+  "limits": {
+    "max_nodes": 50,
+    "max_retries": 3,
+    "max_timeout_minutes": 4320
+  }
+}

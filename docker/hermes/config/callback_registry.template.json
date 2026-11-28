@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "legacy_cutoff": "0000-00-00T00:00:00.000Z",
+  "archive_reason": "fresh-install: no legacy jobs",
+  "verified_eligible": [],
+  "archived_unmatched": []
+}

@@ -1,0 +1,156 @@
+# JoyUMKM - canonical Compose definition for the Hermes dependency (local development only).
+#
+# Docker manages ONLY Hermes. Laravel, Vue, PHP and MySQL stay native (Laragon).
+# Derived from the live `jobsheet2` deployment (3 services) and verified against it by
+# `scripts/setup-hermes.ps1 -Mode Adopt` (redacted structural comparison, no restart).
+#
+# Differences from C:\laragon\jobsheet2\docker-compose.yml (intentional, all verified equal at runtime):
+#   - image is the registry digest (nousresearch/hermes-agent@sha256:d674...), which is the same image the
+#     running containers use (digest == local image ID). A bare local image ID is not reproducible.
+#   - pull_policy: missing (fresh installs may pull the pinned digest; adoption never runs `up` or `pull`).
+#   - host paths come from HERMES_HOST_WWW_ROOT / HERMES_HOST_REPO_ROOT (set by the scripts, never guessed).
+#   - the two on-boarding flags default to disabled so a fresh install can never send anything.
+#
+# Never run `up`, `down`, `pull` or `--force-recreate` against the existing deployment: use the scripts.
+
+name: jobsheet2
+
+services:
+  hermes:
+    container_name: hermes-agent
+    image: nousresearch/hermes-agent@sha256:d6746a084e9341baada483e3d6210444d3c1aeb7c130f0915150065fb2851459
+    pull_policy: missing
+    entrypoint: ["/opt/hermes/docker/entrypoint-dispatch.sh"]
+    command: ["gateway", "run"]
+    working_dir: /opt/hermes
+    user: root
+    privileged: false
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8642:8642"   # Hermes API server
+      - "127.0.0.1:9119:9119"   # Hermes dashboard
+    environment:
+      HERMES_HOME: /opt/data
+      HERMES_DASHBOARD: "1"
+      HERMES_WEB_DIST: /opt/hermes/hermes_cli/web_dist
+      HERMES_TUI_DIR: /opt/hermes/ui-tui
+      HERMES_PYTHON: /opt/hermes/.venv/bin/python
+      HERMES_RUNTIME_DIR: /opt/hermes/tools
+      HERMES_WRITE_SAFE_ROOT: /opt/data:/workspace/laragon/joyumkm
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: admin
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:?set in docker/hermes/.env}
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${HERMES_DASHBOARD_BASIC_AUTH_SECRET:?set in docker/hermes/.env}
+      PLAYWRIGHT_BROWSERS_PATH: /opt/hermes/tools
+      XDG_RUNTIME_DIR: /tmp/hermes-runtime
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      CC: gcc
+      CXX: g++
+      PATH: /opt/hermes/bin:/opt/hermes/.venv/bin:/opt/data/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - hermes_data:/opt/data
+      # Baseline risk (documented, not widened): the whole www tree is readable and the repo is writable.
+      - type: bind
+        source: ${HERMES_HOST_WWW_ROOT:?set by scripts/setup-hermes.ps1}
+        target: /workspace/laragon
+        read_only: true
+      - type: bind
+        source: ${HERMES_HOST_REPO_ROOT:?set by scripts/setup-hermes.ps1}
+        target: /workspace/laragon/joyumkm
+    networks:
+      - default
+      - joyumkm-hermes-webhook
+
+  workflow-ingress:
+    container_name: hermes-workflow-ingress
+    image: nousresearch/hermes-agent@sha256:d6746a084e9341baada483e3d6210444d3c1aeb7c130f0915150065fb2851459
+    pull_policy: missing
+    entrypoint: ["/opt/hermes/.venv/bin/python"]
+    command: ["-m", "visual_workflow_hermes.webhook_ingress"]
+    working_dir: /opt/workflow-plugin
+    user: "10000:10000"
+    read_only: true
+    privileged: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8650:8650"   # Onboarding webhook receiver and health
+      - "127.0.0.1:8651:8651"   # Prediction and dynamic webhook ingress
+    tmpfs:
+      - /tmp
+      - /opt/data:rw,mode=0700,uid=10000,gid=10000
+    environment:
+      HERMES_HOME: /opt/data
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      JOYUMKM_ONBOARDING_LIVE_ENABLED: ${JOYUMKM_ONBOARDING_LIVE_ENABLED:-0}
+      JOYUMKM_ONBOARDING_LIVE_RECIPIENT: ${JOYUMKM_ONBOARDING_LIVE_RECIPIENT:-}
+    volumes:
+      - type: volume
+        source: hermes_data
+        target: /opt/workflow-plugin
+        read_only: true
+        volume:
+          subpath: plugins/visual-workflow
+      - type: volume
+        source: hermes_data
+        target: /opt/data/joyumkm-onboarding
+        volume:
+          subpath: joyumkm-onboarding
+      - type: volume
+        source: hermes_data
+        target: /opt/data/joyumkm-prediction
+        read_only: true
+        volume:
+          subpath: joyumkm-prediction
+      - type: volume
+        source: hermes_data
+        target: /opt/data/workflow-designs
+        read_only: true
+        volume:
+          subpath: workflow-designs
+      - type: volume
+        source: hermes_data
+        target: /opt/data/workflow-runs
+        volume:
+          subpath: workflow-runs
+      - type: volume
+        source: hermes_data
+        target: /opt/data/joyumkm-intelligence/state/email.env
+        read_only: true
+        volume:
+          subpath: joyumkm-intelligence/state/email.env
+    networks:
+      - default
+
+  webhook-proxy:
+    container_name: hermes-webhook-proxy
+    image: nousresearch/hermes-agent@sha256:d6746a084e9341baada483e3d6210444d3c1aeb7c130f0915150065fb2851459
+    pull_policy: missing
+    entrypoint: ["python3"]
+    command: ["/proxy/allowlist_proxy.py"]
+    privileged: false
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8644:8644"
+    tmpfs:
+      - /opt/data
+    volumes:
+      - type: bind
+        source: ${HERMES_HOST_REPO_ROOT:?set by scripts/setup-hermes.ps1}/docs/deployment/hermes-proxy
+        target: /proxy
+        read_only: true
+    networks:
+      - joyumkm-hermes-webhook
+
+networks:
+  joyumkm-hermes-webhook:
+    external: true
+
+volumes:
+  hermes_data:
+    external: true
+    name: hermes_data
